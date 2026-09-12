@@ -629,6 +629,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ordered.map((r, i) => {
           const isCheapestOn = cheapestOn?.station.id === r.station.id;
           const isCheapestOverall = cheapestOverall?.station.id === r.station.id;
+          const detourWorth = r.benefit.netBenefit > 0 ? t("route.worth") : t("route.notWorth");
           const badges = [
             isCheapestOn
               ? `<span class="badge">${escapeHtml(t("route.cheapestBadge"))}</span>`
@@ -640,7 +641,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
               ? `<span class="badge muted">${escapeHtml(t("route.onTheWay"))}</span>`
               : "",
             !isCheapestOverall && r.kind === "detour"
-              ? `<span class="badge">${escapeHtml(r.benefit.netBenefit > 0 ? t("route.worth") : t("route.notWorth"))}</span>`
+              ? `<span class="badge">${escapeHtml(detourWorth)}</span>`
               : "",
           ].join("");
           const extra =
