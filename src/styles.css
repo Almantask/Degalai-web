@@ -67,14 +67,25 @@ body,
   align-items: center;
   justify-content: center;
   position: relative;
+  appearance: none;
   width: calc(100% + 24px);
   margin: 0 -12px -2px;
   padding: 6px 12px 4px;
   min-height: 22px;
+  border-radius: 0 0 var(--radius) var(--radius);
 }
 
 .header-toggle:hover .header-handle {
   background: rgb(16 32 24 / 32%);
+}
+
+.header-toggle:focus {
+  outline: none;
+}
+
+.header-toggle:focus-visible {
+  outline: 2px solid rgb(15 138 75 / 45%);
+  outline-offset: -6px;
 }
 
 .header-handle {
