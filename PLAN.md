@@ -1,88 +1,88 @@
-# Kur degalai – kūrimo planas
+# Kur degalai – development plan
 
-Nemokama statinė svetainė (PWA), kuri kasdien perstatoma su aktualiomis degalų kainomis
-visose Lietuvos degalinėse. Vartotojas gali:
+A free static website (PWA) rebuilt daily with current fuel prices at every fuel station
+in Lithuania. Users can:
 
-1. matyti degalines žemėlapyje su kainomis;
-2. įvesti maršrutą ir pamatyti, kur pakeliui pigiausia bei ar apsimoka nusukti;
-3. paspausti „Aplink mane“ ir gauti pigiausias degalines, įvertinus nuvažiavimo sąnaudas;
-4. peržiūrėti istorinį pigiausių kainų grafiką.
+1. see fuel stations on a map with prices;
+2. enter a route and see where fuel is cheapest along the way and whether a detour is worth it;
+3. tap "Around me" to get the cheapest stations nearby, accounting for the cost of driving there;
+4. view a historical chart of the cheapest daily prices.
 
-Už Lietuvos ribų nieko nedengiame.
+Nothing outside Lithuania is covered.
 
 ---
 
-## 1. Architektūra
+## 1. Architecture
 
 ```
-┌──────────────────────────────┐   kasdien (cron, GitHub Actions)
-│  Duomenų konvejeris (Node)   │
-│  OSM degalinės + kainų       │──► data/stations.json
-│  adapteriai → normalizavimas │──► data/prices/YYYY-MM-DD.json
-│  → validacija → istorija     │──► data/history.json
+┌──────────────────────────────┐   daily (cron, GitHub Actions)
+│  Data pipeline (Node)        │
+│  OSM stations + price        │──► data/stations.json
+│  adapters → normalisation    │──► data/prices/YYYY-MM-DD.json
+│  → validation → history      │──► data/history.json
 └──────────────┬───────────────┘
                │ commit + build
                ▼
 ┌──────────────────────────────┐
-│  Statinė svetainė (Vite+TS)  │  MapLibre GL, PWA, be backend'o
-│  – žemėlapis                 │
-│  – „Aplink mane“             │  ← geolokacija, haversine + kelio koef.
-│  – maršrutas                 │  ← geokodavimas + maršrutų API
-│  – istorijos grafikas        │
+│  Static site (Vite + TS)     │  MapLibre GL, PWA, no backend
+│  – map                       │
+│  – "Around me"               │  ← geolocation, haversine × road factor
+│  – route                     │  ← geocoding + routing API
+│  – history chart             │
 └──────────────────────────────┘
-        hostinama GitHub Pages / Cloudflare Pages (nemokamai)
+        hosted on GitHub Pages / Cloudflare Pages (free)
 ```
 
-Pagrindinis principas: **git yra duomenų bazė**. Kiekviena diena – vienas JSON failas,
-istorija – agreguotas failas. Serverio (backend) nėra; vienintelės išorinės užklausos
-iš naršyklės – žemėlapio plytelės, geokodavimas ir maršrutas.
+Core principle: **git is the database**. One JSON file per day, plus an aggregated
+history file. There is no backend; the only external requests from the browser are
+map tiles, geocoding and routing.
 
-### Technologijos
+### Technology choices
 
-| Sritis | Pasirinkimas | Kodėl |
+| Area | Choice | Why |
 |---|---|---|
-| Statinis build'as | Vite + TypeScript (be framework'o arba Preact) | maži bundle'ai, paprasta |
-| Žemėlapis | MapLibre GL JS + OpenFreeMap / Protomaps PMTiles | nemokama, vektorinės plytelės, be API rakto |
-| Degalinių sąrašas | OpenStreetMap (Overpass API, `amenity=fuel`, LT ribos) | atviri duomenys, koordinatės, brand'ai |
-| Geokodavimas | Photon (komoot) arba Nominatim (su LT filtru) | nemokama, ribotas naudojimas – tinka |
-| Maršrutai | OSRM (žr. 5 sk. – variantai) | greitas, atviras |
-| Grafikas | uPlot (arba Chart.js) | mažas, greitas dideliems laiko intervalams |
-| PWA | vite-plugin-pwa (manifest + service worker) | „veikia kaip programėlė“, offline paskutiniai duomenys |
-| CI | GitHub Actions cron (kasdien ~06:00 LT) | nemokama, commit'ina duomenis ir deploy'ina |
-| Testai | Vitest (konvejeris, skaičiavimai), Playwright (kritiniai UI srautai) | |
+| Static build | Vite + TypeScript (no framework, or Preact) | small bundles, simple |
+| Map | MapLibre GL JS + OpenFreeMap / Protomaps PMTiles | free, vector tiles, no API key |
+| Station list | OpenStreetMap (Overpass API, `amenity=fuel`, LT boundary) | open data, coordinates, brands |
+| Geocoding | Photon (komoot) or Nominatim (filtered to LT) | free, rate limits are acceptable |
+| Routing | OSRM (see section 5 – options) | fast, open |
+| Chart | uPlot (or Chart.js) | tiny, fast on long time ranges |
+| PWA | vite-plugin-pwa (manifest + service worker) | "works like an app", offline last-known data |
+| CI | GitHub Actions cron (daily ~06:00 LT) | free, commits data and deploys |
+| Tests | Vitest (pipeline, calculations), Playwright (critical UI flows) | |
 
 ---
 
-## 2. Duomenų modelis
+## 2. Data model
 
 ```ts
-// data/stations.json – retai kinta, generuojama iš OSM + rankinių pataisymų
+// data/stations.json – changes rarely, generated from OSM + manual overrides
 interface Station {
-  id: string;            // stabilus: "osm:node:123456"
+  id: string;            // stable: "osm:node:123456"
   name: string;
-  brand: string;         // normalizuota: "circle-k", "viada", "orlen", "neste", ...
+  brand: string;         // normalised: "circle-k", "viada", "orlen", "neste", ...
   lat: number; lon: number;
   address?: string;
   city?: string;
-  fuels: FuelType[];     // kokius degalus siūlo
-  sourceIds: Record<string, string>; // susiejimas su kainų šaltinių ID
+  fuels: FuelType[];     // which fuels are offered
+  sourceIds: Record<string, string>; // mapping to price-source IDs
 }
 
-type FuelType = "95" | "98" | "D" | "LPG"; // vėliau: "HVO", "D+", "95+"
+type FuelType = "95" | "98" | "D" | "LPG"; // later: "HVO", "D+", "95+"
 
-// data/prices/YYYY-MM-DD.json – dienos momentinė nuotrauka
+// data/prices/YYYY-MM-DD.json – daily snapshot
 interface DailyPrices {
   date: string;                           // "2026-09-12"
   generatedAt: string;                    // ISO
   prices: Record<string /*stationId*/, Partial<Record<FuelType, PriceEntry>>>;
 }
 interface PriceEntry {
-  price: number;        // EUR/l, 3 skaitmenys po kablelio
-  source: string;       // adapterio pavadinimas
-  observedAt: string;   // kada šaltinis matė kainą
+  price: number;        // EUR/l, 3 decimals
+  source: string;       // adapter name
+  observedAt: string;   // when the source observed the price
 }
 
-// data/history.json – agreguota, naudojama grafikui
+// data/history.json – aggregated, used by the chart
 interface HistoryPoint {
   date: string;
   byFuel: Record<FuelType, {
@@ -93,21 +93,21 @@ interface HistoryPoint {
 }
 ```
 
-Svetainė kraunasi `stations.json` (~1 000 degalinių, ~150 KB gzip) + naujausią
-`prices/*.json` + `history.json`. Visa filtravimo/skaičiavimo logika – kliente.
+The site loads `stations.json` (~1,000 stations, ~150 KB gzip) + the latest
+`prices/*.json` + `history.json`. All filtering and calculations run client-side.
 
 ---
 
-## 3. Duomenų konvejeris (`scripts/`)
+## 3. Data pipeline (`scripts/`)
 
-### 3.1 Degalinių sąrašas
-- Overpass užklausa: `amenity=fuel` Lietuvos administracinėje riboje (relation 72596).
-- Brand'o normalizavimas pagal `brand`, `operator`, `name` (žodynas `brands.ts`).
-- Rankinių pataisymų failas `data/overrides/stations.json` (klaidingos koordinatės, trūkstamos degalinės).
-- Atnaujinama kartą per savaitę (ne kasdien) – OSM kinta lėtai.
+### 3.1 Station list
+- Overpass query: `amenity=fuel` within the Lithuanian administrative boundary (relation 72596).
+- Brand normalisation from `brand`, `operator`, `name` (dictionary in `brands.ts`).
+- Manual overrides file `data/overrides/stations.json` (wrong coordinates, missing stations).
+- Refreshed weekly (not daily) – OSM changes slowly.
 
-### 3.2 Kainų adapteriai
-Bendras interfeisas:
+### 3.2 Price adapters
+Common interface:
 
 ```ts
 interface PriceSource {
@@ -116,186 +116,182 @@ interface PriceSource {
 }
 ```
 
-Kandidatai (kiekvienam – atskiras adapteris, atskirai įjungiamas/išjungiamas):
+Candidates (one adapter per source, individually enabled/disabled):
 
-| Šaltinis | Tipas | Pastabos |
+| Source | Type | Notes |
 |---|---|---|
-| Tinklų svetainės (Circle K, Viada, Orlen, Neste, Baltic Petroleum, Alauša, Emsi, Jozita ir kt.) | oficialios kainos pagal degalinę | tiksliausia; reikia peržiūrėti kiekvienos svetainės naudojimo sąlygas ir `robots.txt` |
-| Kainų agregatoriai (pvz. degalu-kainos.lt tipo) | vartotojų/tinklų pranešimai | platesnė aprėptis, bet reikia leidimo ir kokybės kontrolės |
-| EU Weekly Oil Bulletin | šalies vidurkis | tik kontekstui / validacijai, ne pagal degalinę |
+| Chain websites (Circle K, Viada, Orlen, Neste, Baltic Petroleum, Alauša, Emsi, Jozita, etc.) | official per-station prices | most accurate; review each site's terms of use and `robots.txt` |
+| Price aggregators (e.g. degalu-kainos.lt style) | user/chain reports | wider coverage, but needs permission and quality control |
+| EU Weekly Oil Bulletin | national average | context / validation only, not per station |
 
-Svarbu: prieš įjungiant šaltinį – patikrinti teisinę pusę (ToS, atribucija). Pirmame etape
-pradedame nuo 2–3 didžiausių tinklų, kurie kainas skelbia viešai pagal degalinę.
+Important: check the legal side (ToS, attribution) before enabling a source. Phase one starts
+with the 2–3 largest chains that publish per-station prices publicly.
 
-### 3.3 Susiejimas (matching)
-- Šaltinio degalinė → OSM degalinė: tas pats brand'as + atstumas < 300 m; jei koordinatių
-  nėra – geokoduojamas adresas (cache'inamas `data/cache/geocode.json`).
-- Nesusietos degalinės patenka į `reports/unmatched.json` – peržiūrima rankomis, papildomas
-  `overrides`.
+### 3.3 Matching
+- Source station → OSM station: same brand + distance < 300 m; if no coordinates, geocode the
+  address (cached in `data/cache/geocode.json`).
+- Unmatched stations go to `reports/unmatched.json` – reviewed manually, `overrides` extended.
 
-### 3.4 Validacija
-- Kainų diapazonai pagal degalų tipą (pvz. 95: 0,90–2,50 €/l); už ribų – atmetama, logas.
-- Šuolio kontrolė: >15 % pokytis per dieną toje pačioje degalinėje – pažymima `suspicious`.
-- Šviežumas: jei šaltinis nedavė duomenų >48 h – naudojama paskutinė žinoma kaina su
-  žyma `stale`, po 7 d. – nerodoma.
-- Jei adapteris grąžina 0 įrašų arba nukrenta – build'as nesulūžta, bet CI sukuria
-  GitHub Issue / praneša (workflow `failure()` žingsnis).
+### 3.4 Validation
+- Price ranges per fuel type (e.g. 95: 0.90–2.50 €/l); out-of-range values are dropped and logged.
+- Jump check: >15 % change in one day at the same station is flagged `suspicious`.
+- Freshness: if a source has produced no data for >48 h, the last known price is used with a
+  `stale` flag; after 7 days it is hidden.
+- If an adapter returns 0 records or crashes, the build does not fail, but CI opens a GitHub
+  Issue / sends a notification (workflow `failure()` step).
 
-### 3.5 Istorija
-- Po kiekvienos dienos snapshot'o perskaičiuojamas `history.json` (min/mediana/max pagal
-  degalų tipą, pagal tinklą, pigiausia degalinė).
-- Senų dienų failai lieka repozitorijoje (≈ 100–200 KB/d.; po metų ~50 MB – priimtina;
-  jei išaugs – archyvuojama į metinius failus).
+### 3.5 History
+- After each daily snapshot, `history.json` is recomputed (min/median/max per fuel type, per
+  brand, cheapest station).
+- Old daily files stay in the repo (≈ 100–200 KB/day; ~50 MB after a year – acceptable;
+  archive into yearly files if it grows too much).
 
 ### 3.6 CI (`.github/workflows/daily.yml`)
-1. `cron: "0 3 * * *"` (06:00 LT) + rankinis `workflow_dispatch`.
-2. `npm run pipeline` → generuoja `data/`.
-3. `git commit -m "data: YYYY-MM-DD"` (tik jei kas nors pasikeitė).
-4. `npm run build` → deploy į Pages.
-5. Klaidos atveju – pranešimas.
+1. `cron: "0 3 * * *"` (06:00 LT) + manual `workflow_dispatch`.
+2. `npm run pipeline` → generates `data/`.
+3. `git commit -m "data: YYYY-MM-DD"` (only if something changed).
+4. `npm run build` → deploy to Pages.
+5. Notification on failure.
 
 ---
 
-## 4. Vartotojo sąsaja
+## 4. User interface
 
-### 4.1 Žemėlapis (pagrindinis vaizdas)
-- Lietuvos ribos, pradinis zoom'as – visa šalis; žemėlapio `maxBounds` – LT.
-- Degalinės kaip MapLibre sluoksnis (GeoJSON) su klasteriais mažuose zoom'uose.
-- Žymeklio spalva pagal kainos percentilę (pigu → brangu) pasirinktam degalų tipui.
-- Viršuje: degalų tipo pasirinkimas (95 / 98 / D / LPG), paieškos laukas, mygtukai
-  „Aplink mane“ ir „Maršrutas“.
-- Paspaudus degalinę – popup: pavadinimas, tinklas, visos kainos, atnaujinimo laikas,
-  „Nuvykti“ (nuoroda į išorinę navigaciją), kainos mini-grafikas (iš dienų failų – pasirinktinai).
-- Apačioje (mobile – „bottom sheet“): sąrašas matomų degalinių, rūšiuojamas pagal kainą.
+### 4.1 Map (main view)
+- Lithuanian bounds, initial zoom shows the whole country; map `maxBounds` = LT.
+- Stations as a MapLibre layer (GeoJSON) with clustering at low zoom levels.
+- Marker colour by price percentile (cheap → expensive) for the selected fuel type.
+- Top bar: fuel type selector (95 / 98 / D / LPG), search box, "Around me" and "Route" buttons.
+- Tapping a station opens a popup: name, brand, all prices, last update, "Navigate" (link to
+  external navigation), price mini-chart (from daily files – optional).
+- Bottom (mobile: bottom sheet): list of visible stations sorted by price.
 
-### 4.2 Vartotojo nustatymai (localStorage)
-- Degalų tipas.
-- Automobilio sąnaudos (l/100 km), numatyta 7,0.
-- Kiek litrų planuoja pilti, numatyta 40.
-- Laiko vertė €/h (numatyta 0 – tada vertinamos tik degalų sąnaudos; galima įsijungti, pvz. 10 €/h).
-- Kelio koeficientas (haversine → kelio atstumas), numatyta 1,3 – kai nėra maršrutų API.
+### 4.2 User settings (localStorage)
+- Fuel type.
+- Vehicle consumption (l/100 km), default 7.0.
+- Litres planned to fill, default 40.
+- Value of time €/h (default 0 – only fuel costs are counted; can be enabled, e.g. 10 €/h).
+- Road factor (haversine → road distance), default 1.3 – used when no routing API is available.
 
-### 4.3 „Aplink mane“
-1. `navigator.geolocation` (arba rankinis taškas žemėlapyje, jei neleidžia).
-2. Atrenkamos degalinės R = 15 km spinduliu (keičiamas: 5 / 15 / 30 km).
-3. Kiekvienai skaičiuojama **grynoji nauda** (žr. 6 sk.), bazinė kaina = artimiausios
-   degalinės su pasirinktais degalais kaina.
-4. Sąrašas rūšiuojamas pagal grynąją naudą; rodoma: kaina, atstumas, „sutaupysi ~X €“ arba
-   „neapsimoka (−Y €)“.
+### 4.3 "Around me"
+1. `navigator.geolocation` (or a manual point on the map if denied).
+2. Stations within R = 15 km are selected (switchable: 5 / 15 / 30 km).
+3. **Net benefit** is calculated for each (see section 6); baseline price = the price at the
+   nearest station offering the selected fuel.
+4. List sorted by net benefit; shows price, distance, "you save ~X €" or "not worth it (−Y €)".
 
-### 4.4 Maršrutas
-1. Pradžia (numatyta – mano vieta) ir tikslas – geokodavimas su LT filtru, autocompletion.
-2. Gaunamas maršrutas (geometrija + trukmė).
-3. **Koridorius**: degalinės iki 500 m nuo maršruto laikomos „pakeliui“ (nusukimas ≈ 0);
-   degalinės iki N km (numatyta 5 km, keičiama) – kandidatės nusukti.
-4. Bazinė kaina = pigiausia degalinė koridoriuje. Kandidatėms skaičiuojamas nusukimas:
-   - tiksliai: maršrutų API `table`/`route` per tarpinį tašką (papildomas atstumas ir laikas);
-   - pigiai (fallback): 2 × haversine iki maršruto artimiausio taško × kelio koef., laikas
-     pagal 50 km/h.
-5. Rezultatas: maršrutas žemėlapyje, degalinės pakeliui + rekomenduojami nusukimai su
-   „+X km, +Y min, sutaupai Z €“. Aiškiai pažymima „verta“ / „neverta“.
-6. Kad neapkrauti API – nusukimas skaičiuojamas tik 10–15 geriausių kandidačių pagal kainą.
+### 4.4 Route
+1. Start (default: my location) and destination – geocoding filtered to LT, with autocomplete.
+2. Fetch the route (geometry + duration).
+3. **Corridor**: stations within 500 m of the route count as "on the way" (detour ≈ 0);
+   stations within N km (default 5 km, adjustable) are detour candidates.
+4. Baseline price = cheapest station in the corridor. For candidates, the detour is computed:
+   - precisely: routing API `table`/`route` via the station as a waypoint (extra distance and time);
+   - cheaply (fallback): 2 × haversine to the nearest point on the route × road factor, time at 50 km/h.
+5. Result: route on the map, stations on the way + recommended detours with
+   "+X km, +Y min, saves Z €". Clearly marked "worth it" / "not worth it".
+6. To limit API usage, detours are computed only for the top 10–15 candidates by price.
 
-### 4.5 Istorinis grafikas
-- Atskiras skydelis / puslapis `/istorija`.
-- Linijos: pigiausia kaina šalyje ir mediana pasirinktam degalų tipui; laikotarpis
-  1 mėn / 3 mėn / 1 m / viskas.
-- Papildomai: pagal tinklą (perjungiama), tooltip'e – kurioje degalinėje tą dieną buvo pigiausia.
-- Duomenys iš `history.json` – vienas failas, be papildomų užklausų.
+### 4.5 History chart
+- Separate panel / page `/history`.
+- Lines: cheapest price in the country and median for the selected fuel type; ranges
+  1 month / 3 months / 1 year / all.
+- Additionally: per brand (toggle); tooltip shows which station was cheapest that day.
+- Data from `history.json` – a single file, no extra requests.
 
-### 4.6 PWA, našumas, kalba
-- Manifest, ikonos, „Įdiegti“ užuomina; service worker cache'ina app shell ir paskutinius
-  `data/*.json` (offline rodo paskutines žinomas kainas su data).
-- Tikslas: < 300 KB JS gzip, LCP < 2,5 s mobiliajame 4G.
-- Kalba: lietuvių (numatyta), tekstai atskirame `i18n/lt.json`, kad vėliau būtų galima pridėti EN.
-- Prieinamumas: klaviatūros navigacija sąraše, kontrastai, ARIA žemėlapio valdikliams.
-- SEO: statiniai puslapiai `/`, `/istorija`, `/apie`; „apie“ – šaltiniai, atribucija
-  (OSM, OpenFreeMap, Photon/OSRM), atnaujinimo laikas, atsakomybės apribojimas.
+### 4.6 PWA, performance, language
+- Manifest, icons, "Install" hint; service worker caches the app shell and the latest
+  `data/*.json` (offline shows last known prices with their date).
+- Target: < 300 KB JS gzip, LCP < 2.5 s on mobile 4G.
+- Language: Lithuanian (default), strings in a separate `i18n/lt.json` so EN can be added later.
+- Accessibility: keyboard navigation in the list, contrast, ARIA for map controls.
+- SEO: static pages `/`, `/history`, `/about`; "about" lists sources, attribution
+  (OSM, OpenFreeMap, Photon/OSRM), last update time, disclaimer.
 
 ---
 
-## 5. Maršrutų servisas – variantai
+## 5. Routing service – options
 
-Statinei svetainei tai vienintelė vieta, kur reikia „gyvo“ serviso.
+For a static site this is the only place where a "live" service is needed.
 
-| Variantas | Pliusai | Minusai |
+| Option | Pros | Cons |
 |---|---|---|
-| **A. OSRM viešas demo serveris** | nulis darbo | ne produkcijai, nepatikima |
-| **B. OpenRouteService / kitas nemokamas API su raktu** | patikima, `matrix` endpoint'as | dienos limitai (~2 000 užklausų), raktas viešas kliente (riboti domenu) |
-| **C. Savas OSRM LT ekstraktui (Docker, nemokamas tier'as – Fly.io / Oracle free)** | pilna kontrolė, LT grafas ~200 MB RAM | jau ne 100 % statinis, priežiūra |
-| **D. Maršrutai naršyklėje (LT kelių grafas → WASM Dijkstra/CH)** | jokio serverio, tikrai nemokama | sudėtinga, ~10–20 MB parsisiuntimas |
+| **A. Public OSRM demo server** | zero work | not for production, unreliable |
+| **B. OpenRouteService / other free API with a key** | reliable, `matrix` endpoint | daily limits (~2,000 requests), key is public in the client (restrict by domain) |
+| **C. Own OSRM for the LT extract (Docker, free tier – Fly.io / Oracle free)** | full control, LT graph ~200 MB RAM | no longer 100 % static, maintenance |
+| **D. In-browser routing (LT road graph → WASM Dijkstra/CH)** | no server, truly free | complex, ~10–20 MB download |
 
-Rekomendacija: **pradėti nuo B** su fallback'u į haversine heuristiką (svetainė veikia ir be
-API); jei naudojimas išauga – pereiti į C. D – tik jei norisi visiškai be išorinių servisų.
+Recommendation: **start with B** with a haversine-heuristic fallback (the site works without
+the API); move to C if usage grows. D only if the goal is zero external services.
 
 ---
 
-## 6. Sąnaudų / naudos skaičiavimas
+## 6. Cost / benefit calculation
 
 ```
-sutaupymas      = (bazinė_kaina − degalinės_kaina) × litrai
-degalų_sąnaudos = papildomi_km × (sąnaudos_l_100km / 100) × degalinės_kaina
-laiko_sąnaudos  = papildomos_min / 60 × laiko_vertė_eur_h
-grynoji_nauda   = sutaupymas − degalų_sąnaudos − laiko_sąnaudos
+savings       = (baseline_price − station_price) × litres
+fuel_cost     = extra_km × (consumption_l_100km / 100) × station_price
+time_cost     = extra_min / 60 × time_value_eur_h
+net_benefit   = savings − fuel_cost − time_cost
 ```
 
-- „Aplink mane“: papildomi_km = kelio atstumas iki degalinės (ir atgal, jei vartotojas
-  pažymi „grįžtu į tą pačią vietą“ – numatyta taip).
-- Maršrute: papildomi_km / min = (maršrutas per degalinę) − (tiesioginis maršrutas).
-- Rodyti skaidriai: „Pigiau 0,05 €/l × 40 l = 2,00 €; nusukimas 3,2 km ≈ 0,35 € degalų,
-  +4 min → grynoji nauda +1,65 €“.
-- Vienetų testai su fiksuotais pavyzdžiais (`calc.test.ts`).
+- "Around me": extra_km = road distance to the station (and back, if the user ticks
+  "I return to the same place" – default on).
+- Route: extra_km / min = (route via station) − (direct route).
+- Show transparently: "0.05 €/l cheaper × 40 l = 2.00 €; detour 3.2 km ≈ 0.35 € fuel,
+  +4 min → net benefit +1.65 €".
+- Unit tests with fixed examples (`calc.test.ts`).
 
 ---
 
-## 7. Etapai
+## 7. Phases
 
-### 0. Pagrindas
-- Repo struktūra (`scripts/`, `src/`, `data/`, `public/`), Vite + TS, ESLint/Prettier, Vitest.
-- GitHub Actions: lint + test PR'ams; Pages deploy iš `main`.
-- Rezultatas: tuščia svetainė su Lietuvos žemėlapiu deploy'inta.
+### 0. Foundation
+- Repo structure (`scripts/`, `src/`, `data/`, `public/`), Vite + TS, ESLint/Prettier, Vitest.
+- GitHub Actions: lint + test on PRs; Pages deploy from `main`.
+- Outcome: empty site with a map of Lithuania deployed.
 
-### 1. Duomenų konvejeris MVP
-- OSM degalinių importas + brand'ų normalizavimas.
-- 2–3 kainų adapteriai, matching, validacija, `prices/` + `history.json`.
-- Kasdienis cron workflow su commit'u.
-- Rezultatas: repo kasdien pasipildo duomenimis; `reports/unmatched.json` peržiūra.
+### 1. Data pipeline MVP
+- OSM station import + brand normalisation.
+- 2–3 price adapters, matching, validation, `prices/` + `history.json`.
+- Daily cron workflow with commit.
+- Outcome: repo gains data daily; `reports/unmatched.json` reviewed.
 
-### 2. Žemėlapis
-- Degalinių sluoksnis su kainomis, klasteriai, degalų tipo perjungimas, popup'ai, sąrašas.
-- Rezultatas: naudinga svetainė be maršrutų.
+### 2. Map
+- Station layer with prices, clustering, fuel type switch, popups, list.
+- Outcome: useful site without routing.
 
-### 3. „Aplink mane“
-- Geolokacija, nustatymai (sąnaudos, litrai), grynosios naudos skaičiavimas su haversine.
-- Rezultatas: pirmas „ar apsimoka“ funkcionalumas.
+### 3. "Around me"
+- Geolocation, settings (consumption, litres), net-benefit calculation with haversine.
+- Outcome: first "is it worth it" feature.
 
-### 4. Maršrutas
-- Geokodavimas, maršrutų API integracija (variantas B) + fallback, koridorius, nusukimų
-  vertinimas, UI su rekomendacijomis.
+### 4. Route
+- Geocoding, routing API integration (option B) + fallback, corridor, detour evaluation,
+  UI with recommendations.
 
-### 5. Istorija
-- `history.json` grafikas, laikotarpiai, tinklų palyginimas, mini-grafikas popup'e.
+### 5. History
+- `history.json` chart, ranges, brand comparison, mini-chart in popups.
 
-### 6. PWA ir kokybė
-- Manifest / service worker / offline, našumo optimizacija, prieinamumas, SEO, „apie“ puslapis.
-- Playwright testai: žemėlapis kraunasi, „aplink mane“ su mock geolokacija, maršruto srautas.
+### 6. PWA and quality
+- Manifest / service worker / offline, performance optimisation, accessibility, SEO, "about" page.
+- Playwright tests: map loads, "around me" with mocked geolocation, route flow.
 
-### 7. Priežiūra ir stebėjimas
-- Adapterių gedimų pranešimai, duomenų kokybės ataskaita CI santraukoje.
-- Likusių tinklų adapteriai, vartotojų pranešimų apie klaidingas kainas forma (GitHub Issue
-  šablonas arba paprasta forma per nemokamą servisą).
+### 7. Maintenance and monitoring
+- Adapter failure notifications, data quality report in the CI summary.
+- Adapters for remaining chains, a form for users to report wrong prices (GitHub Issue
+  template or a simple form via a free service).
 
 ---
 
-## 8. Rizikos ir prielaidos
+## 8. Risks and assumptions
 
-- **Duomenų šaltiniai** – didžiausia rizika. Lietuvoje nėra privalomo oficialaus kainų feed'o
-  pagal degalinę (kaip DE/AT), tad remiamasi tinklų svetainėmis / agregatoriais. Kiekvienas
-  šaltinis gali keisti struktūrą – adapteriai izoliuoti, gedimas neišjungia svetainės.
-- **Teisiniai aspektai** – prieš įjungiant šaltinį patikrinti naudojimo sąlygas; visur rodyti
-  atribuciją ir kainų datą/laiką; „kainos gali skirtis“ atsakomybės apribojimas.
-- **Nemokamų servisų limitai** (geokodavimas, maršrutai) – cache'inti kliente, riboti užklausų
-  skaičių (debounce, top-N kandidatės), turėti heuristinį fallback'ą.
-- **Repo augimas** dėl dienos failų – stebėti; esant reikalui archyvuoti į metinius failus.
-- **Prielaidos** (galima keisti): degalų tipai – 95, 98, D, LPG; kainos atnaujinamos 1×/d.;
-  numatytosios sąnaudos 7 l/100 km, 40 l, laiko vertė 0 €/h; kalba – tik LT pirmame etape.
+- **Data sources** – the biggest risk. Lithuania has no mandatory official per-station price
+  feed (unlike DE/AT), so chain websites / aggregators are the basis. Any source may change
+  its structure – adapters are isolated, and a failure does not take the site down.
+- **Legal** – check terms of use before enabling a source; always show attribution and the
+  price date/time; "prices may differ" disclaimer.
+- **Free service limits** (geocoding, routing) – cache on the client, limit request counts
+  (debounce, top-N candidates), keep a heuristic fallback.
+- **Repo growth** from daily files – monitor; archive into yearly files if needed.
+- **Assumptions** (changeable): fuel types 95, 98, D, LPG; prices updated once a day;
+  defaults 7 l/100 km, 40 l, time value 0 €/h; Lithuanian-only UI in phase one.
