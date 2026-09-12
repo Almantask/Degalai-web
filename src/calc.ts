@@ -19,8 +19,7 @@ export interface BenefitResult {
 export function netBenefit(input: BenefitInput): BenefitResult {
   const deltaPerLitre = input.baselinePrice - input.stationPrice;
   const savings = deltaPerLitre * input.litres;
-  const fuelCost =
-    input.extraKm * (input.consumptionLPer100km / 100) * input.stationPrice;
+  const fuelCost = input.extraKm * (input.consumptionLPer100km / 100) * input.stationPrice;
   const timeCost = (input.extraMin / 60) * input.timeValueEurH;
   const net = savings - fuelCost - timeCost;
   return {
@@ -32,9 +31,17 @@ export function netBenefit(input: BenefitInput): BenefitResult {
   };
 }
 
+/** Lithuania motorway limit — used for a best-case driving ETA. */
+export const MAX_ROAD_SPEED_KMH = 130;
+
 export function extraMinutesFromKm(extraKm: number, speedKmh = 50): number {
   if (speedKmh <= 0) return 0;
   return (extraKm / speedKmh) * 60;
+}
+
+/** Minutes to cover `km` driving at the national maximum speed. */
+export function minutesAtMaxSpeed(km: number, speedKmh = MAX_ROAD_SPEED_KMH): number {
+  return extraMinutesFromKm(km, speedKmh);
 }
 
 export function round3(n: number): number {

@@ -25,6 +25,16 @@ export function formatKm(km: number): string {
   return `${n} km`;
 }
 
+export function formatDuration(minutes: number): string {
+  if (minutes < 0.5) return t("units.underMin");
+  const m = Math.max(1, Math.round(minutes));
+  if (m < 60) return t("units.min", { n: m });
+  const h = Math.floor(m / 60);
+  const rem = m % 60;
+  if (rem === 0) return t("units.hour", { h });
+  return t("units.hourMin", { h, m: rem });
+}
+
 export function formatDate(isoDate: string): string {
   const d = new Date(isoDate.includes("T") ? isoDate : `${isoDate}T12:00:00Z`);
   return new Intl.DateTimeFormat(intlLocale(), {

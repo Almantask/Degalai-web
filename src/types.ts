@@ -85,7 +85,7 @@ export interface UserSettings {
 
 export const DEFAULT_SETTINGS: UserSettings = {
   fuel: "D",
-  routePreference: "shortest",
+  routePreference: "fastest",
   consumption: 7,
   litres: 40,
   timeValue: 0,
