@@ -54,7 +54,7 @@ test("around me with mocked geolocation (Vilnius)", async ({ page }) => {
 test("fuel filter switches petrol grades", async ({ page }) => {
   await page.goto("/?fuel=petrol");
   await page.getByRole("button", { name: "Benzinas" }).click();
-  await expect(page.getByRole("button", { name: "95" })).toBeVisible();
-  await page.getByRole("button", { name: "98" }).click();
+  await expect(page.getByRole("button", { name: "95", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "98", exact: true }).click();
   await expect(page).toHaveURL(/fuel=98/);
 });
