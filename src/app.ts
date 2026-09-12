@@ -1,12 +1,31 @@
 import maplibregl from "maplibre-gl";
-import uPlot from "uplot";
 import "maplibre-gl/dist/maplibre-gl.css";
-import "uplot/dist/uPlot.min.css";
-import { extraMinutesFromKm, netBenefit } from "./calc.ts";
+import { extraMinutesFromKm, minutesAtMaxSpeed, netBenefit } from "./calc.ts";
 import { loadAppData, type AppData } from "./data.ts";
-import { formatDate, formatKm, formatMoney, formatPrice, escapeHtml } from "./format.ts";
-import { distanceAlongLineKm, distanceToPolylineKm, nearestPointOnPolyline, roadDistanceKm, type LngLat } from "./geo.ts";
-import { brandLabel, fuelGroupOf, FUEL_BY_GROUP, setLocale, t, tPlural, type Locale, type MessageKey } from "./i18n/index.ts";
+import {
+  formatDate,
+  formatDuration,
+  formatKm,
+  formatMoney,
+  formatPrice,
+  escapeHtml,
+} from "./format.ts";
+import {
+  distanceAlongLineKm,
+  distanceToPolylineKm,
+  nearestPointOnPolyline,
+  roadDistanceKm,
+  type LngLat,
+} from "./geo.ts";
+import {
+  fuelGroupOf,
+  FUEL_BY_GROUP,
+  setLocale,
+  t,
+  tPlural,
+  type Locale,
+  type MessageKey,
+} from "./i18n/index.ts";
 import {
   createMap,
   flyToStation,
@@ -19,7 +38,7 @@ import {
 import { hrefFor, navigate, parsePath, pathFor, type View } from "./router.ts";
 import { fetchRoute, geocode, type GeoHit, type RouteResult } from "./routing.ts";
 import { fuelFromUrl, loadSettings, saveSettings } from "./settings.ts";
-import type { FuelType, Station, UserSettings } from "./types.ts";
+import type { FuelType, Station } from "./types.ts";
 import { DEFAULT_SETTINGS } from "./types.ts";
 
 interface AroundRow {
@@ -42,6 +61,8 @@ interface RouteStationRow {
   connector?: [LngLat, LngLat];
 }
 
+type DestStatus = "idle" | "locating" | "routing" | "denied" | "not-found";
+
 export async function startApp(root: HTMLElement): Promise<void> {
   const settings = loadSettings();
   const parsed = parsePath();
@@ -53,19 +74,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let view: View = parsed.view;
   const data: AppData = await loadAppData();
   let userLocation: LngLat | null = null;
-  let pickMode: "around" | "route-start" | "route-end" | null = null;
+  let pickMode: "around" | "dest-start" | null = null;
   let aroundOpen = false;
-  let routeOpen = false;
   let settingsOpen = false;
+  let listMinimized = false;
   let aroundRows: AroundRow[] = [];
   let aroundOrigin: LngLat | null = null;
   let routeRows: RouteStationRow[] = [];
   let routeLine: RouteResult | null = null;
-  let startHit: GeoHit | { label: string; lat: number; lon: number } | "mylocation" | null = null;
   let endHit: GeoHit | null = null;
+  let destQuery = "";
+  let destStatus: DestStatus = "idle";
+  let pendingDest = false;
   let popup: maplibregl.Popup | null = null;
-  let chart: uPlot | null = null;
-  let searchQuery = "";
   let locateStatus: "idle" | "pending" | "denied" = "idle";
 
   root.innerHTML = shellHtml();
@@ -103,9 +124,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       const act = tEl.dataset.act;
       if (act === "view" || act === "locale") e.preventDefault();
       if (act === "view") {
-        const v = tEl.dataset.view as View;
-        view = v;
-        navigate(v, locale, settings.fuel);
+        view = "map";
+        navigate(view, locale, settings.fuel);
         render();
       } else if (act === "locale") {
         const loc = tEl.dataset.locale as Locale;
@@ -121,7 +141,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       } else if (act === "fuel-group") {
         const g = tEl.dataset.group as "diesel" | "petrol" | "gas";
         const fuels = FUEL_BY_GROUP[g];
-        settings.fuel = g === "petrol" && (settings.fuel === "95" || settings.fuel === "98") ? settings.fuel : fuels[0];
+        settings.fuel =
+          g === "petrol" && (settings.fuel === "95" || settings.fuel === "98")
+            ? settings.fuel
+            : fuels[0];
         persistFuel();
         onFuelChange();
       } else if (act === "fuel") {
@@ -130,61 +153,41 @@ export async function startApp(root: HTMLElement): Promise<void> {
         onFuelChange();
       } else if (act === "around") {
         aroundOpen = !aroundOpen;
-        routeOpen = false;
+        settingsOpen = false;
         if (aroundOpen) void runAroundMe();
-        render();
-      } else if (act === "route") {
-        routeOpen = !routeOpen;
-        aroundOpen = false;
-        if (routeOpen && !startHit) {
-          startHit = "mylocation";
-          requestLocation(true);
-        }
         render();
       } else if (act === "settings") {
         settingsOpen = !settingsOpen;
+        aroundOpen = false;
         render();
       } else if (act === "close-panel") {
         aroundOpen = false;
-        routeOpen = false;
         settingsOpen = false;
-        pickMode = null;
+        if (pickMode === "around") pickMode = null;
         render();
       } else if (act === "pick-around") {
         pickMode = "around";
         aroundOpen = true;
         render();
-      } else if (act === "use-loc") {
-        startHit = "mylocation";
-        requestLocation(true);
-        render();
-      } else if (act === "route-go") {
-        void runRoute();
       } else if (act === "radius") {
         settings.aroundRadiusKm = Number(tEl.dataset.km);
         saveSettings(settings);
         void runAroundMe();
-      } else if (act === "pref") {
-        settings.routePreference = tEl.dataset.pref as UserSettings["routePreference"];
-        saveSettings(settings);
-        render();
       } else if (act === "station") {
         openStation(tEl.dataset.id!);
-      } else if (act === "clear-route") {
-        routeLine = null;
-        routeRows = [];
-        setRouteData(map, null);
-        refreshMap();
-        render();
+      } else if (act === "clear-dest") {
+        clearDestination();
+      } else if (act === "toggle-list") {
+        listMinimized = !listMinimized;
+        renderList();
       }
     });
 
     root.addEventListener("input", (e) => {
       const el = e.target as HTMLInputElement;
-      if (el.id === "search") {
-        searchQuery = el.value;
-        renderList();
-      } else if (el.id === "set-cons") settings.consumption = num(el.value, DEFAULT_SETTINGS.consumption);
+      if (el.id === "dest") destQuery = el.value;
+      else if (el.id === "set-cons")
+        settings.consumption = num(el.value, DEFAULT_SETTINGS.consumption);
       else if (el.id === "set-litres") settings.litres = num(el.value, DEFAULT_SETTINGS.litres);
       else if (el.id === "set-time") settings.timeValue = num(el.value, 0);
       else if (el.id === "set-factor") settings.roadFactor = num(el.value, 1.3);
@@ -198,15 +201,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
       if (el.id === "set-hide") refreshMap();
       if (aroundOpen) void runAroundMe();
     });
-    root.addEventListener("focusin", (e) => {
-      const el = e.target as HTMLElement;
-      if (el.id === "route-start" || el.id === "route-end") {
-        /* suggestions handled on input */
-      }
-    });
     root.addEventListener("keyup", (e) => {
       const el = e.target as HTMLInputElement;
-      if (el.id === "route-end" || el.id === "route-start") debounceSuggest(el);
+      if (el.id === "dest") debounceSuggest(el);
+    });
+    root.addEventListener("keydown", (e) => {
+      const el = e.target as HTMLInputElement;
+      if (el.id === "dest" && e.key === "Enter") {
+        e.preventDefault();
+        void goDestination(el.value);
+      }
     });
   }
 
@@ -218,23 +222,61 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   async function suggest(el: HTMLInputElement): Promise<void> {
     const hits = await geocode(el.value, locale);
-    const box = root.querySelector(`#${el.id}-sug`);
+    const box = root.querySelector("#dest-sug");
     if (!box) return;
     box.innerHTML = hits
       .map(
-        (h, i) =>
-          `<button type="button" class="sug" data-i="${i}" data-for="${el.id}">${escapeHtml(h.label)}</button>`,
+        (h, i) => `<button type="button" class="sug" data-i="${i}">${escapeHtml(h.label)}</button>`,
       )
       .join("");
     box.querySelectorAll<HTMLButtonElement>(".sug").forEach((btn, i) => {
       btn.addEventListener("click", () => {
         const hit = hits[i];
         el.value = hit.label;
-        if (el.id === "route-start") startHit = hit;
-        else endHit = hit;
+        destQuery = hit.label;
         box.innerHTML = "";
+        void selectDestination(hit);
       });
     });
+  }
+
+  async function goDestination(query: string): Promise<void> {
+    const hits = await geocode(query, locale);
+    if (!hits[0]) {
+      destStatus = "not-found";
+      render();
+      return;
+    }
+    await selectDestination(hits[0]);
+  }
+
+  async function selectDestination(hit: GeoHit): Promise<void> {
+    endHit = hit;
+    destQuery = hit.label;
+    aroundOpen = false;
+    settingsOpen = false;
+    pendingDest = true;
+    if (!userLocation) {
+      destStatus = locateStatus === "denied" ? "denied" : "locating";
+      pickMode = locateStatus === "denied" ? "dest-start" : pickMode;
+      requestLocation(true);
+      render();
+      return;
+    }
+    await runRoute();
+  }
+
+  function clearDestination(): void {
+    endHit = null;
+    destQuery = "";
+    pendingDest = false;
+    destStatus = "idle";
+    routeLine = null;
+    routeRows = [];
+    pickMode = pickMode === "dest-start" ? null : pickMode;
+    setRouteData(map, null);
+    refreshMap();
+    render();
   }
 
   function persistFuel(): void {
@@ -261,7 +303,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       : undefined;
     setStationData(map, data.stations, data.prices, settings.fuel, settings, emphasis);
     if (routeLine) {
-      const detours = routeRows.filter((r) => r.connector).map((r) => r.connector!) ;
+      const detours = routeRows.filter((r) => r.connector).map((r) => r.connector!);
       setRouteData(map, routeLine.geometry, detours);
     }
   }
@@ -269,18 +311,28 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function requestLocation(force: boolean): void {
     if (!navigator.geolocation) {
       locateStatus = "denied";
+      if (pendingDest) {
+        destStatus = "denied";
+        pickMode = "dest-start";
+      }
       return;
     }
     locateStatus = "pending";
+    if (pendingDest) destStatus = "locating";
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         userLocation = { lat: pos.coords.latitude, lon: pos.coords.longitude };
         locateStatus = "idle";
         if (aroundOpen) void runAroundMe();
-        render();
+        if (pendingDest && endHit) void runRoute();
+        else render();
       },
       () => {
         locateStatus = "denied";
+        if (pendingDest) {
+          destStatus = "denied";
+          pickMode = "dest-start";
+        }
         if (force) render();
       },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 60_000 },
@@ -332,42 +384,35 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   async function runRoute(): Promise<void> {
-    const startInput = root.querySelector<HTMLInputElement>("#route-start");
-    const endInput = root.querySelector<HTMLInputElement>("#route-end");
-    let start: LngLat | null = null;
-    if (startHit === "mylocation") start = userLocation;
-    else if (startHit) start = { lat: startHit.lat, lon: startHit.lon };
-    if (!start && startInput?.value) {
-      const hits = await geocode(startInput.value, locale);
-      if (hits[0]) start = { lat: hits[0].lat, lon: hits[0].lon };
-    }
-    if (!start && userLocation) start = userLocation;
-    let end: LngLat | null = endHit ? { lat: endHit.lat, lon: endHit.lon } : null;
-    if (!end && endInput?.value) {
-      const hits = await geocode(endInput.value, locale);
-      if (hits[0]) {
-        endHit = hits[0];
-        end = { lat: hits[0].lat, lon: hits[0].lon };
-      }
-    }
+    const start = userLocation;
+    const end = endHit ? { lat: endHit.lat, lon: endHit.lon } : null;
     if (!end) {
+      destStatus = "idle";
       render();
       return;
     }
     if (!start) {
-      locateStatus = "denied";
+      destStatus = "denied";
+      pickMode = "dest-start";
       render();
       return;
     }
-    userLocation = start;
+    destStatus = "routing";
+    pendingDest = false;
+    pickMode = null;
+    render();
     const res = await fetchRoute(start, end, settings.routePreference);
     if (!res) {
       routeLine = null;
       routeRows = [];
+      destStatus = "not-found";
+      setRouteData(map, null);
+      refreshMap();
       render();
       return;
     }
     routeLine = res;
+    destStatus = "idle";
     await evaluateRouteStations(res);
     refreshMap();
     render();
@@ -468,16 +513,53 @@ export async function startApp(root: HTMLElement): Promise<void> {
       aroundOrigin = ll;
       pickMode = null;
       void runAroundMe();
+      return;
     }
+    if (pickMode === "dest-start" || (pendingDest && !userLocation)) {
+      userLocation = ll;
+      pickMode = null;
+      locateStatus = "idle";
+      if (endHit) void runRoute();
+      else render();
+    }
+  }
+
+  function originForEta(): LngLat | null {
+    return userLocation ?? aroundOrigin;
+  }
+
+  function etaParts(distKm: number): { dist: string; eta: string; label: string } {
+    const dist = formatKm(distKm);
+    const eta = t("list.etaMax", { time: formatDuration(minutesAtMaxSpeed(distKm)) });
+    return { dist, eta, label: `${dist} · ${eta}` };
+  }
+
+  function stationAddress(s: Station): string {
+    return s.address || s.city || t("list.addressMissing");
   }
 
   function openStation(id: string): void {
     const s = data.stations.find((x) => x.id === id);
     if (!s) return;
+    const routeRow = routeRows.find((r) => r.station.id === id);
+    const aroundRow = aroundRows.find((r) => r.station.id === id);
+    const origin = originForEta();
+    const distKm =
+      routeRow?.distFromStartKm ??
+      aroundRow?.distKm ??
+      (origin
+        ? roadDistanceKm(origin, { lat: s.lat, lon: s.lon }, settings.roadFactor)
+        : undefined);
     popup?.remove();
-    popup = new maplibregl.Popup({ offset: 16, maxWidth: "280px" })
+    popup = new maplibregl.Popup({ offset: 16, maxWidth: "300px" })
       .setLngLat([s.lon, s.lat])
-      .setHTML(stationPopupHtml(s, data.prices))
+      .setHTML(
+        stationPopupHtml(
+          s,
+          data.prices,
+          distKm != null ? { etaLabel: etaParts(distKm).label } : undefined,
+        ),
+      )
       .addTo(map);
     flyToStation(map, s);
   }
@@ -488,14 +570,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const header = root.querySelector("#header")!;
     header.innerHTML = headerHtml();
     const panels = root.querySelector("#panels")!;
-    panels.innerHTML = `${settingsOpen ? settingsHtml() : ""}${aroundOpen ? aroundHtml() : ""}${routeOpen ? routeHtml() : ""}`;
-    const page = root.querySelector<HTMLElement>("#page")!;
-    page.hidden = view === "map";
-    mapDiv.parentElement!.hidden = view !== "map";
-    if (view === "history") page.innerHTML = historyHtml();
-    else if (view === "about") page.innerHTML = aboutHtml();
-    else page.innerHTML = "";
-    if (view === "history") drawChart();
+    panels.innerHTML = `${settingsOpen ? settingsHtml() : ""}${aroundOpen ? aroundHtml() : ""}`;
     renderList();
     const banner = root.querySelector("#banner")!;
     banner.innerHTML = statusHtml();
@@ -503,10 +578,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function renderList(): void {
     const list = root.querySelector("#list")!;
-    if (view !== "map") {
-      list.innerHTML = "";
-      return;
-    }
     if (aroundOpen && aroundRows.length) {
       list.innerHTML = listWrap(
         aroundRows.slice(0, 40).map((r) => {
@@ -514,13 +585,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
             r.benefit.netBenefit > 0
               ? t("around.save", { amount: formatMoney(r.benefit.netBenefit) })
               : t("around.notWorth", { amount: formatMoney(r.benefit.netBenefit) });
-          return stationRow(r.station, r.price, `${formatKm(r.distKm)} · ${worth}`);
+          return stationRow(r.station, r.price, r.distKm, `<span>${escapeHtml(worth)}</span>`);
         }),
       );
       return;
     }
-    if (routeOpen && routeRows.length) {
-      const cheapestOn = routeRows.filter((r) => r.kind === "on").sort((a, b) => a.price - b.price)[0];
+    if (routeLine && routeRows.length) {
+      const cheapestOn = routeRows
+        .filter((r) => r.kind === "on")
+        .sort((a, b) => a.price - b.price)[0];
       list.innerHTML = listWrap(
         routeRows.map((r) => {
           const badge =
@@ -536,44 +609,61 @@ export async function startApp(root: HTMLElement): Promise<void> {
                   min: Math.round(r.extraMin),
                   save: formatMoney(r.benefit.netBenefit),
                 })
-              : t("route.fromStart", { km: r.distFromStartKm.toFixed(0) });
-          return stationRow(r.station, r.price, `${extra} ${badge}`);
+              : "";
+          return stationRow(r.station, r.price, r.distFromStartKm, `${extra} ${badge}`);
         }),
       );
       return;
     }
-    const ids = new Set(visibleStationIds(map));
-    let rows = data.stations.filter((s) => ids.size === 0 || ids.has(s.id));
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      rows = data.stations.filter(
-        (s) =>
-          s.name.toLowerCase().includes(q) ||
-          s.brand.includes(q) ||
-          (s.address ?? "").toLowerCase().includes(q) ||
-          (s.city ?? "").toLowerCase().includes(q),
-      );
+    if (routeLine && endHit && routeRows.length === 0) {
+      list.innerHTML = listWrap([], t("route.noStations"));
+      return;
     }
+    const ids = new Set(visibleStationIds(map));
+    const origin = originForEta();
+    const rows = data.stations.filter((s) => ids.size === 0 || ids.has(s.id));
     const priced = rows
-      .map((s) => ({ s, price: data.prices?.prices[s.id]?.[settings.fuel]?.price }))
+      .map((s) => ({
+        s,
+        price: data.prices?.prices[s.id]?.[settings.fuel]?.price,
+        distKm: origin
+          ? roadDistanceKm(origin, { lat: s.lat, lon: s.lon }, settings.roadFactor)
+          : undefined,
+      }))
       .filter((r) => r.price != null)
       .sort((a, b) => a.price! - b.price!);
-    list.innerHTML = listWrap(
-      priced.slice(0, 60).map((r) => stationRow(r.s, r.price!, brandLabel(r.s.brand))),
-    );
     if (priced.length === 0) {
-      list.innerHTML = `<div class="sheet"><h2>${escapeHtml(t("list.title"))}</h2><p class="empty">${escapeHtml(t("list.empty"))}</p></div>`;
+      list.innerHTML = listWrap([], t("list.empty"));
+      return;
     }
+    list.innerHTML = listWrap(priced.slice(0, 60).map((r) => stationRow(r.s, r.price!, r.distKm)));
   }
 
-  function listWrap(items: string[]): string {
-    return `<div class="sheet"><h2>${escapeHtml(t("list.title"))} · ${escapeHtml(tPlural("stations", items.length))}</h2><ul class="station-list">${items.join("")}</ul></div>`;
+  function listWrap(items: string[], empty?: string): string {
+    const count = items.length;
+    const title = count ? `${t("list.title")} · ${tPlural("stations", count)}` : t("list.title");
+    const body = empty
+      ? `<p class="empty">${escapeHtml(empty)}</p>`
+      : `<ul class="station-list">${items.join("")}</ul>`;
+    return `<div class="sheet${listMinimized ? " is-min" : ""}">
+      <button type="button" class="list-head" data-act="toggle-list" aria-expanded="${listMinimized ? "false" : "true"}" aria-label="${escapeHtml(listMinimized ? t("list.expand") : t("list.collapse"))}">
+        <span class="list-handle" aria-hidden="true"></span>
+        <h2>${escapeHtml(title)}</h2>
+        <span class="list-chevron" aria-hidden="true">${listMinimized ? "▴" : "▾"}</span>
+      </button>
+      <div class="list-body">${body}</div>
+    </div>`;
   }
 
-  function stationRow(s: Station, price: number, extra: string): string {
+  function stationRow(s: Station, price: number, distKm?: number, extra = ""): string {
+    const eta = distKm != null ? etaParts(distKm) : null;
     return `<li><button type="button" class="station-row" data-act="station" data-id="${escapeHtml(s.id)}">
       <span class="swatch" data-brand="${escapeHtml(s.brand)}"></span>
-      <span class="station-main"><strong>${escapeHtml(s.name)}</strong><small>${escapeHtml(extra)}</small></span>
+      <span class="station-main">
+        <strong>${escapeHtml(s.name)}</strong>
+        <small class="station-addr">${escapeHtml(stationAddress(s))}</small>
+        <small class="station-eta">${eta ? `${escapeHtml(eta.label)}` : ""}${extra}</small>
+      </span>
       <span class="station-price">${escapeHtml(formatPrice(price))}</span>
     </button></li>`;
   }
@@ -581,39 +671,48 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function headerHtml(): string {
     const g = fuelGroupOf(settings.fuel);
     const petrolOpen = g === "petrol";
+    const destVal = destQuery || endHit?.label || "";
     return `
-      <a class="logo" data-act="view" data-view="map" href="${pathFor("map", locale)}">${escapeHtml(t("app.name"))}</a>
-      <div class="fuel-filter" role="group" aria-label="${escapeHtml(t("fuel.diesel"))}">
-        ${(["diesel", "petrol", "gas"] as const)
-          .map(
-            (group) =>
-              `<button type="button" class="${g === group ? "on" : ""}" data-act="fuel-group" data-group="${group}">${escapeHtml(t(`fuel.group.${group}` as MessageKey))}</button>`,
-          )
-          .join("")}
+      <div class="topbar">
+        <a class="logo" data-act="view" data-view="map" href="${pathFor("map", locale)}">${escapeHtml(t("app.name"))}</a>
+        <div class="fuel-filter" role="group" aria-label="${escapeHtml(t("fuel.diesel"))}">
+          ${(["diesel", "petrol", "gas"] as const)
+            .map(
+              (group) =>
+                `<button type="button" class="${g === group ? "on" : ""}" data-act="fuel-group" data-group="${group}">${escapeHtml(t(`fuel.group.${group}` as MessageKey))}</button>`,
+            )
+            .join("")}
+        </div>
+        ${
+          petrolOpen
+            ? `<div class="fuel-sub">${["95", "98"]
+                .map(
+                  (f) =>
+                    `<button type="button" class="${settings.fuel === f ? "on" : ""}" data-act="fuel" data-fuel="${f}">${f}</button>`,
+                )
+                .join("")}</div>`
+            : ""
+        }
+        <div class="topbar-end">
+          <div class="lang">
+            <a data-act="locale" data-locale="lt" href="${hrefFor(view, "lt", settings.fuel)}" hreflang="lt" class="${locale === "lt" ? "on" : ""}">LT</a>
+            <a data-act="locale" data-locale="en" href="${hrefFor(view, "en", settings.fuel)}" hreflang="en" class="${locale === "en" ? "on" : ""}">EN</a>
+          </div>
+          <button type="button" class="icon-btn ${aroundOpen ? "on" : ""}" data-act="around">${escapeHtml(t("action.around"))}</button>
+          <button type="button" class="icon-btn ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">⚙</button>
+        </div>
       </div>
-      ${
-        petrolOpen
-          ? `<div class="fuel-sub">${["95", "98"]
-              .map(
-                (f) =>
-                  `<button type="button" class="${settings.fuel === f ? "on" : ""}" data-act="fuel" data-fuel="${f}">${f}</button>`,
-              )
-              .join("")}</div>`
-          : ""
-      }
-      <input id="search" class="search" type="search" placeholder="${escapeHtml(t("action.search"))}" value="${escapeHtml(searchQuery)}" />
-      <button type="button" class="${aroundOpen ? "on" : ""}" data-act="around">${escapeHtml(t("action.around"))}</button>
-      <button type="button" class="${routeOpen ? "on" : ""}" data-act="route">${escapeHtml(t("action.route"))}</button>
-      <nav class="nav">
-        <a data-act="view" data-view="map" href="${hrefFor("map", locale, settings.fuel)}">${escapeHtml(t("nav.map"))}</a>
-        <a data-act="view" data-view="history" href="${hrefFor("history", locale, settings.fuel)}">${escapeHtml(t("nav.history"))}</a>
-        <a data-act="view" data-view="about" href="${hrefFor("about", locale, settings.fuel)}">${escapeHtml(t("nav.about"))}</a>
-      </nav>
-      <div class="lang">
-        <a data-act="locale" data-locale="lt" href="${hrefFor(view, "lt", settings.fuel)}" hreflang="lt" class="${locale === "lt" ? "on" : ""}">LT</a>
-        <a data-act="locale" data-locale="en" href="${hrefFor(view, "en", settings.fuel)}" hreflang="en" class="${locale === "en" ? "on" : ""}">EN</a>
+      <div class="dest">
+        <div class="dest-from">
+          <span class="dest-pin" aria-hidden="true"></span>
+          <span>${escapeHtml(t("dest.from"))}</span>
+        </div>
+        <div class="dest-field">
+          <input id="dest" class="search" type="search" autocomplete="off" placeholder="${escapeHtml(t("dest.placeholder"))}" value="${escapeHtml(destVal)}" />
+          ${endHit ? `<button type="button" class="dest-clear" data-act="clear-dest" aria-label="${escapeHtml(t("dest.clear"))}">×</button>` : ""}
+          <div id="dest-sug" class="sug-box"></div>
+        </div>
       </div>
-      <button type="button" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">⚙</button>
     `;
   }
 
@@ -631,31 +730,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     </section>`;
   }
 
-  function routeHtml(): string {
-    const startVal = startHit === "mylocation" ? t("route.myLocation") : startHit ? startHit.label : "";
-    const endVal = endHit?.label ?? "";
-    return `<section class="panel" aria-label="${escapeHtml(t("route.title"))}">
-      <header><h2>${escapeHtml(t("route.title"))}</h2><button type="button" data-act="close-panel">${escapeHtml(t("action.close"))}</button></header>
-      <label>${escapeHtml(t("route.start"))}
-        <input id="route-start" autocomplete="off" placeholder="${escapeHtml(t("route.startPlaceholder"))}" value="${escapeHtml(startVal)}" />
-        <div id="route-start-sug" class="sug-box"></div>
-      </label>
-      <button type="button" data-act="use-loc">${escapeHtml(t("action.useLocation"))}</button>
-      <label>${escapeHtml(t("route.end"))}
-        <input id="route-end" autocomplete="off" placeholder="${escapeHtml(t("route.endPlaceholder"))}" value="${escapeHtml(endVal)}" />
-        <div id="route-end-sug" class="sug-box"></div>
-      </label>
-      <div class="radii">
-        <button type="button" class="${settings.routePreference === "shortest" ? "on" : ""}" data-act="pref" data-pref="shortest">${escapeHtml(t("route.shortest"))}</button>
-        <button type="button" class="${settings.routePreference === "fastest" ? "on" : ""}" data-act="pref" data-pref="fastest">${escapeHtml(t("route.fastest"))}</button>
-      </div>
-      ${routeLine?.profile === "fastest" && settings.routePreference === "shortest" ? `<p class="hint">${escapeHtml(t("route.usingFastest"))}</p>` : ""}
-      <button type="button" class="primary" data-act="route-go">${escapeHtml(t("route.search"))}</button>
-      ${routeLine ? `<button type="button" data-act="clear-route">${escapeHtml(t("action.clear"))}</button>` : ""}
-      ${!endHit && !(root.querySelector<HTMLInputElement>("#route-end")?.value) ? "" : ""}
-    </section>`;
-  }
-
   function settingsHtml(): string {
     return `<section class="panel" aria-label="${escapeHtml(t("settings.title"))}">
       <header><h2>${escapeHtml(t("settings.title"))}</h2><button type="button" data-act="close-panel">${escapeHtml(t("action.close"))}</button></header>
@@ -669,70 +743,21 @@ export async function startApp(root: HTMLElement): Promise<void> {
     </section>`;
   }
 
-  function historyHtml(): string {
-    return `<section class="page-card">
-      <h1>${escapeHtml(t("history.title"))}</h1>
-      <div class="radii" id="hist-range">
-        ${["1m", "3m", "1y", "all"]
-          .map((r) => `<button type="button" data-range="${r}">${escapeHtml(t(`history.range.${r}` as "history.range.1m"))}</button>`)
-          .join("")}
-      </div>
-      <div id="chart" class="chart"></div>
-      <p class="hint">${data.history.length < 2 ? escapeHtml(t("history.empty")) : ""}</p>
-    </section>`;
-  }
-
-  function aboutHtml(): string {
-    const updated = data.meta?.date ? formatDate(data.meta.date) : "—";
-    return `<section class="page-card about">
-      <h1>${escapeHtml(t("about.title"))}</h1>
-      <p>${escapeHtml(t("about.body"))}</p>
-      <p>${escapeHtml(t("about.disclaimer"))}</p>
-      <h2>${escapeHtml(t("about.sources"))}</h2>
-      <ul>
-        <li>${escapeHtml(t("about.source.lea"))}</li>
-        <li>${escapeHtml(t("about.source.osm"))}</li>
-        <li>${escapeHtml(t("about.source.map"))}</li>
-        <li>${escapeHtml(t("about.source.geo"))}</li>
-      </ul>
-      <p>${escapeHtml(t("about.updated", { date: updated }))}</p>
-      <p>${escapeHtml(t("about.offline"))}</p>
-    </section>`;
-  }
-
   function statusHtml(): string {
     if (!navigator.onLine && data.meta?.date) {
       return `<div class="banner">${escapeHtml(t("status.offline", { date: formatDate(data.meta.date) }))}</div>`;
     }
     if (!data.prices) return `<div class="banner">${escapeHtml(t("status.noData"))}</div>`;
+    if (destStatus === "locating")
+      return `<div class="banner info">${escapeHtml(t("dest.locating"))}</div>`;
+    if (destStatus === "routing")
+      return `<div class="banner info">${escapeHtml(t("dest.routing"))}</div>`;
+    if (destStatus === "denied") {
+      return `<div class="banner">${escapeHtml(pickMode === "dest-start" ? t("dest.pickStart") : t("dest.denied"))}</div>`;
+    }
+    if (destStatus === "not-found")
+      return `<div class="banner">${escapeHtml(t("dest.notFound"))}</div>`;
     return "";
-  }
-
-  function drawChart(): void {
-    const el = root.querySelector<HTMLElement>("#chart");
-    if (!el) return;
-    chart?.destroy();
-    chart = null;
-    const fuel = settings.fuel;
-    const points = data.history.filter((h) => h.byFuel[fuel]);
-    if (points.length < 2) return;
-    const xs = points.map((p) => Date.parse(`${p.date}T00:00:00Z`) / 1000);
-    const mins = points.map((p) => p.byFuel[fuel]!.min);
-    const meds = points.map((p) => p.byFuel[fuel]!.median);
-    chart = new uPlot(
-      {
-        width: Math.min(el.clientWidth || 640, 900),
-        height: 320,
-        series: [
-          {},
-          { label: t("history.min"), stroke: "#15803d", width: 2 },
-          { label: t("history.median"), stroke: "#ca8a04", width: 2 },
-        ],
-        axes: [{}, { values: (_u, vals) => vals.map((v) => (v as number).toFixed(2)) }],
-      },
-      [xs, mins, meds],
-      el,
-    );
   }
 
   function updateHreflang(): void {
@@ -760,10 +785,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function shellHtml(): string {
     return `<div class="app">
+      <div class="map-wrap"><div id="map" role="application" aria-label="${escapeHtml(t("nav.map"))}"></div></div>
       <header id="header" class="header"></header>
       <div id="banner"></div>
-      <div class="map-wrap"><div id="map" role="application" aria-label="${escapeHtml(t("nav.map"))}"></div><div id="panels"></div></div>
-      <main id="page" class="page" hidden></main>
+      <div id="panels"></div>
       <aside id="list" class="list"></aside>
     </div>`;
   }

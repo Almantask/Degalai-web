@@ -31,13 +31,13 @@ export function createMap(container: HTMLElement, handlers: MapHandlers): maplib
       [LT_BOUNDS.maxLon + 0.3, LT_BOUNDS.maxLat + 0.3],
     ],
   });
-  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-left");
   map.addControl(
     new maplibregl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
       showUserLocation: true,
     }),
-    "bottom-right",
+    "bottom-left",
   );
 
   map.on("load", () => {
@@ -118,17 +118,7 @@ export function createMap(container: HTMLElement, handlers: MapHandlers): maplib
           "case",
           ["==", ["get", "hasPrice"], 0],
           "#9ca3af",
-          [
-            "interpolate",
-            ["linear"],
-            ["get", "pct"],
-            0,
-            "#15803d",
-            0.5,
-            "#ca8a04",
-            1,
-            "#b91c1c",
-          ],
+          ["interpolate", ["linear"], ["get", "pct"], 0, "#15803d", 0.5, "#ca8a04", 1, "#b91c1c"],
         ],
         "circle-stroke-width": 1.5,
         "circle-stroke-color": "#fff",
@@ -209,7 +199,10 @@ export function setStationData(
       if (price == null && !s.fuels.includes(fuel)) return false;
       return true;
     });
-  const values = priced.map((p) => p.price).filter((n): n is number => n != null).sort((a, b) => a - b);
+  const values = priced
+    .map((p) => p.price)
+    .filter((n): n is number => n != null)
+    .sort((a, b) => a - b);
   const features = priced.map(({ s, price }) => {
     const pct = price == null || values.length === 0 ? 0.5 : percentile(values, price);
     const emp = emphasis?.[s.id] ?? "normal";
@@ -231,7 +224,11 @@ export function setStationData(
   src.setData({ type: "FeatureCollection", features });
 }
 
-export function setRouteData(map: maplibregl.Map, line: LngLat[] | null, detours: Array<[LngLat, LngLat]> = []): void {
+export function setRouteData(
+  map: maplibregl.Map,
+  line: LngLat[] | null,
+  detours: Array<[LngLat, LngLat]> = [],
+): void {
   const routeSrc = map.getSource(ROUTE_SRC) as maplibregl.GeoJSONSource | undefined;
   const detourSrc = map.getSource(DETOUR_SRC) as maplibregl.GeoJSONSource | undefined;
   if (routeSrc) {
@@ -256,7 +253,13 @@ export function setRouteData(map: maplibregl.Map, line: LngLat[] | null, detours
       features: detours.map(([a, b]) => ({
         type: "Feature",
         properties: {},
-        geometry: { type: "LineString", coordinates: [[a.lon, a.lat], [b.lon, b.lat]] },
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [a.lon, a.lat],
+            [b.lon, b.lat],
+          ],
+        },
       })),
     });
   }
@@ -284,7 +287,15 @@ export function flyToStation(map: maplibregl.Map, s: Station): void {
   map.easeTo({ center: [s.lon, s.lat], zoom: Math.max(map.getZoom(), 13) });
 }
 
-export function stationPopupHtml(s: Station, prices: DailyPrices | null): string {
+export interface StationPopupExtra {
+  etaLabel?: string;
+}
+
+export function stationPopupHtml(
+  s: Station,
+  prices: DailyPrices | null,
+  extra?: StationPopupExtra,
+): string {
   const fuels = (["95", "98", "D", "LPG"] as FuelType[])
     .map((f) => {
       const e = prices?.prices[s.id]?.[f];
@@ -296,13 +307,14 @@ export function stationPopupHtml(s: Station, prices: DailyPrices | null): string
     })
     .join("");
   const nav = `https://www.openstreetmap.org/directions?from=&to=${s.lat}%2C${s.lon}`;
-  const updated = prices?.generatedAt
-    ? `${t("popup.updated")}: ${escapeHtml(prices.date)}`
-    : "";
+  const updated = prices?.generatedAt ? `${t("popup.updated")}: ${escapeHtml(prices.date)}` : "";
+  const addr = s.address || s.city || t("list.addressMissing");
+  const eta = extra?.etaLabel ? `<p class="popup-eta">${escapeHtml(extra.etaLabel)}</p>` : "";
   return `<div class="popup">
     <h3>${escapeHtml(s.name)}</h3>
     <p class="popup-brand">${escapeHtml(brandLabel(s.brand))}</p>
-    ${s.address ? `<p class="popup-addr">${escapeHtml(s.address)}</p>` : ""}
+    <p class="popup-addr">${escapeHtml(addr)}</p>
+    ${eta}
     ${fuels}
     <p class="popup-meta">${updated}</p>
     <a class="popup-nav" href="${nav}" target="_blank" rel="noreferrer">${escapeHtml(t("action.navigate"))}</a>

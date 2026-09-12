@@ -1,6 +1,7 @@
-import { extraMinutesFromKm, netBenefit } from "../src/calc.ts";
+import { extraMinutesFromKm, minutesAtMaxSpeed, netBenefit } from "../src/calc.ts";
+import { formatDuration } from "../src/format.ts";
 import { haversineKm, roadDistanceKm } from "../src/geo.ts";
-import { pluralCategory } from "../src/i18n/index.ts";
+import { pluralCategory, setLocale } from "../src/i18n/index.ts";
 import { normalizeBrand } from "../src/brands.ts";
 import { PRICE_RANGE } from "../scripts/validate.ts";
 import { median } from "../scripts/history.ts";
@@ -94,6 +95,22 @@ describe("address tokens", () => {
     const a = tokens("Vilnius, Gariūnų g. 45");
     const b = tokens("Gariunu g 45 Vilnius");
     expect(jaccard(a, b)).toBeGreaterThan(0.4);
+  });
+});
+
+describe("max-speed ETA", () => {
+  it("is 60 minutes for 130 km at the motorway limit", () => {
+    expect(minutesAtMaxSpeed(130)).toBe(60);
+  });
+
+  it("formats minutes and hours", () => {
+    setLocale("lt");
+    expect(formatDuration(0.2)).toBe("< 1 min");
+    expect(formatDuration(8.2)).toBe("8 min");
+    expect(formatDuration(60)).toBe("1 val.");
+    expect(formatDuration(75)).toBe("1 val. 15 min");
+    setLocale("en");
+    expect(formatDuration(75)).toBe("1 h 15 min");
   });
 });
 

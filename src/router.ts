@@ -2,7 +2,7 @@ import type { FuelType } from "./types.ts";
 import { persistLocale } from "./settings.ts";
 import { getLocale, setLocale, type Locale } from "./i18n/index.ts";
 
-export type View = "map" | "history" | "about";
+export type View = "map";
 
 export interface RouteState {
   view: View;
@@ -12,14 +12,10 @@ export interface RouteState {
 
 const LT_PATHS: Record<View, string> = {
   map: "/",
-  history: "/istorija",
-  about: "/apie",
 };
 
 const EN_PATHS: Record<View, string> = {
   map: "/en/",
-  history: "/en/history",
-  about: "/en/about",
 };
 
 export function basePath(): string {
@@ -36,11 +32,8 @@ export function stripBase(pathname: string): string {
 export function parsePath(pathname = window.location.pathname): RouteState {
   const path = stripBase(pathname).replace(/\/+$/, "") || "/";
   const locale: Locale = path === "/en" || path.startsWith("/en/") ? "en" : "lt";
-  let view: View = "map";
-  if (path === "/istorija" || path === "/en/history") view = "history";
-  else if (path === "/apie" || path === "/en/about") view = "about";
   const fuelQuery = new URLSearchParams(window.location.search).get("fuel");
-  return { view, locale, fuelQuery };
+  return { view: "map", locale, fuelQuery };
 }
 
 export function pathFor(view: View, locale: Locale = getLocale()): string {

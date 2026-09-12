@@ -5,19 +5,29 @@ test("Lithuanian map shell loads", async ({ page }) => {
   await expect(page.locator(".logo")).toContainText("Kur degalai");
   await expect(page.locator("#map")).toBeVisible();
   await expect(page.getByRole("button", { name: /Dyzelinas|Diesel/ })).toBeVisible();
+  await expect(page.getByPlaceholder("Kur važiuojate?")).toBeVisible();
+  await expect(page.getByText("Nuo mano vietos")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Istorija" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Apie" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Maršrutas" })).toHaveCount(0);
 });
 
-test("English locale and about page", async ({ page }) => {
+test("English locale loads without history or about", async ({ page }) => {
   await page.goto("/en/");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
-  await page.getByRole("link", { name: "About" }).click();
-  await expect(page.getByRole("heading", { name: "About" })).toBeVisible();
-  await expect(page.getByText(/Lithuanian Energy Agency/)).toBeVisible();
+  await expect(page.getByPlaceholder("Where are you going?")).toBeVisible();
+  await expect(page.getByRole("link", { name: "About" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "History" })).toHaveCount(0);
 });
 
-test("history page in Lithuanian", async ({ page }) => {
-  await page.goto("/istorija");
-  await expect(page.getByRole("heading", { name: "Kainų istorija" })).toBeVisible();
+test("station list can be minimised", async ({ page }) => {
+  await page.goto("/");
+  const toggle = page.getByRole("button", { name: /Sutraukti sąrašą|Išskleisti sąrašą/ });
+  await expect(toggle).toBeVisible();
+  await expect(page.locator(".list-body")).toBeVisible();
+  await toggle.click();
+  await expect(page.locator(".sheet")).toHaveClass(/is-min/);
+  await expect(page.locator(".list-body")).toBeHidden();
 });
 
 test("around me with mocked geolocation (Vilnius)", async ({ page }) => {
