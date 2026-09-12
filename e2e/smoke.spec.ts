@@ -20,6 +20,18 @@ test("English locale loads without history or about", async ({ page }) => {
   await expect(page.getByRole("link", { name: "History" })).toHaveCount(0);
 });
 
+test("station list is cheapest-first with a badge on top", async ({ page }) => {
+  await page.goto("/");
+  const first = page.locator(".station-row").first();
+  await expect(first).toBeVisible({ timeout: 15_000 });
+  await expect(first.locator(".badge")).toHaveText(/Pigiausia/);
+  const texts = await page.locator(".station-row .station-price").allTextContents();
+  const values = texts.map((s) => Number(s.replace(/[^\d,.-]/g, "").replace(",", ".")));
+  expect(values.length).toBeGreaterThan(1);
+  const sorted = [...values].sort((a, b) => a - b);
+  expect(values).toEqual(sorted);
+});
+
 test("station list can be minimised", async ({ page }) => {
   await page.goto("/");
   const toggle = page.getByRole("button", { name: /Sutraukti sąrašą|Išskleisti sąrašą/ });

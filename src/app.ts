@@ -36,6 +36,7 @@ import {
   type Emphasis,
   visibleStationIds,
 } from "./map.ts";
+import { orderRouteRows } from "./route-list.ts";
 import { hrefFor, navigate, parsePath, pathFor, type View } from "./router.ts";
 import { fetchRoute, geocode, type GeoHit, type RouteResult } from "./routing.ts";
 import { fuelFromUrl, loadSettings, saveSettings } from "./settings.ts";
@@ -598,29 +599,50 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function renderList(): void {
     const list = root.querySelector("#list")!;
     if (aroundOpen && aroundRows.length) {
+      const cheapest = [...aroundRows].sort(
+        (a, b) => a.price - b.price || a.station.id.localeCompare(b.station.id),
+      )[0];
+      const rest = aroundRows.filter((r) => r.station.id !== cheapest.station.id);
+      const ordered = [cheapest, ...rest].slice(0, 40);
       list.innerHTML = listWrap(
-        aroundRows.slice(0, 40).map((r) => {
+        ordered.map((r, i) => {
           const worth =
             r.benefit.netBenefit > 0
               ? t("around.save", { amount: formatMoney(r.benefit.netBenefit) })
               : t("around.notWorth", { amount: formatMoney(r.benefit.netBenefit) });
-          return stationRow(r.station, r.price, r.distKm, `<span>${escapeHtml(worth)}</span>`);
+          const isCheapest = r.station.id === cheapest.station.id;
+          return stationRow(
+            r.station,
+            r.price,
+            r.distKm,
+            worth,
+            isCheapest && i === 0 ? "is-pick" : "",
+            isCheapest ? `<span class="badge">${escapeHtml(t("list.cheapest"))}</span>` : "",
+          );
         }),
       );
       return;
     }
     if (routeLine && routeRows.length) {
-      const cheapestOn = routeRows
-        .filter((r) => r.kind === "on")
-        .sort((a, b) => a.price - b.price)[0];
+      const { cheapestOn, cheapestOverall, ordered } = orderRouteRows(routeRows);
       list.innerHTML = listWrap(
-        routeRows.map((r) => {
-          const badge =
-            cheapestOn && r.station.id === cheapestOn.station.id
+        ordered.map((r, i) => {
+          const isCheapestOn = cheapestOn?.station.id === r.station.id;
+          const isCheapestOverall = cheapestOverall?.station.id === r.station.id;
+          const badges = [
+            isCheapestOn
               ? `<span class="badge">${escapeHtml(t("route.cheapestBadge"))}</span>`
-              : r.kind === "on"
-                ? `<span class="badge muted">${escapeHtml(t("route.onTheWay"))}</span>`
-                : `<span class="badge">${escapeHtml(r.benefit.netBenefit > 0 ? t("route.worth") : t("route.notWorth"))}</span>`;
+              : "",
+            isCheapestOverall
+              ? `<span class="badge">${escapeHtml(t("route.cheapestOverall"))}</span>`
+              : "",
+            !isCheapestOn && r.kind === "on"
+              ? `<span class="badge muted">${escapeHtml(t("route.onTheWay"))}</span>`
+              : "",
+            !isCheapestOverall && r.kind === "detour"
+              ? `<span class="badge">${escapeHtml(r.benefit.netBenefit > 0 ? t("route.worth") : t("route.notWorth"))}</span>`
+              : "",
+          ].join("");
           const extra =
             r.kind === "detour"
               ? t("route.extra", {
@@ -629,7 +651,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
                   save: formatMoney(r.benefit.netBenefit),
                 })
               : "";
-          return stationRow(r.station, r.price, r.distFromStartKm, `${extra} ${badge}`);
+          const pinned = isCheapestOn || isCheapestOverall;
+          return stationRow(
+            r.station,
+            r.price,
+            r.distFromStartKm,
+            extra,
+            pinned && i < 2 ? "is-pick" : "",
+            badges,
+          );
         }),
       );
       return;
@@ -655,7 +685,21 @@ export async function startApp(root: HTMLElement): Promise<void> {
       list.innerHTML = listWrap([], t("list.empty"));
       return;
     }
-    list.innerHTML = listWrap(priced.slice(0, 60).map((r) => stationRow(r.s, r.price!, r.distKm)));
+    const cheapestId = priced[0]?.s.id;
+    list.innerHTML = listWrap(
+      priced
+        .slice(0, 60)
+        .map((r, i) =>
+          stationRow(
+            r.s,
+            r.price!,
+            r.distKm,
+            "",
+            r.s.id === cheapestId ? "is-pick" : "",
+            i === 0 ? `<span class="badge">${escapeHtml(t("list.cheapest"))}</span>` : "",
+          ),
+        ),
+    );
   }
 
   function listWrap(items: string[], empty?: string): string {
@@ -674,14 +718,23 @@ export async function startApp(root: HTMLElement): Promise<void> {
     </div>`;
   }
 
-  function stationRow(s: Station, price: number, distKm?: number, extra = ""): string {
+  function stationRow(
+    s: Station,
+    price: number,
+    distKm?: number,
+    extra = "",
+    className = "",
+    badges = "",
+  ): string {
     const eta = distKm != null ? etaParts(distKm) : null;
-    return `<li><button type="button" class="station-row" data-act="station" data-id="${escapeHtml(s.id)}">
+    const cls = ["station-row", className].filter(Boolean).join(" ");
+    return `<li><button type="button" class="${cls}" data-act="station" data-id="${escapeHtml(s.id)}">
       <span class="swatch" data-brand="${escapeHtml(s.brand)}"></span>
       <span class="station-main">
+        ${badges ? `<span class="station-badges">${badges}</span>` : ""}
         <strong>${escapeHtml(s.name)}</strong>
         <small class="station-addr">${escapeHtml(stationAddress(s))}</small>
-        <small class="station-eta">${eta ? `${escapeHtml(eta.label)}` : ""}${extra}</small>
+        <small class="station-eta">${eta ? `${escapeHtml(eta.label)}` : ""}${extra ? ` ${escapeHtml(extra)}` : ""}</small>
       </span>
       <span class="station-price">${escapeHtml(formatPrice(price))}</span>
     </button></li>`;

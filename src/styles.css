@@ -388,6 +388,18 @@ body,
   box-shadow: 0 6px 16px rgb(16 32 24 / 6%);
 }
 
+.station-row.is-pick {
+  background: var(--green-soft);
+  border-color: rgb(15 138 75 / 28%);
+}
+
+.station-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
 .station-main {
   flex: 1;
   display: flex;
