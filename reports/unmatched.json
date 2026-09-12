@@ -1,0 +1,1692 @@
+[
+  {
+    "sourceStationId": "lea:76-88321-baltic-dariaus-g-girėno-ir-k-ožtakių-petroleum-r-sav-telšių-uab",
+    "brand": "baltic-petroleum",
+    "address": "Ožtakių k., Dariaus ir Girėno g. 76, 88321",
+    "city": "Telšių r. sav.",
+    "name": "UAB Baltic Petroleum",
+    "fuel": "D",
+    "price": 2.229,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:76-88321-baltic-dariaus-g-girėno-ir-k-ožtakių-petroleum-r-sav-telšių-uab",
+    "brand": "baltic-petroleum",
+    "address": "Ožtakių k., Dariaus ir Girėno g. 76, 88321",
+    "city": "Telšių r. sav.",
+    "name": "UAB Baltic Petroleum",
+    "fuel": "LPG",
+    "price": 0.789,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:76-88321-baltic-dariaus-g-girėno-ir-k-ožtakių-petroleum-r-sav-telšių-uab",
+    "brand": "baltic-petroleum",
+    "address": "Ožtakių k., Dariaus ir Girėno g. 76, 88321",
+    "city": "Telšių r. sav.",
+    "name": "UAB Baltic Petroleum",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:35-38305-g-krekenava-lt-panevėžio-r-sav-tilto-uab-viada",
+    "brand": "viada",
+    "address": "Krekenava, Tilto g. 35, 38305",
+    "city": "Panevėžio r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.899,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:35-38305-g-krekenava-lt-panevėžio-r-sav-tilto-uab-viada",
+    "brand": "viada",
+    "address": "Krekenava, Tilto g. 35, 38305",
+    "city": "Panevėžio r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.259,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:35-38305-g-krekenava-lt-panevėžio-r-sav-tilto-uab-viada",
+    "brand": "viada",
+    "address": "Krekenava, Tilto g. 35, 38305",
+    "city": "Panevėžio r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:16-33165-g-gojaus-k-lt-molėtų-r-sav-uab-utenos-viada",
+    "brand": "viada",
+    "address": "Gojaus k., Utenos g. 16, 33165",
+    "city": "Molėtų r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.829,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:16-33165-g-gojaus-k-lt-molėtų-r-sav-uab-utenos-viada",
+    "brand": "viada",
+    "address": "Gojaus k., Utenos g. 16, 33165",
+    "city": "Molėtų r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.199,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:16-33165-g-gojaus-k-lt-molėtų-r-sav-uab-utenos-viada",
+    "brand": "viada",
+    "address": "Gojaus k., Utenos g. 16, 33165",
+    "city": "Molėtų r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.959,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:101-33112-g-lt-molėtai-molėtų-r-sav-uab-viada-vilniaus",
+    "brand": "viada",
+    "address": "Molėtai, Vilniaus g. 101, 33112",
+    "city": "Molėtų r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.829,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:101-33112-g-lt-molėtai-molėtų-r-sav-uab-viada-vilniaus",
+    "brand": "viada",
+    "address": "Molėtai, Vilniaus g. 101, 33112",
+    "city": "Molėtų r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.199,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:101-33112-g-lt-molėtai-molėtų-r-sav-uab-viada-vilniaus",
+    "brand": "viada",
+    "address": "Molėtai, Vilniaus g. 101, 33112",
+    "city": "Molėtų r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.959,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:75-89132-g-lt-mažeikiai-mažeikių-r-sav-uab-viada-žemaitijos",
+    "brand": "viada",
+    "address": "Mažeikiai, Žemaitijos g. 75, 89132",
+    "city": "Mažeikių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.829,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:75-89132-g-lt-mažeikiai-mažeikių-r-sav-uab-viada-žemaitijos",
+    "brand": "viada",
+    "address": "Mažeikiai, Žemaitijos g. 75, 89132",
+    "city": "Mažeikių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.139,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:75-89132-g-lt-mažeikiai-mažeikių-r-sav-uab-viada-žemaitijos",
+    "brand": "viada",
+    "address": "Mažeikiai, Žemaitijos g. 75, 89132",
+    "city": "Mažeikių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.919,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:2a-89101-g-lt-mažeikiai-mažeikių-montuotojų-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Mažeikiai, Montuotojų g. 2A, 89101",
+    "city": "Mažeikių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.829,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:2a-89101-g-lt-mažeikiai-mažeikių-montuotojų-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Mažeikiai, Montuotojų g. 2A, 89101",
+    "city": "Mažeikių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.139,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:2a-89101-g-lt-mažeikiai-mažeikių-montuotojų-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Mažeikiai, Montuotojų g. 2A, 89101",
+    "city": "Mažeikių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.919,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:2-68161-ambrazevičiaus-brazaičio-g-j-lt-marijampolė-marijampolės-sav-uab-viada",
+    "brand": "viada",
+    "address": "Marijampolė, J. Ambrazevičiaus-Brazaičio g. 2, 68161",
+    "city": "Marijampolės sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.839,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:2-68161-ambrazevičiaus-brazaičio-g-j-lt-marijampolė-marijampolės-sav-uab-viada",
+    "brand": "viada",
+    "address": "Marijampolė, J. Ambrazevičiaus-Brazaičio g. 2, 68161",
+    "city": "Marijampolės sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.159,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:2-68161-ambrazevičiaus-brazaičio-g-j-lt-marijampolė-marijampolės-sav-uab-viada",
+    "brand": "viada",
+    "address": "Marijampolė, J. Ambrazevičiaus-Brazaičio g. 2, 68161",
+    "city": "Marijampolės sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.919,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:5-68305-g-geležinkelio-lt-marijampolė-marijampolės-sav-uab-viada",
+    "brand": "viada",
+    "address": "Marijampolė, Geležinkelio g. 5, 68305",
+    "city": "Marijampolės sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.829,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:5-68305-g-geležinkelio-lt-marijampolė-marijampolės-sav-uab-viada",
+    "brand": "viada",
+    "address": "Marijampolė, Geležinkelio g. 5, 68305",
+    "city": "Marijampolės sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.159,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:5-68305-g-geležinkelio-lt-marijampolė-marijampolės-sav-uab-viada",
+    "brand": "viada",
+    "address": "Marijampolė, Geležinkelio g. 5, 68305",
+    "city": "Marijampolės sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.919,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:32-67102-g-lazdijai-lazdijų-lt-r-sav-turistų-uab-viada",
+    "brand": "viada",
+    "address": "Lazdijai, Turistų g. 32, 67102",
+    "city": "Lazdijų r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.799,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:32-67102-g-lazdijai-lazdijų-lt-r-sav-turistų-uab-viada",
+    "brand": "viada",
+    "address": "Lazdijai, Turistų g. 32, 67102",
+    "city": "Lazdijų r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.159,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:32-67102-g-lazdijai-lazdijų-lt-r-sav-turistų-uab-viada",
+    "brand": "viada",
+    "address": "Lazdijai, Turistų g. 32, 67102",
+    "city": "Lazdijų r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.919,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:15-40109-g-kupiškio-kupiškis-lt-pergalės-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kupiškis, Pergalės g. 15, 40109",
+    "city": "Kupiškio r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.799,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:15-40109-g-kupiškio-kupiškis-lt-pergalės-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kupiškis, Pergalės g. 15, 40109",
+    "city": "Kupiškio r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.199,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:15-40109-g-kupiškio-kupiškis-lt-pergalės-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kupiškis, Pergalės g. 15, 40109",
+    "city": "Kupiškio r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.949,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:1a-40473-k-kerelių-kupiškio-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kerelių k. 1A, 40473",
+    "city": "Kupiškio r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.799,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:1a-40473-k-kerelių-kupiškio-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kerelių k. 1A, 40473",
+    "city": "Kupiškio r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.199,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:1a-40473-k-kerelių-kupiškio-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kerelių k. 1A, 40473",
+    "city": "Kupiškio r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.949,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:97100-k-kretingos-kretingsodžio-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kretingsodžio k., 97100",
+    "city": "Kretingos r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.839,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:97100-k-kretingos-kretingsodžio-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kretingsodžio k., 97100",
+    "city": "Kretingos r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.299,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:97100-k-kretingos-kretingsodžio-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kretingsodžio k., 97100",
+    "city": "Kretingos r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:163-97133-g-kretinga-kretingos-lt-r-sav-uab-viada-vytauto",
+    "brand": "viada",
+    "address": "Kretinga, Vytauto g. 163, 97133",
+    "city": "Kretingos r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.839,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:163-97133-g-kretinga-kretingos-lt-r-sav-uab-viada-vytauto",
+    "brand": "viada",
+    "address": "Kretinga, Vytauto g. 163, 97133",
+    "city": "Kretingos r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.299,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:163-97133-g-kretinga-kretingos-lt-r-sav-uab-viada-vytauto",
+    "brand": "viada",
+    "address": "Kretinga, Vytauto g. 163, 97133",
+    "city": "Kretingos r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:6-k-klaipėdos-lt-pl-r-sav-sudmantų-uab-viada-vilniaus",
+    "brand": "viada",
+    "address": "Sudmantų k., Vilniaus pl. 6",
+    "city": "Klaipėdos r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.899,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:6-k-klaipėdos-lt-pl-r-sav-sudmantų-uab-viada-vilniaus",
+    "brand": "viada",
+    "address": "Sudmantų k., Vilniaus pl. 6",
+    "city": "Klaipėdos r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.199,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:6-k-klaipėdos-lt-pl-r-sav-sudmantų-uab-viada-vilniaus",
+    "brand": "viada",
+    "address": "Sudmantų k., Vilniaus pl. 6",
+    "city": "Klaipėdos r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:28-92191-g-klaipėda-klaipėdos-lt-m-priestočio-sav-uab-viada",
+    "brand": "viada",
+    "address": "Klaipėda, Priestočio g. 28, 92191",
+    "city": "Klaipėdos m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.839,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:28-92191-g-klaipėda-klaipėdos-lt-m-priestočio-sav-uab-viada",
+    "brand": "viada",
+    "address": "Klaipėda, Priestočio g. 28, 92191",
+    "city": "Klaipėdos m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.159,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:28-92191-g-klaipėda-klaipėdos-lt-m-priestočio-sav-uab-viada",
+    "brand": "viada",
+    "address": "Klaipėda, Priestočio g. 28, 92191",
+    "city": "Klaipėdos m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.919,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:139-93185-g-klaipėda-klaipėdos-lt-m-nemuno-sav-uab-viada",
+    "brand": "viada",
+    "address": "Klaipėda, Nemuno g. 139, 93185",
+    "city": "Klaipėdos m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.839,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:139-93185-g-klaipėda-klaipėdos-lt-m-nemuno-sav-uab-viada",
+    "brand": "viada",
+    "address": "Klaipėda, Nemuno g. 139, 93185",
+    "city": "Klaipėdos m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.159,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:139-93185-g-klaipėda-klaipėdos-lt-m-nemuno-sav-uab-viada",
+    "brand": "viada",
+    "address": "Klaipėda, Nemuno g. 139, 93185",
+    "city": "Klaipėdos m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.919,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:242-92330-g-klaipėda-klaipėdos-liepojos-lt-m-sav-uab-viada",
+    "brand": "viada",
+    "address": "Klaipėda, Liepojos g. 242, 92330",
+    "city": "Klaipėdos m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.839,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:242-92330-g-klaipėda-klaipėdos-liepojos-lt-m-sav-uab-viada",
+    "brand": "viada",
+    "address": "Klaipėda, Liepojos g. 242, 92330",
+    "city": "Klaipėdos m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.189,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:242-92330-g-klaipėda-klaipėdos-liepojos-lt-m-sav-uab-viada",
+    "brand": "viada",
+    "address": "Klaipėda, Liepojos g. 242, 92330",
+    "city": "Klaipėdos m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.939,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:5-58267-baisogalos-g-gudžiūnų-k-kėdainių-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Gudžiūnų k., Baisogalos g. 5, 58267",
+    "city": "Kėdainių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.929,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:5-58267-baisogalos-g-gudžiūnų-k-kėdainių-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Gudžiūnų k., Baisogalos g. 5, 58267",
+    "city": "Kėdainių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.259,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:5-58267-baisogalos-g-gudžiūnų-k-kėdainių-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Gudžiūnų k., Baisogalos g. 5, 58267",
+    "city": "Kėdainių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:2a-58352-dotnuva-g-kėdainių-lt-r-sav-tilto-uab-viada",
+    "brand": "viada",
+    "address": "Dotnuva, Tilto g. 2A, 58352",
+    "city": "Kėdainių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.929,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:2a-58352-dotnuva-g-kėdainių-lt-r-sav-tilto-uab-viada",
+    "brand": "viada",
+    "address": "Dotnuva, Tilto g. 2A, 58352",
+    "city": "Kėdainių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.259,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:2a-58352-dotnuva-g-kėdainių-lt-r-sav-tilto-uab-viada",
+    "brand": "viada",
+    "address": "Dotnuva, Tilto g. 2A, 58352",
+    "city": "Kėdainių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:būdos-k-kazlų-lt-rūdos-sav-uab-viada-ąžuolų",
+    "brand": "viada",
+    "address": "Ąžuolų Būdos k.",
+    "city": "Kazlų Rūdos sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.859,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:būdos-k-kazlų-lt-rūdos-sav-uab-viada-ąžuolų",
+    "brand": "viada",
+    "address": "Ąžuolų Būdos k.",
+    "city": "Kazlų Rūdos sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.259,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:būdos-k-kazlų-lt-rūdos-sav-uab-viada-ąžuolų",
+    "brand": "viada",
+    "address": "Ąžuolų Būdos k.",
+    "city": "Kazlų Rūdos sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:20a-53419-g-kauno-lt-r-sav-uab-viada-vytauto-zapyškis",
+    "brand": "viada",
+    "address": "Zapyškis, Vytauto g. 20A, 53419",
+    "city": "Kauno r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.899,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:20a-53419-g-kauno-lt-r-sav-uab-viada-vytauto-zapyškis",
+    "brand": "viada",
+    "address": "Zapyškis, Vytauto g. 20A, 53419",
+    "city": "Kauno r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.259,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:20a-53419-g-kauno-lt-r-sav-uab-viada-vytauto-zapyškis",
+    "brand": "viada",
+    "address": "Zapyškis, Vytauto g. 20A, 53419",
+    "city": "Kauno r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:54471-k-kauno-lt-margavos-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Margavos k., 54471",
+    "city": "Kauno r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.929,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:54471-k-kauno-lt-margavos-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Margavos k., 54471",
+    "city": "Kauno r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.249,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:54471-k-kauno-lt-margavos-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Margavos k., 54471",
+    "city": "Kauno r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:13a-54311-g-k-kauno-kumpių-lt-r-sav-uab-verslo-viada",
+    "brand": "viada",
+    "address": "Kumpių k., Verslo g. 13A, 54311",
+    "city": "Kauno r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.899,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:13a-54311-g-k-kauno-kumpių-lt-r-sav-uab-verslo-viada",
+    "brand": "viada",
+    "address": "Kumpių k., Verslo g. 13A, 54311",
+    "city": "Kauno r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.299,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:13a-54311-g-k-kauno-kumpių-lt-r-sav-uab-verslo-viada",
+    "brand": "viada",
+    "address": "Kumpių k., Verslo g. 13A, 54311",
+    "city": "Kauno r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:09300-41-baltijos-g-k-kampiškių-kauno-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kampiškių k., Baltijos g. 41, 09300",
+    "city": "Kauno r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.949,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:09300-41-baltijos-g-k-kampiškių-kauno-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kampiškių k., Baltijos g. 41, 09300",
+    "city": "Kauno r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.299,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:09300-41-baltijos-g-k-kampiškių-kauno-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kampiškių k., Baltijos g. 41, 09300",
+    "city": "Kauno r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:22-g-ilgakiemio-k-kauno-lt-prienų-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Ilgakiemio k., Prienų g. 22,",
+    "city": "Kauno r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.799,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:22-g-ilgakiemio-k-kauno-lt-prienų-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Ilgakiemio k., Prienų g. 22,",
+    "city": "Kauno r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.199,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:22-g-ilgakiemio-k-kauno-lt-prienų-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Ilgakiemio k., Prienų g. 22,",
+    "city": "Kauno r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.979,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:4-54310-automagistralės-g-giraitės-k-kauno-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Giraitės k., Automagistralės g. 4, 54310",
+    "city": "Kauno r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.899,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:4-54310-automagistralės-g-giraitės-k-kauno-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Giraitės k., Automagistralės g. 4, 54310",
+    "city": "Kauno r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.299,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:4-54310-automagistralės-g-giraitės-k-kauno-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Giraitės k., Automagistralės g. 4, 54310",
+    "city": "Kauno r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:124b-46282-g-kaunas-kauno-lt-m-sav-uab-veiverių-viada",
+    "brand": "viada",
+    "address": "Kaunas, Veiverių g. 124B, 46282",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.859,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:124b-46282-g-kaunas-kauno-lt-m-sav-uab-veiverių-viada",
+    "brand": "viada",
+    "address": "Kaunas, Veiverių g. 124B, 46282",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.199,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:124b-46282-g-kaunas-kauno-lt-m-sav-uab-veiverių-viada",
+    "brand": "viada",
+    "address": "Kaunas, Veiverių g. 124B, 46282",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.989,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:117-46354-g-kaunas-kauno-lt-m-sav-uab-veiverių-viada",
+    "brand": "viada",
+    "address": "Kaunas, Veiverių g. 117, 46354",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.859,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:117-46354-g-kaunas-kauno-lt-m-sav-uab-veiverių-viada",
+    "brand": "viada",
+    "address": "Kaunas, Veiverių g. 117, 46354",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.199,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:117-46354-g-kaunas-kauno-lt-m-sav-uab-veiverių-viada",
+    "brand": "viada",
+    "address": "Kaunas, Veiverių g. 117, 46354",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.989,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:22b-52447-g-kaunas-kauno-lt-m-masiulio-sav-t-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, T. Masiulio g. 22B, 52447",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.849,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:22b-52447-g-kaunas-kauno-lt-m-masiulio-sav-t-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, T. Masiulio g. 22B, 52447",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.199,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:22b-52447-g-kaunas-kauno-lt-m-masiulio-sav-t-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, T. Masiulio g. 22B, 52447",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.989,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:3a-50124-g-kaunas-kauno-lt-m-sav-statybininkų-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Statybininkų g. 3A, 50124",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.829,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:3a-50124-g-kaunas-kauno-lt-m-sav-statybininkų-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Statybininkų g. 3A, 50124",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.179,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:3a-50124-g-kaunas-kauno-lt-m-sav-statybininkų-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Statybininkų g. 3A, 50124",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.959,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:49404-66a-g-kaunas-kauno-lt-lukšio-m-p-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, P. Lukšio g. 66A, 49404",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.829,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:49404-66a-g-kaunas-kauno-lt-lukšio-m-p-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, P. Lukšio g. 66A, 49404",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.159,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:49404-66a-g-kaunas-kauno-lt-lukšio-m-p-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, P. Lukšio g. 66A, 49404",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.939,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:18-47115-g-kaunas-kauno-lt-m-miežėnų-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Miežėnų g. 18, 47115",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.849,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:18-47115-g-kaunas-kauno-lt-m-miežėnų-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Miežėnų g. 18, 47115",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.179,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:18-47115-g-kaunas-kauno-lt-m-miežėnų-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Miežėnų g. 18, 47115",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.919,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:44351-54-karaliaus-kaunas-kauno-lt-m-mindaugo-pr-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Karaliaus Mindaugo pr. 54, 44351",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.899,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:44351-54-karaliaus-kaunas-kauno-lt-m-mindaugo-pr-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Karaliaus Mindaugo pr. 54, 44351",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.199,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:44351-54-karaliaus-kaunas-kauno-lt-m-mindaugo-pr-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Karaliaus Mindaugo pr. 54, 44351",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.989,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:44405-64-baršausko-g-k-kaunas-kauno-lt-m-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, K. Baršausko g. 64, 44405",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.929,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:44405-64-baršausko-g-k-kaunas-kauno-lt-m-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, K. Baršausko g. 64, 44405",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.139,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:44405-64-baršausko-g-k-kaunas-kauno-lt-m-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, K. Baršausko g. 64, 44405",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.929,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:49117-61a-islandijos-kaunas-kauno-lt-m-pl-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Islandijos pl. 61A, 49117",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.949,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:49117-61a-islandijos-kaunas-kauno-lt-m-pl-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Islandijos pl. 61A, 49117",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.299,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:49117-61a-islandijos-kaunas-kauno-lt-m-pl-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Islandijos pl. 61A, 49117",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:45462-84-didžioji-g-kaunas-kauno-lt-m-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Didžioji g. 84, 45462",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.859,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:45462-84-didžioji-g-kaunas-kauno-lt-m-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Didžioji g. 84, 45462",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.249,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:45462-84-didžioji-g-kaunas-kauno-lt-m-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Didžioji g. 84, 45462",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:18a-51205-biruliškių-g-kaunas-kauno-lt-m-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Biruliškių g. 18A, 51205",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.249,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:18a-51205-biruliškių-g-kaunas-kauno-lt-m-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Biruliškių g. 18A, 51205",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:47130-90b-baltijos-g-kaunas-kauno-lt-m-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Baltijos g. 90B, 47130",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.849,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:47130-90b-baltijos-g-kaunas-kauno-lt-m-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Baltijos g. 90B, 47130",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.179,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:47130-90b-baltijos-g-kaunas-kauno-lt-m-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, Baltijos g. 90B, 47130",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.919,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:45267-90-a-juozapavičiaus-kaunas-kauno-lt-m-pr-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, A. Juozapavičiaus pr. 90, 45267",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.899,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:45267-90-a-juozapavičiaus-kaunas-kauno-lt-m-pr-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, A. Juozapavičiaus pr. 90, 45267",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.199,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:45267-90-a-juozapavičiaus-kaunas-kauno-lt-m-pr-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaunas, A. Juozapavičiaus pr. 90, 45267",
+    "city": "Kauno m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.989,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:35-69270-g-k-kalvarijos-lt-muitinės-pelucmurgių-sav-uab-viada",
+    "brand": "viada",
+    "address": "Pelucmurgių k., Muitinės g. 35, 69270",
+    "city": "Kalvarijos sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.219,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:35-69270-g-k-kalvarijos-lt-muitinės-pelucmurgių-sav-uab-viada",
+    "brand": "viada",
+    "address": "Pelucmurgių k., Muitinės g. 35, 69270",
+    "city": "Kalvarijos sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:135-56173-g-gedimino-kaišiadorių-kaišiadorys-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaišiadorys, Gedimino g. 135, 56173",
+    "city": "Kaišiadorių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.899,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:135-56173-g-gedimino-kaišiadorių-kaišiadorys-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaišiadorys, Gedimino g. 135, 56173",
+    "city": "Kaišiadorių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.259,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:135-56173-g-gedimino-kaišiadorių-kaišiadorys-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Kaišiadorys, Gedimino g. 135, 56173",
+    "city": "Kaišiadorių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:51-84166-g-joniškio-joniškis-lt-r-sav-uab-viada-vilniaus",
+    "brand": "viada",
+    "address": "Joniškis, Vilniaus g. 51, 84166",
+    "city": "Joniškio r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.799,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:51-84166-g-joniškio-joniškis-lt-r-sav-uab-viada-vilniaus",
+    "brand": "viada",
+    "address": "Joniškis, Vilniaus g. 51, 84166",
+    "city": "Joniškio r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.199,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:51-84166-g-joniškio-joniškis-lt-r-sav-uab-viada-vilniaus",
+    "brand": "viada",
+    "address": "Joniškis, Vilniaus g. 51, 84166",
+    "city": "Joniškio r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.959,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:4d-55101-darbininkų-g-jonava-jonavos-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Jonava, Darbininkų g. 4D, 55101",
+    "city": "Jonavos r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.819,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:4d-55101-darbininkų-g-jonava-jonavos-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Jonava, Darbininkų g. 4D, 55101",
+    "city": "Jonavos r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.179,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:4d-55101-darbininkų-g-jonava-jonavos-lt-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Jonava, Darbininkų g. 4D, 55101",
+    "city": "Jonavos r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.929,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:28a-30138-g-ignalina-ignalinos-lt-r-sav-turistų-uab-viada",
+    "brand": "viada",
+    "address": "Ignalina, Turistų g. 28A, 30138",
+    "city": "Ignalinos r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.799,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:28a-30138-g-ignalina-ignalinos-lt-r-sav-turistų-uab-viada",
+    "brand": "viada",
+    "address": "Ignalina, Turistų g. 28A, 30138",
+    "city": "Ignalinos r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.259,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:28a-30138-g-ignalina-ignalinos-lt-r-sav-turistų-uab-viada",
+    "brand": "viada",
+    "address": "Ignalina, Turistų g. 28A, 30138",
+    "city": "Ignalinos r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.999,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:26109-6-elektrinės-elektrėnai-elektrėnų-g-lt-sav-uab-viada",
+    "brand": "viada",
+    "address": "Elektrėnai, Elektrinės g. 6, 26109",
+    "city": "Elektrėnų sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.839,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:26109-6-elektrinės-elektrėnai-elektrėnų-g-lt-sav-uab-viada",
+    "brand": "viada",
+    "address": "Elektrėnai, Elektrinės g. 6, 26109",
+    "city": "Elektrėnų sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.179,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:26109-6-elektrinės-elektrėnai-elektrėnų-g-lt-sav-uab-viada",
+    "brand": "viada",
+    "address": "Elektrėnai, Elektrinės g. 6, 26109",
+    "city": "Elektrėnų sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.929,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:1b-41132-biržai-biržų-g-lt-pasvalio-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Biržai, Pasvalio g. 1B, 41132",
+    "city": "Biržų r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.839,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:1b-41132-biržai-biržų-g-lt-pasvalio-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Biržai, Pasvalio g. 1B, 41132",
+    "city": "Biržų r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.199,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:1b-41132-biržai-biržų-g-lt-pasvalio-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Biržai, Pasvalio g. 1B, 41132",
+    "city": "Biržų r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.959,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:2-41136-biržai-biržų-g-lt-parodos-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Biržai, Parodos g. 2, 41136",
+    "city": "Biržų r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.839,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:2-41136-biržai-biržų-g-lt-parodos-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Biržai, Parodos g. 2, 41136",
+    "city": "Biržų r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.199,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:2-41136-biržai-biržų-g-lt-parodos-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Biržai, Parodos g. 2, 41136",
+    "city": "Biržų r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.959,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:29109-9-anykščiai-anykščių-g-lt-piliakalnio-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Anykščiai, Piliakalnio g. 9, 29109",
+    "city": "Anykščių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.799,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:29109-9-anykščiai-anykščių-g-lt-piliakalnio-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Anykščiai, Piliakalnio g. 9, 29109",
+    "city": "Anykščių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.199,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:29109-9-anykščiai-anykščių-g-lt-piliakalnio-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Anykščiai, Piliakalnio g. 9, 29109",
+    "city": "Anykščių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.959,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:29148-34-a-anykščiai-anykščių-g-lt-r-sav-uab-viada-vienuolio",
+    "brand": "viada",
+    "address": "Anykščiai, A. Vienuolio g. 34, 29148",
+    "city": "Anykščių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.799,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:29148-34-a-anykščiai-anykščių-g-lt-r-sav-uab-viada-vienuolio",
+    "brand": "viada",
+    "address": "Anykščiai, A. Vienuolio g. 34, 29148",
+    "city": "Anykščių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.199,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:29148-34-a-anykščiai-anykščių-g-lt-r-sav-uab-viada-vienuolio",
+    "brand": "viada",
+    "address": "Anykščiai, A. Vienuolio g. 34, 29148",
+    "city": "Anykščių r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.959,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:33b-62136-alytaus-alytus-g-lt-m-sav-uab-ulonų-viada",
+    "brand": "viada",
+    "address": "Alytus, Ulonų g. 33B, 62136",
+    "city": "Alytaus m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.819,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:33b-62136-alytaus-alytus-g-lt-m-sav-uab-ulonų-viada",
+    "brand": "viada",
+    "address": "Alytus, Ulonų g. 33B, 62136",
+    "city": "Alytaus m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.179,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:33b-62136-alytaus-alytus-g-lt-m-sav-uab-ulonų-viada",
+    "brand": "viada",
+    "address": "Alytus, Ulonų g. 33B, 62136",
+    "city": "Alytaus m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.959,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:27-62175-alytaus-alytus-g-lt-m-naujoji-sav-uab-viada",
+    "brand": "viada",
+    "address": "Alytus, Naujoji g. 27, 62175",
+    "city": "Alytaus m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.829,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:27-62175-alytaus-alytus-g-lt-m-naujoji-sav-uab-viada",
+    "brand": "viada",
+    "address": "Alytus, Naujoji g. 27, 62175",
+    "city": "Alytaus m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.179,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:27-62175-alytaus-alytus-g-lt-m-naujoji-sav-uab-viada",
+    "brand": "viada",
+    "address": "Alytus, Naujoji g. 27, 62175",
+    "city": "Alytaus m. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.959,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:25-64144-alytaus-daugų-g-k-lt-neveiglo-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Daugų k., Neveiglo g. 25, 64144",
+    "city": "Alytaus r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "LPG",
+    "price": 0.859,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:25-64144-alytaus-daugų-g-k-lt-neveiglo-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Daugų k., Neveiglo g. 25, 64144",
+    "city": "Alytaus r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "D",
+    "price": 2.199,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:25-64144-alytaus-daugų-g-k-lt-neveiglo-r-sav-uab-viada",
+    "brand": "viada",
+    "address": "Daugų k., Neveiglo g. 25, 64144",
+    "city": "Alytaus r. sav.",
+    "name": "UAB Viada LT",
+    "fuel": "95",
+    "price": 1.979,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:2a-55355-g-jonavos-k-kauno-r-ručiūnų-sav-uab-vimijula",
+    "brand": "independent",
+    "address": "Ručiūnų k., Kauno g. 2A, 55355",
+    "city": "Jonavos r. sav.",
+    "name": "UAB Vimijula",
+    "fuel": "LPG",
+    "price": 0.84,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:2a-55355-g-jonavos-k-kauno-r-ručiūnų-sav-uab-vimijula",
+    "brand": "independent",
+    "address": "Ručiūnų k., Kauno g. 2A, 55355",
+    "city": "Jonavos r. sav.",
+    "name": "UAB Vimijula",
+    "fuel": "D",
+    "price": 2.17,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:2a-55355-g-jonavos-k-kauno-r-ručiūnų-sav-uab-vimijula",
+    "brand": "independent",
+    "address": "Ručiūnų k., Kauno g. 2A, 55355",
+    "city": "Jonavos r. sav.",
+    "name": "UAB Vimijula",
+    "fuel": "95",
+    "price": 1.94,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:3-69331-g-k-l-lietuva-marijampolės-pasūduonės-sav-taunio-uab-virši",
+    "brand": "independent",
+    "address": "Pasūduonės k., L.Taunio g. 3, 69331",
+    "city": "Marijampolės sav.",
+    "name": "UAB VIRŠI Lietuva",
+    "fuel": "LPG",
+    "price": 0.924,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:3-69331-g-k-l-lietuva-marijampolės-pasūduonės-sav-taunio-uab-virši",
+    "brand": "independent",
+    "address": "Pasūduonės k., L.Taunio g. 3, 69331",
+    "city": "Marijampolės sav.",
+    "name": "UAB VIRŠI Lietuva",
+    "fuel": "D",
+    "price": 2.154,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:3-69331-g-k-l-lietuva-marijampolės-pasūduonės-sav-taunio-uab-virši",
+    "brand": "independent",
+    "address": "Pasūduonės k., L.Taunio g. 3, 69331",
+    "city": "Marijampolės sav.",
+    "name": "UAB VIRŠI Lietuva",
+    "fuel": "95",
+    "price": 1.914,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:2c-89330-g-k-laukų-mažeikių-r-sav-tirkšlių-uab-visvilas",
+    "brand": "independent",
+    "address": "Tirkšlių k., Laukų g. 2C, 89330",
+    "city": "Mažeikių r. sav.",
+    "name": "UAB Visvilas",
+    "fuel": "95",
+    "price": 1.85,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:2c-89330-g-k-laukų-mažeikių-r-sav-tirkšlių-uab-visvilas",
+    "brand": "independent",
+    "address": "Tirkšlių k., Laukų g. 2C, 89330",
+    "city": "Mažeikių r. sav.",
+    "name": "UAB Visvilas",
+    "fuel": "D",
+    "price": 2.09,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:2c-89330-g-k-laukų-mažeikių-r-sav-tirkšlių-uab-visvilas",
+    "brand": "independent",
+    "address": "Tirkšlių k., Laukų g. 2C, 89330",
+    "city": "Mažeikių r. sav.",
+    "name": "UAB Visvilas",
+    "fuel": "LPG",
+    "price": 0.73,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:4-90110-g-k-plungės-pramogų-r-sav-truikių-uab-vvarff",
+    "brand": "independent",
+    "address": "Truikių k., Pramogų g. 4, 90110",
+    "city": "Plungės r. sav.",
+    "name": "UAB VVARFF",
+    "fuel": "95",
+    "price": 1.956,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:4-90110-g-k-plungės-pramogų-r-sav-truikių-uab-vvarff",
+    "brand": "independent",
+    "address": "Truikių k., Pramogų g. 4, 90110",
+    "city": "Plungės r. sav.",
+    "name": "UAB VVARFF",
+    "fuel": "D",
+    "price": 2.246,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:4-90110-g-k-plungės-pramogų-r-sav-truikių-uab-vvarff",
+    "brand": "independent",
+    "address": "Truikių k., Pramogų g. 4, 90110",
+    "city": "Plungės r. sav.",
+    "name": "UAB VVARFF",
+    "fuel": "LPG",
+    "price": 0.866,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:16a-55195-g-jonava-jonavos-r-sav-taurostos-uab-žibalas",
+    "brand": "independent",
+    "address": "Jonava, Taurostos g. 16A, 55195",
+    "city": "Jonavos r. sav.",
+    "name": "UAB Žibalas",
+    "fuel": "LPG",
+    "price": 0.84,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:16a-55195-g-jonava-jonavos-r-sav-taurostos-uab-žibalas",
+    "brand": "independent",
+    "address": "Jonava, Taurostos g. 16A, 55195",
+    "city": "Jonavos r. sav.",
+    "name": "UAB Žibalas",
+    "fuel": "D",
+    "price": 2.23,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:16a-55195-g-jonava-jonavos-r-sav-taurostos-uab-žibalas",
+    "brand": "independent",
+    "address": "Jonava, Taurostos g. 16A, 55195",
+    "city": "Jonavos r. sav.",
+    "name": "UAB Žibalas",
+    "fuel": "95",
+    "price": 1.95,
+    "observedAt": "2026-09-11T07:00:00+03:00"
+  }
+]
