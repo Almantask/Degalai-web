@@ -30,6 +30,19 @@ test("station list can be minimised", async ({ page }) => {
   await expect(page.locator(".list-body")).toBeHidden();
 });
 
+test("search header can be minimised for a full map", async ({ page }) => {
+  await page.goto("/");
+  const toggle = page.getByRole("button", { name: /Sutraukti paiešką|Išskleisti paiešką/ });
+  await expect(toggle).toBeVisible();
+  await expect(page.getByPlaceholder("Kur važiuojate?")).toBeVisible();
+  await toggle.click();
+  await expect(page.locator("#header")).toHaveClass(/is-min/);
+  await expect(page.getByPlaceholder("Kur važiuojate?")).toBeHidden();
+  await expect(page.locator("#map")).toBeVisible();
+  await page.getByRole("button", { name: /Išskleisti paiešką|Expand search/ }).click();
+  await expect(page.getByPlaceholder("Kur važiuojate?")).toBeVisible();
+});
+
 test("around me with mocked geolocation (Vilnius)", async ({ page }) => {
   await page.addInitScript(() => {
     const pos = {

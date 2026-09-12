@@ -47,13 +47,99 @@ body,
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 10px 12px 12px;
+  padding: 10px 12px 8px;
   background: var(--card);
   backdrop-filter: blur(18px) saturate(1.4);
   border: 1px solid rgb(255 255 255 / 70%);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   color: var(--ink);
+}
+
+.header-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.header-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: calc(100% + 24px);
+  margin: 0 -12px -2px;
+  padding: 6px 12px 4px;
+  min-height: 22px;
+}
+
+.header-toggle:hover .header-handle {
+  background: rgb(16 32 24 / 32%);
+}
+
+.header-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 99px;
+  background: rgb(16 32 24 / 18%);
+}
+
+.header-min-label {
+  display: none;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-size: 1.05rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.header-chevron {
+  position: absolute;
+  right: 16px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.header.is-min {
+  right: auto;
+  width: auto;
+  max-width: min(320px, calc(100% - 24px));
+  padding: 8px 10px;
+  gap: 0;
+}
+
+.header.is-min .header-body {
+  display: none;
+}
+
+.header.is-min .header-toggle {
+  width: 100%;
+  min-width: 148px;
+  margin: 0;
+  padding: 2px 2px 2px 8px;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.header.is-min .header-handle {
+  display: none;
+}
+
+.header.is-min .header-min-label {
+  display: block;
+}
+
+.header.is-min .header-chevron {
+  position: static;
+  margin-left: auto;
+  padding: 0 6px;
+}
+
+.app:has(.header.is-min) .panel,
+.app:has(.header.is-min) #banner {
+  top: max(62px, calc(env(safe-area-inset-top) + 52px));
 }
 
 .topbar,
@@ -524,6 +610,16 @@ body,
     left: 16px;
     right: auto;
     width: min(760px, calc(100% - 400px));
+  }
+
+  .header.is-min {
+    width: auto;
+  }
+
+  .app:has(.header.is-min) .panel,
+  .app:has(.header.is-min) #banner {
+    top: 72px;
+    max-width: min(760px, calc(100% - 400px));
   }
 
   .list {

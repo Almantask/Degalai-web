@@ -34,6 +34,8 @@
   "list.etaMax": "max. greičiu {time}",
   "list.collapse": "Sutraukti sąrašą",
   "list.expand": "Išskleisti sąrašą",
+  "header.collapse": "Sutraukti paiešką",
+  "header.expand": "Išskleisti paiešką",
   "list.addressMissing": "Adresas nenurodytas",
   "popup.updated": "Atnaujinta",
   "popup.stale": "Sena kaina",

@@ -34,6 +34,8 @@
   "list.etaMax": "at max speed {time}",
   "list.collapse": "Minimise list",
   "list.expand": "Expand list",
+  "header.collapse": "Minimise search",
+  "header.expand": "Expand search",
   "list.addressMissing": "Address unavailable",
   "popup.updated": "Updated",
   "popup.stale": "Stale price",

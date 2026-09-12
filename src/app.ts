@@ -79,6 +79,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let aroundOpen = false;
   let settingsOpen = false;
   let listMinimized = false;
+  let headerMinimized = false;
   let aroundRows: AroundRow[] = [];
   let aroundOrigin: LngLat | null = null;
   let routeRows: RouteStationRow[] = [];
@@ -181,6 +182,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       } else if (act === "toggle-list") {
         listMinimized = !listMinimized;
         renderList();
+      } else if (act === "toggle-header") {
+        headerMinimized = !headerMinimized;
+        applyHeaderMinimized();
       }
     });
 
@@ -583,6 +587,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     updateHreflang();
     const header = root.querySelector("#header")!;
     header.innerHTML = headerHtml();
+    applyHeaderMinimized();
     const panels = root.querySelector("#panels")!;
     panels.innerHTML = `${settingsOpen ? settingsHtml() : ""}${aroundOpen ? aroundHtml() : ""}`;
     renderList();
@@ -682,51 +687,70 @@ export async function startApp(root: HTMLElement): Promise<void> {
     </button></li>`;
   }
 
+  function applyHeaderMinimized(): void {
+    const header = root.querySelector("#header")!;
+    header.classList.toggle("is-min", headerMinimized);
+    const btn = header.querySelector<HTMLButtonElement>("[data-act='toggle-header']");
+    if (!btn) return;
+    btn.setAttribute("aria-expanded", headerMinimized ? "false" : "true");
+    btn.setAttribute("aria-label", headerMinimized ? t("header.expand") : t("header.collapse"));
+    const chev = btn.querySelector(".header-chevron");
+    if (chev) chev.textContent = headerMinimized ? "▾" : "▴";
+  }
+
   function headerHtml(): string {
     const g = fuelGroupOf(settings.fuel);
     const petrolOpen = g === "petrol";
     const destVal = destQuery || endHit?.label || "";
+    const minLabel = destVal || t("app.name");
     return `
-      <div class="topbar">
-        <a class="logo" data-act="view" data-view="map" href="${pathFor("map", locale)}">${escapeHtml(t("app.name"))}</a>
-        <div class="fuel-filter" role="group" aria-label="${escapeHtml(t("fuel.diesel"))}">
-          ${(["diesel", "petrol", "gas"] as const)
-            .map(
-              (group) =>
-                `<button type="button" class="${g === group ? "on" : ""}" data-act="fuel-group" data-group="${group}">${escapeHtml(t(`fuel.group.${group}` as MessageKey))}</button>`,
-            )
-            .join("")}
-        </div>
-        ${
-          petrolOpen
-            ? `<div class="fuel-sub">${["95", "98"]
-                .map(
-                  (f) =>
-                    `<button type="button" class="${settings.fuel === f ? "on" : ""}" data-act="fuel" data-fuel="${f}">${f}</button>`,
-                )
-                .join("")}</div>`
-            : ""
-        }
-        <div class="topbar-end">
-          <div class="lang">
-            <a data-act="locale" data-locale="lt" href="${hrefFor(view, "lt", settings.fuel)}" hreflang="lt" class="${locale === "lt" ? "on" : ""}">LT</a>
-            <a data-act="locale" data-locale="en" href="${hrefFor(view, "en", settings.fuel)}" hreflang="en" class="${locale === "en" ? "on" : ""}">EN</a>
+      <div class="header-body">
+        <div class="topbar">
+          <a class="logo" data-act="view" data-view="map" href="${pathFor("map", locale)}">${escapeHtml(t("app.name"))}</a>
+          <div class="fuel-filter" role="group" aria-label="${escapeHtml(t("fuel.diesel"))}">
+            ${(["diesel", "petrol", "gas"] as const)
+              .map(
+                (group) =>
+                  `<button type="button" class="${g === group ? "on" : ""}" data-act="fuel-group" data-group="${group}">${escapeHtml(t(`fuel.group.${group}` as MessageKey))}</button>`,
+              )
+              .join("")}
           </div>
-          <button type="button" class="icon-btn ${aroundOpen ? "on" : ""}" data-act="around">${escapeHtml(t("action.around"))}</button>
-          <button type="button" class="icon-btn ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">⚙</button>
+          ${
+            petrolOpen
+              ? `<div class="fuel-sub">${["95", "98"]
+                  .map(
+                    (f) =>
+                      `<button type="button" class="${settings.fuel === f ? "on" : ""}" data-act="fuel" data-fuel="${f}">${f}</button>`,
+                  )
+                  .join("")}</div>`
+              : ""
+          }
+          <div class="topbar-end">
+            <div class="lang">
+              <a data-act="locale" data-locale="lt" href="${hrefFor(view, "lt", settings.fuel)}" hreflang="lt" class="${locale === "lt" ? "on" : ""}">LT</a>
+              <a data-act="locale" data-locale="en" href="${hrefFor(view, "en", settings.fuel)}" hreflang="en" class="${locale === "en" ? "on" : ""}">EN</a>
+            </div>
+            <button type="button" class="icon-btn ${aroundOpen ? "on" : ""}" data-act="around">${escapeHtml(t("action.around"))}</button>
+            <button type="button" class="icon-btn ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">⚙</button>
+          </div>
+        </div>
+        <div class="dest">
+          <div class="dest-from">
+            <span class="dest-pin" aria-hidden="true"></span>
+            <span>${escapeHtml(t("dest.from"))}</span>
+          </div>
+          <div class="dest-field">
+            <input id="dest" class="search" type="search" autocomplete="off" placeholder="${escapeHtml(t("dest.placeholder"))}" value="${escapeHtml(destVal)}" />
+            ${endHit ? `<button type="button" class="dest-clear" data-act="clear-dest" aria-label="${escapeHtml(t("dest.clear"))}">×</button>` : ""}
+            <div id="dest-sug" class="sug-box"></div>
+          </div>
         </div>
       </div>
-      <div class="dest">
-        <div class="dest-from">
-          <span class="dest-pin" aria-hidden="true"></span>
-          <span>${escapeHtml(t("dest.from"))}</span>
-        </div>
-        <div class="dest-field">
-          <input id="dest" class="search" type="search" autocomplete="off" placeholder="${escapeHtml(t("dest.placeholder"))}" value="${escapeHtml(destVal)}" />
-          ${endHit ? `<button type="button" class="dest-clear" data-act="clear-dest" aria-label="${escapeHtml(t("dest.clear"))}">×</button>` : ""}
-          <div id="dest-sug" class="sug-box"></div>
-        </div>
-      </div>
+      <button type="button" class="header-toggle" data-act="toggle-header" aria-expanded="${headerMinimized ? "false" : "true"}" aria-label="${escapeHtml(headerMinimized ? t("header.expand") : t("header.collapse"))}">
+        <span class="header-handle" aria-hidden="true"></span>
+        <span class="header-min-label">${escapeHtml(minLabel)}</span>
+        <span class="header-chevron" aria-hidden="true">${headerMinimized ? "▾" : "▴"}</span>
+      </button>
     `;
   }
 
