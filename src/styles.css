@@ -63,6 +63,20 @@ body,
   color: var(--green-dark);
 }
 
+.header .fuel-filter button,
+.header .fuel-sub button {
+  border: 1px solid rgb(255 255 255 / 40%);
+  background: transparent;
+  color: #fff;
+}
+
+.header .fuel-filter button.on,
+.header .fuel-sub button.on {
+  background: #fff;
+  color: var(--green-dark);
+  border-color: #fff;
+}
+
 .logo {
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -225,8 +239,6 @@ body,
 }
 
 .radii button,
-.fuel-filter button,
-.fuel-sub button,
 .panel button:not(.primary) {
   border: 1px solid var(--line);
   background: #fff;
