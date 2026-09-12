@@ -1,0 +1,14 @@
+node_modules
+dist
+dev-dist
+.DS_Store
+*.log
+playwright-report
+test-results
+public/data
+data/downloads
+data/cache/*
+!data/cache/.gitkeep
+!data/cache/geocode.json
+.vite
+.eslintcache

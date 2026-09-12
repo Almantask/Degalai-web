@@ -1,0 +1,32 @@
+name: Wrong price
+description: Report an incorrect fuel price
+title: "[price] "
+labels: [data]
+body:
+  - type: input
+    id: station
+    attributes:
+      label: Station name / address
+    validations:
+      required: true
+  - type: dropdown
+    id: fuel
+    attributes:
+      label: Fuel
+      options: ["95", "98", "D", "LPG"]
+    validations:
+      required: true
+  - type: input
+    id: shown
+    attributes:
+      label: Price shown on the site (€/l)
+  - type: input
+    id: actual
+    attributes:
+      label: Price at the pump (€/l)
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
