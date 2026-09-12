@@ -181,16 +181,24 @@ with the 2–3 largest chains that publish per-station prices publicly.
 4. List sorted by net benefit; shows price, distance, "you save ~X €" or "not worth it (−Y €)".
 
 ### 4.4 Route
-1. Start (default: my location) and destination – geocoding filtered to LT, with autocomplete.
-2. Fetch the route (geometry + duration).
-3. **Corridor**: stations within 500 m of the route count as "on the way" (detour ≈ 0);
+1. Opening route mode requests geolocation and pre-fills **Start = current location**
+   (shown as "My location" with a pin on the map); the user only types the destination.
+   - The start field remains editable: clearing it lets the user type an address or pick a
+     point on the map instead.
+   - If geolocation is denied/unavailable, the start field is left empty with a prompt to
+     enter a start address, and the "Use my location" button retries the permission.
+   - The resolved position is reused for "Around me" and refreshed on each route search.
+2. Destination – geocoding filtered to LT, with autocomplete (start uses the same geocoder
+   when entered manually).
+3. Fetch the route (geometry + duration).
+4. **Corridor**: stations within 500 m of the route count as "on the way" (detour ≈ 0);
    stations within N km (default 5 km, adjustable) are detour candidates.
-4. Baseline price = cheapest station in the corridor. For candidates, the detour is computed:
+5. Baseline price = cheapest station in the corridor. For candidates, the detour is computed:
    - precisely: routing API `table`/`route` via the station as a waypoint (extra distance and time);
    - cheaply (fallback): 2 × haversine to the nearest point on the route × road factor, time at 50 km/h.
-5. Result: route on the map, stations on the way + recommended detours with
+6. Result: route on the map, stations on the way + recommended detours with
    "+X km, +Y min, saves Z €". Clearly marked "worth it" / "not worth it".
-6. To limit API usage, detours are computed only for the top 10–15 candidates by price.
+7. To limit API usage, detours are computed only for the top 10–15 candidates by price.
 
 ### 4.5 History chart
 - Separate panel / page `/history`.
