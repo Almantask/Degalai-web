@@ -36,6 +36,7 @@ import {
   type Emphasis,
   visibleStationIds,
 } from "./map.ts";
+import { orderRouteRows } from "./route-list.ts";
 import { hrefFor, navigate, parsePath, pathFor, type View } from "./router.ts";
 import { fetchRoute, geocode, type GeoHit, type RouteResult } from "./routing.ts";
 import { fuelFromUrl, loadSettings, saveSettings } from "./settings.ts";
@@ -79,6 +80,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let aroundOpen = false;
   let settingsOpen = false;
   let listMinimized = false;
+  let headerMinimized = false;
   let aroundRows: AroundRow[] = [];
   let aroundOrigin: LngLat | null = null;
   let routeRows: RouteStationRow[] = [];
@@ -181,6 +183,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       } else if (act === "toggle-list") {
         listMinimized = !listMinimized;
         renderList();
+      } else if (act === "toggle-header") {
+        headerMinimized = !headerMinimized;
+        applyHeaderMinimized();
       }
     });
 
@@ -583,6 +588,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     updateHreflang();
     const header = root.querySelector("#header")!;
     header.innerHTML = headerHtml();
+    applyHeaderMinimized();
     const panels = root.querySelector("#panels")!;
     panels.innerHTML = `${settingsOpen ? settingsHtml() : ""}${aroundOpen ? aroundHtml() : ""}`;
     renderList();
@@ -593,29 +599,51 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function renderList(): void {
     const list = root.querySelector("#list")!;
     if (aroundOpen && aroundRows.length) {
+      const cheapest = [...aroundRows].sort(
+        (a, b) => a.price - b.price || a.station.id.localeCompare(b.station.id),
+      )[0];
+      const rest = aroundRows.filter((r) => r.station.id !== cheapest.station.id);
+      const ordered = [cheapest, ...rest].slice(0, 40);
       list.innerHTML = listWrap(
-        aroundRows.slice(0, 40).map((r) => {
+        ordered.map((r, i) => {
           const worth =
             r.benefit.netBenefit > 0
               ? t("around.save", { amount: formatMoney(r.benefit.netBenefit) })
               : t("around.notWorth", { amount: formatMoney(r.benefit.netBenefit) });
-          return stationRow(r.station, r.price, r.distKm, `<span>${escapeHtml(worth)}</span>`);
+          const isCheapest = r.station.id === cheapest.station.id;
+          return stationRow(
+            r.station,
+            r.price,
+            r.distKm,
+            worth,
+            isCheapest && i === 0 ? "is-pick" : "",
+            isCheapest ? `<span class="badge">${escapeHtml(t("list.cheapest"))}</span>` : "",
+          );
         }),
       );
       return;
     }
     if (routeLine && routeRows.length) {
-      const cheapestOn = routeRows
-        .filter((r) => r.kind === "on")
-        .sort((a, b) => a.price - b.price)[0];
+      const { cheapestOn, cheapestOverall, ordered } = orderRouteRows(routeRows);
       list.innerHTML = listWrap(
-        routeRows.map((r) => {
-          const badge =
-            cheapestOn && r.station.id === cheapestOn.station.id
+        ordered.map((r, i) => {
+          const isCheapestOn = cheapestOn?.station.id === r.station.id;
+          const isCheapestOverall = cheapestOverall?.station.id === r.station.id;
+          const detourWorth = r.benefit.netBenefit > 0 ? t("route.worth") : t("route.notWorth");
+          const badges = [
+            isCheapestOn
               ? `<span class="badge">${escapeHtml(t("route.cheapestBadge"))}</span>`
-              : r.kind === "on"
-                ? `<span class="badge muted">${escapeHtml(t("route.onTheWay"))}</span>`
-                : `<span class="badge">${escapeHtml(r.benefit.netBenefit > 0 ? t("route.worth") : t("route.notWorth"))}</span>`;
+              : "",
+            isCheapestOverall
+              ? `<span class="badge">${escapeHtml(t("route.cheapestOverall"))}</span>`
+              : "",
+            !isCheapestOn && r.kind === "on"
+              ? `<span class="badge muted">${escapeHtml(t("route.onTheWay"))}</span>`
+              : "",
+            !isCheapestOverall && r.kind === "detour"
+              ? `<span class="badge">${escapeHtml(detourWorth)}</span>`
+              : "",
+          ].join("");
           const extra =
             r.kind === "detour"
               ? t("route.extra", {
@@ -624,7 +652,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
                   save: formatMoney(r.benefit.netBenefit),
                 })
               : "";
-          return stationRow(r.station, r.price, r.distFromStartKm, `${extra} ${badge}`);
+          const pinned = isCheapestOn || isCheapestOverall;
+          return stationRow(
+            r.station,
+            r.price,
+            r.distFromStartKm,
+            extra,
+            pinned && i < 2 ? "is-pick" : "",
+            badges,
+          );
         }),
       );
       return;
@@ -650,7 +686,21 @@ export async function startApp(root: HTMLElement): Promise<void> {
       list.innerHTML = listWrap([], t("list.empty"));
       return;
     }
-    list.innerHTML = listWrap(priced.slice(0, 60).map((r) => stationRow(r.s, r.price!, r.distKm)));
+    const cheapestId = priced[0]?.s.id;
+    list.innerHTML = listWrap(
+      priced
+        .slice(0, 60)
+        .map((r, i) =>
+          stationRow(
+            r.s,
+            r.price!,
+            r.distKm,
+            "",
+            r.s.id === cheapestId ? "is-pick" : "",
+            i === 0 ? `<span class="badge">${escapeHtml(t("list.cheapest"))}</span>` : "",
+          ),
+        ),
+    );
   }
 
   function listWrap(items: string[], empty?: string): string {
@@ -669,64 +719,92 @@ export async function startApp(root: HTMLElement): Promise<void> {
     </div>`;
   }
 
-  function stationRow(s: Station, price: number, distKm?: number, extra = ""): string {
+  function stationRow(
+    s: Station,
+    price: number,
+    distKm?: number,
+    extra = "",
+    className = "",
+    badges = "",
+  ): string {
     const eta = distKm != null ? etaParts(distKm) : null;
-    return `<li><button type="button" class="station-row" data-act="station" data-id="${escapeHtml(s.id)}">
+    const cls = ["station-row", className].filter(Boolean).join(" ");
+    return `<li><button type="button" class="${cls}" data-act="station" data-id="${escapeHtml(s.id)}">
       <span class="swatch" data-brand="${escapeHtml(s.brand)}"></span>
       <span class="station-main">
+        ${badges ? `<span class="station-badges">${badges}</span>` : ""}
         <strong>${escapeHtml(s.name)}</strong>
         <small class="station-addr">${escapeHtml(stationAddress(s))}</small>
-        <small class="station-eta">${eta ? `${escapeHtml(eta.label)}` : ""}${extra}</small>
+        <small class="station-eta">${eta ? `${escapeHtml(eta.label)}` : ""}${extra ? ` ${escapeHtml(extra)}` : ""}</small>
       </span>
       <span class="station-price">${escapeHtml(formatPrice(price))}</span>
     </button></li>`;
+  }
+
+  function applyHeaderMinimized(): void {
+    const header = root.querySelector("#header")!;
+    header.classList.toggle("is-min", headerMinimized);
+    const btn = header.querySelector<HTMLButtonElement>("[data-act='toggle-header']");
+    if (!btn) return;
+    btn.setAttribute("aria-expanded", headerMinimized ? "false" : "true");
+    btn.setAttribute("aria-label", headerMinimized ? t("header.expand") : t("header.collapse"));
+    const chev = btn.querySelector(".header-chevron");
+    if (chev) chev.textContent = headerMinimized ? "▾" : "▴";
   }
 
   function headerHtml(): string {
     const g = fuelGroupOf(settings.fuel);
     const petrolOpen = g === "petrol";
     const destVal = destQuery || endHit?.label || "";
+    const minLabel = destVal || t("app.name");
     return `
-      <div class="topbar">
-        <a class="logo" data-act="view" data-view="map" href="${pathFor("map", locale)}">${escapeHtml(t("app.name"))}</a>
-        <div class="fuel-filter" role="group" aria-label="${escapeHtml(t("fuel.diesel"))}">
-          ${(["diesel", "petrol", "gas"] as const)
-            .map(
-              (group) =>
-                `<button type="button" class="${g === group ? "on" : ""}" data-act="fuel-group" data-group="${group}">${escapeHtml(t(`fuel.group.${group}` as MessageKey))}</button>`,
-            )
-            .join("")}
-        </div>
-        ${
-          petrolOpen
-            ? `<div class="fuel-sub">${["95", "98"]
-                .map(
-                  (f) =>
-                    `<button type="button" class="${settings.fuel === f ? "on" : ""}" data-act="fuel" data-fuel="${f}">${f}</button>`,
-                )
-                .join("")}</div>`
-            : ""
-        }
-        <div class="topbar-end">
-          <div class="lang">
-            <a data-act="locale" data-locale="lt" href="${hrefFor(view, "lt", settings.fuel)}" hreflang="lt" class="${locale === "lt" ? "on" : ""}">LT</a>
-            <a data-act="locale" data-locale="en" href="${hrefFor(view, "en", settings.fuel)}" hreflang="en" class="${locale === "en" ? "on" : ""}">EN</a>
+      <div class="header-body">
+        <div class="topbar">
+          <a class="logo" data-act="view" data-view="map" href="${pathFor("map", locale)}">${escapeHtml(t("app.name"))}</a>
+          <div class="fuel-filter" role="group" aria-label="${escapeHtml(t("fuel.diesel"))}">
+            ${(["diesel", "petrol", "gas"] as const)
+              .map(
+                (group) =>
+                  `<button type="button" class="${g === group ? "on" : ""}" data-act="fuel-group" data-group="${group}">${escapeHtml(t(`fuel.group.${group}` as MessageKey))}</button>`,
+              )
+              .join("")}
           </div>
-          <button type="button" class="icon-btn ${aroundOpen ? "on" : ""}" data-act="around">${escapeHtml(t("action.around"))}</button>
-          <button type="button" class="icon-btn ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">⚙</button>
+          ${
+            petrolOpen
+              ? `<div class="fuel-sub">${["95", "98"]
+                  .map(
+                    (f) =>
+                      `<button type="button" class="${settings.fuel === f ? "on" : ""}" data-act="fuel" data-fuel="${f}">${f}</button>`,
+                  )
+                  .join("")}</div>`
+              : ""
+          }
+          <div class="topbar-end">
+            <div class="lang">
+              <a data-act="locale" data-locale="lt" href="${hrefFor(view, "lt", settings.fuel)}" hreflang="lt" class="${locale === "lt" ? "on" : ""}">LT</a>
+              <a data-act="locale" data-locale="en" href="${hrefFor(view, "en", settings.fuel)}" hreflang="en" class="${locale === "en" ? "on" : ""}">EN</a>
+            </div>
+            <button type="button" class="icon-btn ${aroundOpen ? "on" : ""}" data-act="around">${escapeHtml(t("action.around"))}</button>
+            <button type="button" class="icon-btn ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">⚙</button>
+          </div>
+        </div>
+        <div class="dest">
+          <div class="dest-from">
+            <span class="dest-pin" aria-hidden="true"></span>
+            <span>${escapeHtml(t("dest.from"))}</span>
+          </div>
+          <div class="dest-field">
+            <input id="dest" class="search" type="search" autocomplete="off" placeholder="${escapeHtml(t("dest.placeholder"))}" value="${escapeHtml(destVal)}" />
+            ${endHit ? `<button type="button" class="dest-clear" data-act="clear-dest" aria-label="${escapeHtml(t("dest.clear"))}">×</button>` : ""}
+            <div id="dest-sug" class="sug-box"></div>
+          </div>
         </div>
       </div>
-      <div class="dest">
-        <div class="dest-from">
-          <span class="dest-pin" aria-hidden="true"></span>
-          <span>${escapeHtml(t("dest.from"))}</span>
-        </div>
-        <div class="dest-field">
-          <input id="dest" class="search" type="search" autocomplete="off" placeholder="${escapeHtml(t("dest.placeholder"))}" value="${escapeHtml(destVal)}" />
-          ${endHit ? `<button type="button" class="dest-clear" data-act="clear-dest" aria-label="${escapeHtml(t("dest.clear"))}">×</button>` : ""}
-          <div id="dest-sug" class="sug-box"></div>
-        </div>
-      </div>
+      <button type="button" class="header-toggle" data-act="toggle-header" aria-expanded="${headerMinimized ? "false" : "true"}" aria-label="${escapeHtml(headerMinimized ? t("header.expand") : t("header.collapse"))}">
+        <span class="header-handle" aria-hidden="true"></span>
+        <span class="header-min-label">${escapeHtml(minLabel)}</span>
+        <span class="header-chevron" aria-hidden="true">${headerMinimized ? "▾" : "▴"}</span>
+      </button>
     `;
   }
 

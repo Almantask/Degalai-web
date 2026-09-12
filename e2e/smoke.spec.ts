@@ -20,6 +20,18 @@ test("English locale loads without history or about", async ({ page }) => {
   await expect(page.getByRole("link", { name: "History" })).toHaveCount(0);
 });
 
+test("station list is cheapest-first with a badge on top", async ({ page }) => {
+  await page.goto("/");
+  const first = page.locator(".station-row").first();
+  await expect(first).toBeVisible({ timeout: 15_000 });
+  await expect(first.locator(".badge")).toHaveText(/Pigiausia/);
+  const texts = await page.locator(".station-row .station-price").allTextContents();
+  const values = texts.map((s) => Number(s.replace(/[^\d,.-]/g, "").replace(",", ".")));
+  expect(values.length).toBeGreaterThan(1);
+  const sorted = [...values].sort((a, b) => a - b);
+  expect(values).toEqual(sorted);
+});
+
 test("station list can be minimised", async ({ page }) => {
   await page.goto("/");
   const toggle = page.getByRole("button", { name: /Sutraukti sąrašą|Išskleisti sąrašą/ });
@@ -28,6 +40,19 @@ test("station list can be minimised", async ({ page }) => {
   await toggle.click();
   await expect(page.locator(".sheet")).toHaveClass(/is-min/);
   await expect(page.locator(".list-body")).toBeHidden();
+});
+
+test("search header can be minimised for a full map", async ({ page }) => {
+  await page.goto("/");
+  const toggle = page.getByRole("button", { name: /Sutraukti paiešką|Išskleisti paiešką/ });
+  await expect(toggle).toBeVisible();
+  await expect(page.getByPlaceholder("Kur važiuojate?")).toBeVisible();
+  await toggle.click();
+  await expect(page.locator("#header")).toHaveClass(/is-min/);
+  await expect(page.getByPlaceholder("Kur važiuojate?")).toBeHidden();
+  await expect(page.locator("#map")).toBeVisible();
+  await page.getByRole("button", { name: /Išskleisti paiešką|Expand search/ }).click();
+  await expect(page.getByPlaceholder("Kur važiuojate?")).toBeVisible();
 });
 
 test("around me with mocked geolocation (Vilnius)", async ({ page }) => {
