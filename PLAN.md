@@ -161,13 +161,20 @@ with the 2–3 largest chains that publish per-station prices publicly.
 - Lithuanian bounds, initial zoom shows the whole country; map `maxBounds` = LT.
 - Stations as a MapLibre layer (GeoJSON) with clustering at low zoom levels.
 - Marker colour by price percentile (cheap → expensive) for the selected fuel type.
-- Top bar: fuel type selector (95 / 98 / D / LPG), search box, "Around me" and "Route" buttons.
+- Top bar: **fuel filter**, search box, "Around me" and "Route" buttons.
+  - Fuel filter is a segmented control with three groups: **Diesel** / **Petrol** / **Gas (LPG)**.
+    Petrol expands to grade (95 default, 98); Diesel can later expand to D / D+ / HVO.
+  - The filter is global: it drives marker colours, the station list, "Around me", route
+    highlighting and the history chart. Stations that do not sell the selected fuel are hidden
+    (or dimmed – toggle in settings).
+  - Stored in localStorage; also reflected in the URL (`?fuel=diesel`) so a filtered view can be shared.
 - Tapping a station opens a popup: name, brand, all prices, last update, "Navigate" (link to
   external navigation), price mini-chart (from daily files – optional).
 - Bottom (mobile: bottom sheet): list of visible stations sorted by price.
 
 ### 4.2 User settings (localStorage)
-- Fuel type.
+- Fuel filter (Diesel / Petrol 95 or 98 / Gas).
+- Route preference (Shortest / Fastest), default Shortest.
 - Vehicle consumption (l/100 km), default 7.0.
 - Litres planned to fill, default 40.
 - Value of time €/h (default 0 – only fuel costs are counted; can be enabled, e.g. 10 €/h).
@@ -190,15 +197,26 @@ with the 2–3 largest chains that publish per-station prices publicly.
    - The resolved position is reused for "Around me" and refreshed on each route search.
 2. Destination – geocoding filtered to LT, with autocomplete (start uses the same geocoder
    when entered manually).
-3. Fetch the route (geometry + duration).
-4. **Corridor**: stations within 500 m of the route count as "on the way" (detour ≈ 0);
-   stations within N km (default 5 km, adjustable) are detour candidates.
-5. Baseline price = cheapest station in the corridor. For candidates, the detour is computed:
+3. **Shortest path** to the destination: the routing API is asked for the shortest-distance
+   route (ORS `preference=shortest`; OSRM would need a `shortest` profile – otherwise its
+   fastest route is used and labelled as such). A "Shortest / Fastest" toggle is available,
+   default **Shortest**. The response gives geometry, distance and duration, drawn as the main
+   route line on the map with the map fitted to its bounds.
+4. **Highlight fuel stations along the route** for the selected fuel filter (Diesel / Petrol / Gas):
+   - stations within 500 m of the route count as "on the way" (detour ≈ 0) and are drawn with a
+     prominent marker (larger, price label always visible, coloured by price);
+   - stations within N km (default 5 km, adjustable) are detour candidates, drawn smaller with a
+     dashed connector to the route;
+   - all other stations are dimmed / hidden while route mode is active;
+   - stations not selling the selected fuel are excluded entirely.
+5. Baseline price = cheapest "on the way" station. For candidates, the detour is computed:
    - precisely: routing API `table`/`route` via the station as a waypoint (extra distance and time);
    - cheaply (fallback): 2 × haversine to the nearest point on the route × road factor, time at 50 km/h.
-6. Result: route on the map, stations on the way + recommended detours with
-   "+X km, +Y min, saves Z €". Clearly marked "worth it" / "not worth it".
-7. To limit API usage, detours are computed only for the top 10–15 candidates by price.
+6. Result: route on the map, a list of highlighted stations ordered by position along the route
+   (with km from start), plus recommended detours with "+X km, +Y min, saves Z €".
+   Clearly marked "worth it" / "not worth it"; the cheapest on-route station is badged.
+7. Changing the fuel filter while a route is shown re-runs steps 4–6 without refetching the route.
+8. To limit API usage, detours are computed only for the top 10–15 candidates by price.
 
 ### 4.5 History chart
 - Separate panel / page `/history`.
