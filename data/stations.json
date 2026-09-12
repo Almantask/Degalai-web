@@ -2840,7 +2840,7 @@
     ],
     "sourceIds": {
       "osm": "way/62200455",
-      "lea": "lea:08311-161a-baltic-g-kalvarijų-m-petroleum-sav-uab-vilniaus-vilnius"
+      "lea": "lea:08314-33-g-j-kazlausko-m-sav-skulas-uab-vilniaus-vilnius"
     }
   },
   {
@@ -3319,7 +3319,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/88726335"
+      "osm": "way/88726335",
+      "lea": "lea:28-92191-g-klaipėda-klaipėdos-lt-m-priestočio-sav-uab-viada"
     }
   },
   {
@@ -3337,7 +3338,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/88726345"
+      "osm": "way/88726345",
+      "lea": "lea:242-92330-g-klaipėda-klaipėdos-liepojos-lt-m-sav-uab-viada"
     }
   },
   {
@@ -3609,7 +3611,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/98034422"
+      "osm": "way/98034422",
+      "lea": "lea:27-62175-alytaus-alytus-g-lt-m-naujoji-sav-uab-viada"
     }
   },
   {
@@ -3908,7 +3911,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/117564238"
+      "osm": "way/117564238",
+      "lea": "lea:22b-52447-g-kaunas-kauno-lt-m-masiulio-sav-t-uab-viada"
     }
   },
   {
@@ -4052,7 +4056,7 @@
     ],
     "sourceIds": {
       "osm": "way/127683606",
-      "lea": "lea:28a-92211-g-klaipėda-klaipėdos-kretingos-m-sav-trevena-uab"
+      "lea": "lea:97100-k-kretingos-kretingsodžio-lt-r-sav-uab-viada"
     }
   },
   {
@@ -4121,7 +4125,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/131114720"
+      "osm": "way/131114720",
+      "lea": "lea:33b-62136-alytaus-alytus-g-lt-m-sav-uab-ulonų-viada"
     }
   },
   {
@@ -4307,10 +4312,12 @@
     "city": "Kaunas",
     "fuels": [
       "95",
-      "D"
+      "D",
+      "LPG"
     ],
     "sourceIds": {
-      "osm": "way/138515573"
+      "osm": "way/138515573",
+      "lea": "lea:124b-46282-g-kaunas-kauno-lt-m-sav-uab-veiverių-viada"
     }
   },
   {
@@ -4363,7 +4370,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/138641611"
+      "osm": "way/138641611",
+      "lea": "lea:45267-90-a-juozapavičiaus-kaunas-kauno-lt-m-pr-sav-uab-viada"
     }
   },
   {
@@ -4473,7 +4481,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/146533349"
+      "osm": "way/146533349",
+      "lea": "lea:49404-66a-g-kaunas-kauno-lt-lukšio-m-p-sav-uab-viada"
     }
   },
   {
@@ -4486,10 +4495,12 @@
     "city": "Kaunas",
     "fuels": [
       "95",
-      "D"
+      "D",
+      "LPG"
     ],
     "sourceIds": {
-      "osm": "way/148746104"
+      "osm": "way/148746104",
+      "lea": "lea:49117-61a-islandijos-kaunas-kauno-lt-m-pl-sav-uab-viada"
     }
   },
   {
@@ -5108,7 +5119,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/171687137"
+      "osm": "way/171687137",
+      "lea": "lea:163-97133-g-kretinga-kretingos-lt-r-sav-uab-viada-vytauto"
     }
   },
   {
@@ -5356,7 +5368,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/190273153"
+      "osm": "way/190273153",
+      "lea": "lea:13a-54311-g-k-kauno-kumpių-lt-r-sav-uab-verslo-viada"
     }
   },
   {
@@ -5385,10 +5398,12 @@
     "lon": 25.4052818,
     "fuels": [
       "95",
-      "D"
+      "D",
+      "LPG"
     ],
     "sourceIds": {
-      "osm": "way/190769413"
+      "osm": "way/190769413",
+      "lea": "lea:101-33112-g-lt-molėtai-molėtų-r-sav-uab-viada-vilniaus"
     }
   },
   {
@@ -5701,7 +5716,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/200298634"
+      "osm": "way/200298634",
+      "lea": "lea:47130-90b-baltijos-g-kaunas-kauno-lt-m-sav-uab-viada"
     }
   },
   {
@@ -6133,7 +6149,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/208463968"
+      "osm": "way/208463968",
+      "lea": "lea:45462-84-didžioji-g-kaunas-kauno-lt-m-sav-uab-viada"
     }
   },
   {
@@ -6479,7 +6496,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/213435023"
+      "osm": "way/213435023",
+      "lea": "lea:18-47115-g-kaunas-kauno-lt-m-miežėnų-sav-uab-viada"
     }
   },
   {
@@ -6496,7 +6514,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/213521931"
+      "osm": "way/213521931",
+      "lea": "lea:51-84166-g-joniškio-joniškis-lt-r-sav-uab-viada-vilniaus"
     }
   },
   {
@@ -7319,7 +7338,8 @@
       "D"
     ],
     "sourceIds": {
-      "osm": "way/232568821"
+      "osm": "way/232568821",
+      "lea": "lea:35-69270-g-k-kalvarijos-lt-muitinės-pelucmurgių-sav-uab-viada"
     }
   },
   {
@@ -7348,10 +7368,12 @@
     "city": "Kaišiadorys",
     "fuels": [
       "95",
-      "D"
+      "D",
+      "LPG"
     ],
     "sourceIds": {
-      "osm": "way/233361764"
+      "osm": "way/233361764",
+      "lea": "lea:135-56173-g-gedimino-kaišiadorių-kaišiadorys-lt-r-sav-uab-viada"
     }
   },
   {
@@ -7589,10 +7611,12 @@
     "city": "Anykščiai",
     "fuels": [
       "95",
-      "D"
+      "D",
+      "LPG"
     ],
     "sourceIds": {
-      "osm": "way/242507667"
+      "osm": "way/242507667",
+      "lea": "lea:29148-34-a-anykščiai-anykščių-g-lt-r-sav-uab-viada-vienuolio"
     }
   },
   {
@@ -7829,10 +7853,12 @@
     "city": "Kupiškis",
     "fuels": [
       "95",
-      "D"
+      "D",
+      "LPG"
     ],
     "sourceIds": {
-      "osm": "way/252425264"
+      "osm": "way/252425264",
+      "lea": "lea:15-40109-g-kupiškio-kupiškis-lt-pergalės-r-sav-uab-viada"
     }
   },
   {
@@ -8156,10 +8182,12 @@
     "city": "Marijampolė",
     "fuels": [
       "95",
-      "D"
+      "D",
+      "LPG"
     ],
     "sourceIds": {
-      "osm": "way/265435822"
+      "osm": "way/265435822",
+      "lea": "lea:2-68161-ambrazevičiaus-brazaičio-g-j-lt-marijampolė-marijampolės-sav-uab-viada"
     }
   },
   {
@@ -8263,7 +8291,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/267015775"
+      "osm": "way/267015775",
+      "lea": "lea:4-90110-g-k-plungės-pramogų-r-sav-truikių-uab-vvarff"
     }
   },
   {
@@ -8298,7 +8327,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/268939705"
+      "osm": "way/268939705",
+      "lea": "lea:2a-58352-dotnuva-g-kėdainių-lt-r-sav-tilto-uab-viada"
     }
   },
   {
@@ -10238,10 +10268,12 @@
     "city": "Jonava",
     "fuels": [
       "95",
-      "D"
+      "D",
+      "LPG"
     ],
     "sourceIds": {
-      "osm": "way/432317471"
+      "osm": "way/432317471",
+      "lea": "lea:4d-55101-darbininkų-g-jonava-jonavos-lt-r-sav-uab-viada"
     }
   },
   {
@@ -10488,7 +10520,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/452304922"
+      "osm": "way/452304922",
+      "lea": "lea:2a-89101-g-lt-mažeikiai-mažeikių-montuotojų-r-sav-uab-viada"
     }
   },
   {
@@ -10870,7 +10903,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/507363403"
+      "osm": "way/507363403",
+      "lea": "lea:2-41136-biržai-biržų-g-lt-parodos-r-sav-uab-viada"
     }
   },
   {
@@ -10901,10 +10935,12 @@
     "city": "Kaunas",
     "fuels": [
       "95",
-      "D"
+      "D",
+      "LPG"
     ],
     "sourceIds": {
-      "osm": "way/515191833"
+      "osm": "way/515191833",
+      "lea": "lea:44405-64-baršausko-g-k-kaunas-kauno-lt-m-sav-uab-viada"
     }
   },
   {
@@ -11004,7 +11040,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/520974228"
+      "osm": "way/520974228",
+      "lea": "lea:54471-k-kauno-lt-margavos-r-sav-uab-viada"
     }
   },
   {
@@ -11077,7 +11114,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/540437602"
+      "osm": "way/540437602",
+      "lea": "lea:3a-50124-g-kaunas-kauno-lt-m-sav-statybininkų-uab-viada"
     }
   },
   {
@@ -11286,7 +11324,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/560286246"
+      "osm": "way/560286246",
+      "lea": "lea:4-54310-automagistralės-g-giraitės-k-kauno-lt-r-sav-uab-viada"
     }
   },
   {
@@ -11510,7 +11549,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/592952590"
+      "osm": "way/592952590",
+      "lea": "lea:20a-53419-g-kauno-lt-r-sav-uab-viada-vytauto-zapyškis"
     }
   },
   {
@@ -11557,10 +11597,12 @@
     "city": "Tirkšliai",
     "fuels": [
       "95",
-      "D"
+      "D",
+      "LPG"
     ],
     "sourceIds": {
-      "osm": "way/604115457"
+      "osm": "way/604115457",
+      "lea": "lea:2c-89330-g-k-laukų-mažeikių-r-sav-tirkšlių-uab-visvilas"
     }
   },
   {
@@ -11873,10 +11915,12 @@
     "city": "Ignalina",
     "fuels": [
       "95",
-      "D"
+      "D",
+      "LPG"
     ],
     "sourceIds": {
-      "osm": "way/714474238"
+      "osm": "way/714474238",
+      "lea": "lea:28a-30138-g-ignalina-ignalinos-lt-r-sav-turistų-uab-viada"
     }
   },
   {
@@ -12352,10 +12396,12 @@
     "city": "Kampiškiai",
     "fuels": [
       "95",
-      "D"
+      "D",
+      "LPG"
     ],
     "sourceIds": {
-      "osm": "way/951700614"
+      "osm": "way/951700614",
+      "lea": "lea:09300-41-baltijos-g-k-kampiškių-kauno-lt-r-sav-uab-viada"
     }
   },
   {
@@ -12389,7 +12435,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/959781929"
+      "osm": "way/959781929",
+      "lea": "lea:29109-9-anykščiai-anykščių-g-lt-piliakalnio-r-sav-uab-viada"
     }
   },
   {
@@ -12470,10 +12517,12 @@
     "city": "Ručiūnai",
     "fuels": [
       "95",
-      "D"
+      "D",
+      "LPG"
     ],
     "sourceIds": {
-      "osm": "way/1006831779"
+      "osm": "way/1006831779",
+      "lea": "lea:2a-55355-g-jonavos-k-kauno-r-ručiūnų-sav-uab-vimijula"
     }
   },
   {
@@ -12819,7 +12868,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/1197254995"
+      "osm": "way/1197254995",
+      "lea": "lea:1b-41132-biržai-biržų-g-lt-pasvalio-r-sav-uab-viada"
     }
   },
   {
@@ -12852,7 +12902,8 @@
       "LPG"
     ],
     "sourceIds": {
-      "osm": "way/1228991356"
+      "osm": "way/1228991356",
+      "lea": "lea:35-38305-g-krekenava-lt-panevėžio-r-sav-tilto-uab-viada"
     }
   },
   {
@@ -12967,10 +13018,12 @@
     "fuels": [
       "95",
       "98",
-      "D"
+      "D",
+      "LPG"
     ],
     "sourceIds": {
-      "osm": "way/1306914839"
+      "osm": "way/1306914839",
+      "lea": "lea:3-69331-g-k-l-lietuva-marijampolės-pasūduonės-sav-taunio-uab-virši"
     }
   },
   {
@@ -13442,7 +13495,7 @@
       "LPG"
     ],
     "sourceIds": {
-      "lea": "lea:1-31142-g-kosmoso-saurida-sav-uab-visaginas-visagino"
+      "lea": "lea:3-31142-alauša-g-kosmoso-sav-uab-visaginas-visagino"
     }
   },
   {
@@ -13527,7 +13580,7 @@
       "LPG"
     ],
     "sourceIds": {
-      "lea": "lea:08314-33-g-j-kazlausko-m-sav-skulas-uab-vilniaus-vilnius"
+      "lea": "lea:08247-204g-alauša-g-kalvarijų-m-sav-uab-vilniaus-vilnius"
     }
   },
   {
@@ -14034,7 +14087,7 @@
       "LPG"
     ],
     "sourceIds": {
-      "lea": "lea:2a-75122-eniris-g-kelio-r-rytinio-sav-uab-šilalė-šilalės"
+      "lea": "lea:2-75122-baltic-g-kelio-petroleum-r-rytinio-sav-uab-šilalė-šilalės"
     }
   },
   {
@@ -14119,7 +14172,7 @@
       "LPG"
     ],
     "sourceIds": {
-      "lea": "lea:32-74111-g-gelvybė-jurbarkas-jurbarko-muitinės-r-sav-uab"
+      "lea": "lea:22a-74111-baltic-g-jurbarkas-jurbarko-muitinės-petroleum-r-sav-uab"
     }
   },
   {
@@ -14996,6 +15049,23 @@
     }
   },
   {
+    "id": "lea:32-74111-g-gelvybė-jurbarkas-jurbarko-muitinės-r-sav-uab",
+    "name": "UAB Gelvybė",
+    "brand": "independent",
+    "lat": 55.0771406,
+    "lon": 22.7568861,
+    "address": "Jurbarkas, Muitinės g. 32, 74111",
+    "city": "Jurbarko r. sav.",
+    "fuels": [
+      "LPG",
+      "D",
+      "95"
+    ],
+    "sourceIds": {
+      "lea": "lea:32-74111-g-gelvybė-jurbarkas-jurbarko-muitinės-r-sav-uab"
+    }
+  },
+  {
     "id": "lea:5-91240-g-gindana-klaipėda-klaipėdos-m-priešpilio-sav-uab",
     "name": "UAB Gindana",
     "brand": "independent",
@@ -15701,6 +15771,23 @@
     }
   },
   {
+    "id": "lea:1-31142-g-kosmoso-saurida-sav-uab-visaginas-visagino",
+    "name": "UAB Saurida",
+    "brand": "independent",
+    "lat": 55.5953874,
+    "lon": 26.4187207,
+    "address": "Visaginas, Kosmoso g. 1, 31142",
+    "city": "Visagino sav.",
+    "fuels": [
+      "95",
+      "D",
+      "LPG"
+    ],
+    "sourceIds": {
+      "lea": "lea:1-31142-g-kosmoso-saurida-sav-uab-visaginas-visagino"
+    }
+  },
+  {
     "id": "lea:14160-1a-buivydiškių-g-r-saurida-sav-uab-vilniaus-zujūnai",
     "name": "UAB Saurida",
     "brand": "independent",
@@ -16355,6 +16442,277 @@
     ],
     "sourceIds": {
       "lea": "lea:28a-35101-g-j-janonio-lt-m-panevėžio-panevėžys-sav-uab-viada"
+    }
+  },
+  {
+    "id": "lea:16-33165-g-gojaus-k-lt-molėtų-r-sav-uab-utenos-viada",
+    "name": "UAB Viada LT",
+    "brand": "viada",
+    "lat": 55.2125625,
+    "lon": 25.4471179,
+    "address": "Gojaus k., Utenos g. 16, 33165",
+    "city": "Molėtų r. sav.",
+    "fuels": [
+      "LPG",
+      "D",
+      "95"
+    ],
+    "sourceIds": {
+      "lea": "lea:16-33165-g-gojaus-k-lt-molėtų-r-sav-uab-utenos-viada"
+    }
+  },
+  {
+    "id": "lea:75-89132-g-lt-mažeikiai-mažeikių-r-sav-uab-viada-žemaitijos",
+    "name": "UAB Viada LT",
+    "brand": "viada",
+    "lat": 56.3024538,
+    "lon": 22.3454238,
+    "address": "Mažeikiai, Žemaitijos g. 75, 89132",
+    "city": "Mažeikių r. sav.",
+    "fuels": [
+      "LPG",
+      "D",
+      "95"
+    ],
+    "sourceIds": {
+      "lea": "lea:75-89132-g-lt-mažeikiai-mažeikių-r-sav-uab-viada-žemaitijos"
+    }
+  },
+  {
+    "id": "lea:5-68305-g-geležinkelio-lt-marijampolė-marijampolės-sav-uab-viada",
+    "name": "UAB Viada LT",
+    "brand": "viada",
+    "lat": 54.5574575,
+    "lon": 23.3644065,
+    "address": "Marijampolė, Geležinkelio g. 5, 68305",
+    "city": "Marijampolės sav.",
+    "fuels": [
+      "LPG",
+      "D",
+      "95"
+    ],
+    "sourceIds": {
+      "lea": "lea:5-68305-g-geležinkelio-lt-marijampolė-marijampolės-sav-uab-viada"
+    }
+  },
+  {
+    "id": "lea:32-67102-g-lazdijai-lazdijų-lt-r-sav-turistų-uab-viada",
+    "name": "UAB Viada LT",
+    "brand": "viada",
+    "lat": 54.221747,
+    "lon": 23.5129133,
+    "address": "Lazdijai, Turistų g. 32, 67102",
+    "city": "Lazdijų r. sav.",
+    "fuels": [
+      "LPG",
+      "D",
+      "95"
+    ],
+    "sourceIds": {
+      "lea": "lea:32-67102-g-lazdijai-lazdijų-lt-r-sav-turistų-uab-viada"
+    }
+  },
+  {
+    "id": "lea:1a-40473-k-kerelių-kupiškio-lt-r-sav-uab-viada",
+    "name": "UAB Viada LT",
+    "brand": "viada",
+    "lat": 55.8394722,
+    "lon": 25.1661111,
+    "address": "Kerelių k. 1A, 40473",
+    "city": "Kupiškio r. sav.",
+    "fuels": [
+      "LPG",
+      "D",
+      "95"
+    ],
+    "sourceIds": {
+      "lea": "lea:1a-40473-k-kerelių-kupiškio-lt-r-sav-uab-viada"
+    }
+  },
+  {
+    "id": "lea:6-k-klaipėdos-lt-pl-r-sav-sudmantų-uab-viada-vilniaus",
+    "name": "UAB Viada LT",
+    "brand": "viada",
+    "lat": 55.7030966,
+    "lon": 21.2101381,
+    "address": "Sudmantų k., Vilniaus pl. 6",
+    "city": "Klaipėdos r. sav.",
+    "fuels": [
+      "LPG",
+      "D",
+      "95"
+    ],
+    "sourceIds": {
+      "lea": "lea:6-k-klaipėdos-lt-pl-r-sav-sudmantų-uab-viada-vilniaus"
+    }
+  },
+  {
+    "id": "lea:139-93185-g-klaipėda-klaipėdos-lt-m-nemuno-sav-uab-viada",
+    "name": "UAB Viada LT",
+    "brand": "viada",
+    "lat": 55.6978102,
+    "lon": 21.1364038,
+    "address": "Klaipėda, Nemuno g. 139, 93185",
+    "city": "Klaipėdos m. sav.",
+    "fuels": [
+      "LPG",
+      "D",
+      "95"
+    ],
+    "sourceIds": {
+      "lea": "lea:139-93185-g-klaipėda-klaipėdos-lt-m-nemuno-sav-uab-viada"
+    }
+  },
+  {
+    "id": "lea:5-58267-baisogalos-g-gudžiūnų-k-kėdainių-lt-r-sav-uab-viada",
+    "name": "UAB Viada LT",
+    "brand": "viada",
+    "lat": 55.5187284,
+    "lon": 23.7735852,
+    "address": "Gudžiūnų k., Baisogalos g. 5, 58267",
+    "city": "Kėdainių r. sav.",
+    "fuels": [
+      "LPG",
+      "D",
+      "95"
+    ],
+    "sourceIds": {
+      "lea": "lea:5-58267-baisogalos-g-gudžiūnų-k-kėdainių-lt-r-sav-uab-viada"
+    }
+  },
+  {
+    "id": "lea:būdos-k-kazlų-lt-rūdos-sav-uab-viada-ąžuolų",
+    "name": "UAB Viada LT",
+    "brand": "viada",
+    "lat": 54.7093534,
+    "lon": 23.5417068,
+    "address": "Ąžuolų Būdos k.",
+    "city": "Kazlų Rūdos sav.",
+    "fuels": [
+      "LPG",
+      "D",
+      "95"
+    ],
+    "sourceIds": {
+      "lea": "lea:būdos-k-kazlų-lt-rūdos-sav-uab-viada-ąžuolų"
+    }
+  },
+  {
+    "id": "lea:22-g-ilgakiemio-k-kauno-lt-prienų-r-sav-uab-viada",
+    "name": "UAB Viada LT",
+    "brand": "viada",
+    "lat": 54.9076376,
+    "lon": 24.5371141,
+    "address": "Ilgakiemio k., Prienų g. 22,",
+    "city": "Kauno r. sav.",
+    "fuels": [
+      "LPG",
+      "D",
+      "95"
+    ],
+    "sourceIds": {
+      "lea": "lea:22-g-ilgakiemio-k-kauno-lt-prienų-r-sav-uab-viada"
+    }
+  },
+  {
+    "id": "lea:117-46354-g-kaunas-kauno-lt-m-sav-uab-veiverių-viada",
+    "name": "UAB Viada LT",
+    "brand": "viada",
+    "lat": 54.8686115,
+    "lon": 23.88895,
+    "address": "Kaunas, Veiverių g. 117, 46354",
+    "city": "Kauno m. sav.",
+    "fuels": [
+      "LPG",
+      "D",
+      "95"
+    ],
+    "sourceIds": {
+      "lea": "lea:117-46354-g-kaunas-kauno-lt-m-sav-uab-veiverių-viada"
+    }
+  },
+  {
+    "id": "lea:44351-54-karaliaus-kaunas-kauno-lt-m-mindaugo-pr-sav-uab-viada",
+    "name": "UAB Viada LT",
+    "brand": "viada",
+    "lat": 54.8875335,
+    "lon": 23.9211444,
+    "address": "Kaunas, Karaliaus Mindaugo pr. 54, 44351",
+    "city": "Kauno m. sav.",
+    "fuels": [
+      "LPG",
+      "D",
+      "95"
+    ],
+    "sourceIds": {
+      "lea": "lea:44351-54-karaliaus-kaunas-kauno-lt-m-mindaugo-pr-sav-uab-viada"
+    }
+  },
+  {
+    "id": "lea:18a-51205-biruliškių-g-kaunas-kauno-lt-m-sav-uab-viada",
+    "name": "UAB Viada LT",
+    "brand": "viada",
+    "lat": 54.9114474,
+    "lon": 24.0269007,
+    "address": "Kaunas, Biruliškių g. 18A, 51205",
+    "city": "Kauno m. sav.",
+    "fuels": [
+      "D",
+      "95"
+    ],
+    "sourceIds": {
+      "lea": "lea:18a-51205-biruliškių-g-kaunas-kauno-lt-m-sav-uab-viada"
+    }
+  },
+  {
+    "id": "lea:26109-6-elektrinės-elektrėnai-elektrėnų-g-lt-sav-uab-viada",
+    "name": "UAB Viada LT",
+    "brand": "viada",
+    "lat": 54.787716,
+    "lon": 24.6573035,
+    "address": "Elektrėnai, Elektrinės g. 6, 26109",
+    "city": "Elektrėnų sav.",
+    "fuels": [
+      "LPG",
+      "D",
+      "95"
+    ],
+    "sourceIds": {
+      "lea": "lea:26109-6-elektrinės-elektrėnai-elektrėnų-g-lt-sav-uab-viada"
+    }
+  },
+  {
+    "id": "lea:25-64144-alytaus-daugų-g-k-lt-neveiglo-r-sav-uab-viada",
+    "name": "UAB Viada LT",
+    "brand": "viada",
+    "lat": 54.3668527,
+    "lon": 24.3375601,
+    "address": "Daugų k., Neveiglo g. 25, 64144",
+    "city": "Alytaus r. sav.",
+    "fuels": [
+      "LPG",
+      "D",
+      "95"
+    ],
+    "sourceIds": {
+      "lea": "lea:25-64144-alytaus-daugų-g-k-lt-neveiglo-r-sav-uab-viada"
+    }
+  },
+  {
+    "id": "lea:16a-55195-g-jonava-jonavos-r-sav-taurostos-uab-žibalas",
+    "name": "UAB Žibalas",
+    "brand": "independent",
+    "lat": 55.0671367,
+    "lon": 24.2879695,
+    "address": "Jonava, Taurostos g. 16A, 55195",
+    "city": "Jonavos r. sav.",
+    "fuels": [
+      "LPG",
+      "D",
+      "95"
+    ],
+    "sourceIds": {
+      "lea": "lea:16a-55195-g-jonava-jonavos-r-sav-taurostos-uab-žibalas"
     }
   }
 ]

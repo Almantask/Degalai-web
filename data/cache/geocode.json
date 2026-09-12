@@ -2994,5 +2994,295 @@
     "lat": 55.5211854,
     "lon": 24.3126597,
     "label": "Viada, Vienkiemio g., Ramygala"
+  },
+  "Jurbarkas, Muitinės g. 32, 74111, Jurbarko r. sav., Lietuva": {
+    "lat": 55.0771406,
+    "lon": 22.7568861,
+    "label": "Muitinės g., Jurbarkas"
+  },
+  "Visaginas, Kosmoso g. 1, 31142, Visagino sav., Lietuva": {
+    "lat": 55.5953874,
+    "lon": 26.4187207,
+    "label": "Visagino stadionas, Kosmoso g., Visaginas"
+  },
+  "Krekenava, Tilto g. 35, 38305, Panevėžio r. sav., Lietuva": {
+    "lat": 55.5406697,
+    "lon": 24.1058148,
+    "label": "Krekenava, Tilto g., Krekenava"
+  },
+  "Gojaus k., Utenos g. 16, 33165, Molėtų r. sav., Lietuva": {
+    "lat": 55.2125625,
+    "lon": 25.4471179,
+    "label": "Gojaus g., Gojus"
+  },
+  "Molėtai, Vilniaus g. 101, 33112, Molėtų r. sav., Lietuva": {
+    "lat": 55.2255363,
+    "lon": 25.405996,
+    "label": "Molėtų kelių tarnyba, Vilniaus g., Molėtai"
+  },
+  "Mažeikiai, Žemaitijos g. 75, 89132, Mažeikių r. sav., Lietuva": {
+    "lat": 56.3024538,
+    "lon": 22.3454238,
+    "label": "Circle K „Mažeikiai“, Žemaitijos g., Mažeikiai"
+  },
+  "Mažeikiai, Montuotojų g. 2A, 89101, Mažeikių r. sav., Lietuva": {
+    "lat": 56.3158969,
+    "lon": 22.302462,
+    "label": "Viada, Montuotojų g., Mažeikiai"
+  },
+  "Marijampolė, J. Ambrazevičiaus-Brazaičio g. 2, 68161, Marijampolės sav., Lietuva": {
+    "lat": 54.5673138,
+    "lon": 23.3398817,
+    "label": "J. Ambrazevičiaus-Brazaičio g., Marijampolė"
+  },
+  "Marijampolė, Geležinkelio g. 5, 68305, Marijampolės sav., Lietuva": {
+    "lat": 54.5574575,
+    "lon": 23.3644065,
+    "label": "Marijampolės geležinkelio stotis, Stoties g., Marijampolė"
+  },
+  "Lazdijai, Turistų g. 32, 67102, Lazdijų r. sav., Lietuva": {
+    "lat": 54.221747,
+    "lon": 23.5129133,
+    "label": "Turistų g., Lazdijai"
+  },
+  "Kupiškis, Pergalės g. 15, 40109, Kupiškio r. sav., Lietuva": {
+    "lat": 55.8445748,
+    "lon": 24.9789992,
+    "label": "Viada, Pergalės g., Kupiškis"
+  },
+  "Kerelių k. 1A, 40473, Kupiškio r. sav., Lietuva": {
+    "lat": 55.8394722,
+    "lon": 25.1661111,
+    "label": "Kerelių piliakalnis, Kereliai"
+  },
+  "Kretingsodžio k., 97100, Kretingos r. sav., Lietuva": {
+    "lat": 55.8977503,
+    "lon": 21.2179843,
+    "label": "Klaipėdos Ernesto Galvanausko profesinio mokymo centras, Kretingos filialas, Sodžiaus g., Kretingsodis"
+  },
+  "Kretinga, Vytauto g. 163, 97133, Kretingos r. sav., Lietuva": {
+    "lat": 55.890521,
+    "lon": 21.2787212,
+    "label": "Vytauto g., Kretinga"
+  },
+  "Sudmantų k., Vilniaus pl. 6, Klaipėdos r. sav., Lietuva": {
+    "lat": 55.7030966,
+    "lon": 21.2101381,
+    "label": "Sudmantų g., Sudmantai"
+  },
+  "Klaipėda, Priestočio g. 28, 92191, Klaipėdos m. sav., Lietuva": {
+    "lat": 55.7191319,
+    "lon": 21.1445955,
+    "label": "Priestočio g., Klaipėda"
+  },
+  "Klaipėda, Nemuno g. 139, 93185, Klaipėdos m. sav., Lietuva": {
+    "lat": 55.6978102,
+    "lon": 21.1364038,
+    "label": "Klaipėdos jūrų krovinių kompanija Bega, Nemuno g., Klaipėda"
+  },
+  "Klaipėda, Liepojos g. 242, 92330, Klaipėdos m. sav., Lietuva": {
+    "lat": 55.7538813,
+    "lon": 21.1313388,
+    "label": "Viada, Liepojos g., Klaipėda"
+  },
+  "Gudžiūnų k., Baisogalos g. 5, 58267, Kėdainių r. sav., Lietuva": {
+    "lat": 55.5187284,
+    "lon": 23.7735852,
+    "label": "Baisogalos g., Gudžiūnai"
+  },
+  "Dotnuva, Tilto g. 2A, 58352, Kėdainių r. sav., Lietuva": {
+    "lat": 55.374726,
+    "lon": 23.8807876,
+    "label": "Viada, Tilto g., Dotnuva"
+  },
+  "Ąžuolų Būdos k., Kazlų Rūdos sav., Lietuva": {
+    "lat": 54.7093534,
+    "lon": 23.5417068,
+    "label": "Ąžuolų Būdos kaimo kapinės, Didžiosios Zariškės"
+  },
+  "Zapyškis, Vytauto g. 20A, 53419, Kauno r. sav., Lietuva": {
+    "lat": 54.9269559,
+    "lon": 23.6618882,
+    "label": "Vytauto g., Zapyškis"
+  },
+  "Margavos k., 54471, Kauno r. sav., Lietuva": {
+    "lat": 54.9581446,
+    "lon": 24.0361596,
+    "label": "Margavos tv., Margava"
+  },
+  "Kumpių k., Verslo g. 13A, 54311, Kauno r. sav., Lietuva": {
+    "lat": 54.9591238,
+    "lon": 23.8668163,
+    "label": "Viada, Verslo g., Kumpiai"
+  },
+  "Kampiškių k., Baltijos g. 41, 09300, Kauno r. sav., Lietuva": {
+    "lat": 54.8425457,
+    "lon": 23.8496814,
+    "label": "Viada, Baltijos g., Kampiškiai"
+  },
+  "Ilgakiemio k., Prienų g. 22,, Kauno r. sav., Lietuva": {
+    "lat": 54.9076376,
+    "lon": 24.5371141,
+    "label": "Ilgakiemio g., Kasčiukiškės"
+  },
+  "Giraitės k., Automagistralės g. 4, 54310, Kauno r. sav., Lietuva": {
+    "lat": 54.9591082,
+    "lon": 23.8642584,
+    "label": "Viada, Automagistralės g., Giraitė"
+  },
+  "Kaunas, Veiverių g. 124B, 46282, Kauno m. sav., Lietuva": {
+    "lat": 54.8833359,
+    "lon": 23.893637,
+    "label": "Viada, Veiverių g., Kaunas"
+  },
+  "Kaunas, Veiverių g. 117, 46354, Kauno m. sav., Lietuva": {
+    "lat": 54.8686115,
+    "lon": 23.88895,
+    "label": "Veiverių g., Kaunas"
+  },
+  "Kaunas, T. Masiulio g. 22B, 52447, Kauno m. sav., Lietuva": {
+    "lat": 54.8809124,
+    "lon": 24.0097867,
+    "label": "Viada, T. Masiulio g., Kaunas"
+  },
+  "Kaunas, Statybininkų g. 3A, 50124, Kauno m. sav., Lietuva": {
+    "lat": 54.9201003,
+    "lon": 23.9487458,
+    "label": "Viada, Statybininkų g., Kaunas"
+  },
+  "Kaunas, P. Lukšio g. 66A, 49404, Kauno m. sav., Lietuva": {
+    "lat": 54.9239174,
+    "lon": 23.9409028,
+    "label": "P. Lukšio g., Kaunas"
+  },
+  "Kaunas, Miežėnų g. 18, 47115, Kauno m. sav., Lietuva": {
+    "lat": 54.9176824,
+    "lon": 23.8630548,
+    "label": "Viada, Miežėnų g., Kaunas"
+  },
+  "Kaunas, Karaliaus Mindaugo pr. 54, 44351, Kauno m. sav., Lietuva": {
+    "lat": 54.8875335,
+    "lon": 23.9211444,
+    "label": "Viada, Karaliaus Mindaugo pr., Kaunas"
+  },
+  "Kaunas, K. Baršausko g. 64, 44405, Kauno m. sav., Lietuva": {
+    "lat": 54.8973896,
+    "lon": 23.9584816,
+    "label": "Viada, K. Baršausko g., Kaunas"
+  },
+  "Kaunas, Islandijos pl. 61A, 49117, Kauno m. sav., Lietuva": {
+    "lat": 54.9344683,
+    "lon": 23.9655193,
+    "label": "Islandijos pl., Kaunas"
+  },
+  "Kaunas, Didžioji g. 84, 45462, Kauno m. sav., Lietuva": {
+    "lat": 54.8551079,
+    "lon": 24.0131202,
+    "label": "Viada, Didžioji g., Kaunas"
+  },
+  "Kaunas, Biruliškių g. 18A, 51205, Kauno m. sav., Lietuva": {
+    "lat": 54.9114474,
+    "lon": 24.0269007,
+    "label": "„Okseta“ Kauno naftos produktų terminalas, Biruliškių g., Kaunas"
+  },
+  "Kaunas, Baltijos g. 90B, 47130, Kauno m. sav., Lietuva": {
+    "lat": 54.9180088,
+    "lon": 23.8736664,
+    "label": "Viada, Baltijos g., Kaunas"
+  },
+  "Kaunas, A. Juozapavičiaus pr. 90, 45267, Kauno m. sav., Lietuva": {
+    "lat": 54.8778192,
+    "lon": 23.933537,
+    "label": "A. Juozapavičiaus pr., Kaunas"
+  },
+  "Pelucmurgių k., Muitinės g. 35, 69270, Kalvarijos sav., Lietuva": {
+    "lat": 54.3398246,
+    "lon": 23.1631122,
+    "label": "Viada, Muitinės g., Pelucmurgiai"
+  },
+  "Kaišiadorys, Gedimino g. 135, 56173, Kaišiadorių r. sav., Lietuva": {
+    "lat": 54.8550869,
+    "lon": 24.4417261,
+    "label": "Viada, Gedimino g., Kaišiadorys"
+  },
+  "Joniškis, Vilniaus g. 51, 84166, Joniškio r. sav., Lietuva": {
+    "lat": 56.2246151,
+    "lon": 23.6011237,
+    "label": "Viada, Vilniaus g., Joniškis"
+  },
+  "Jonava, Darbininkų g. 4D, 55101, Jonavos r. sav., Lietuva": {
+    "lat": 55.0937258,
+    "lon": 24.282767,
+    "label": "Viada, Darbininkų g., Jonava"
+  },
+  "Ignalina, Turistų g. 28A, 30138, Ignalinos r. sav., Lietuva": {
+    "lat": 55.3389521,
+    "lon": 26.1455754,
+    "label": "Turistų g., Ignalina"
+  },
+  "Elektrėnai, Elektrinės g. 6, 26109, Elektrėnų sav., Lietuva": {
+    "lat": 54.787716,
+    "lon": 24.6573035,
+    "label": "Elektrinės g., Elektrėnai"
+  },
+  "Biržai, Pasvalio g. 1B, 41132, Biržų r. sav., Lietuva": {
+    "lat": 56.2019312,
+    "lon": 24.7377964,
+    "label": "Viada, Pasvalio g., Biržai"
+  },
+  "Biržai, Parodos g. 2, 41136, Biržų r. sav., Lietuva": {
+    "lat": 56.2013087,
+    "lon": 24.7490206,
+    "label": "Viada, Parodos g., Biržai"
+  },
+  "Anykščiai, Piliakalnio g. 9, 29109, Anykščių r. sav., Lietuva": {
+    "lat": 55.5413265,
+    "lon": 25.1349412,
+    "label": "Viada, Piliakalnio g., Anykščiai"
+  },
+  "Anykščiai, A. Vienuolio g. 34, 29148, Anykščių r. sav., Lietuva": {
+    "lat": 55.5226002,
+    "lon": 25.0879884,
+    "label": "Baltic Petroleum, A. Vienuolio g., Anykščiai"
+  },
+  "Alytus, Ulonų g. 33B, 62136, Alytaus m. sav., Lietuva": {
+    "lat": 54.3847857,
+    "lon": 24.0500261,
+    "label": "Viada, Ulonų g., Alytus"
+  },
+  "Alytus, Naujoji g. 27, 62175, Alytaus m. sav., Lietuva": {
+    "lat": 54.4140414,
+    "lon": 24.0101635,
+    "label": "Viada, Naujoji g., Alytus"
+  },
+  "Daugų k., Neveiglo g. 25, 64144, Alytaus r. sav., Lietuva": {
+    "lat": 54.3668527,
+    "lon": 24.3375601,
+    "label": "Neveiglo g., Daugai"
+  },
+  "Ručiūnų k., Kauno g. 2A, 55355, Jonavos r. sav., Lietuva": {
+    "lat": 55.1378212,
+    "lon": 24.1933962,
+    "label": "Vimijula, Kauno g., Ručiūnai"
+  },
+  "Pasūduonės k., L.Taunio g. 3, 69331, Marijampolės sav., Lietuva": {
+    "lat": 54.4757949,
+    "lon": 23.221689,
+    "label": "Virši, Leono Taunio g., Pasūduonė"
+  },
+  "Tirkšlių k., Laukų g. 2C, 89330, Mažeikių r. sav., Lietuva": {
+    "lat": 56.259788,
+    "lon": 22.3091383,
+    "label": "Laukų g., Tirkšliai"
+  },
+  "Truikių k., Pramogų g. 4, 90110, Plungės r. sav., Lietuva": {
+    "lat": 55.9387488,
+    "lon": 21.8800433,
+    "label": "Circle K „Plungė“, Pramogų g., Truikiai"
+  },
+  "Jonava, Taurostos g. 16A, 55195, Jonavos r. sav., Lietuva": {
+    "lat": 55.0671367,
+    "lon": 24.2879695,
+    "label": "Taurostos g., Jonava"
   }
 }
