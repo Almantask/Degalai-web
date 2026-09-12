@@ -225,13 +225,33 @@ with the 2–3 largest chains that publish per-station prices publicly.
 - Additionally: per brand (toggle); tooltip shows which station was cheapest that day.
 - Data from `history.json` – a single file, no extra requests.
 
-### 4.6 PWA, performance, language
+### 4.6 Multilanguage (LT and EN)
+- Two locales from day one: **Lithuanian (`lt`, default)** and **English (`en`)**.
+- URL-prefixed routes so both are indexable and shareable: `/` (lt) and `/en/`, `/istorija` ↔
+  `/en/history`, `/apie` ↔ `/en/about`. Each page emits `<link rel="alternate" hreflang>` and
+  `<html lang>`.
+- Locale selection: URL prefix wins; otherwise saved choice (localStorage) → `navigator.language`
+  (`lt*` → lt, anything else → en). Language switcher in the header keeps the current view
+  (route, fuel filter, map position) when switching.
+- Strings live in `src/i18n/lt.json` and `src/i18n/en.json` with a tiny typed `t()` helper
+  (no heavy i18n library); ICU-style plurals only where needed ("1 station" / "3 stations").
+  A CI check fails if the two files have different keys.
+- Locale-aware formatting via `Intl`: prices (`1,749 €/l` vs `€1.749/l`), distances, dates on
+  the chart and "last updated" timestamps; the `lt-LT` / `en-GB` locales are used.
+- Data stays language-neutral: station names/brands/addresses come from OSM as-is; fuel type
+  labels (Dyzelinas/Diesel, Benzinas/Petrol, Dujos/Gas) and brand display names are translated
+  in the UI layer.
+- Geocoder queries pass `lang=lt|en` so suggestions and result labels follow the UI language.
+- PWA manifest has `lang` per locale build (name/description in both languages); SEO meta and
+  Open Graph tags are translated per page.
+- Playwright smoke tests run the critical flows in both locales.
+
+### 4.7 PWA, performance, quality
 - Manifest, icons, "Install" hint; service worker caches the app shell and the latest
   `data/*.json` (offline shows last known prices with their date).
 - Target: < 300 KB JS gzip, LCP < 2.5 s on mobile 4G.
-- Language: Lithuanian (default), strings in a separate `i18n/lt.json` so EN can be added later.
 - Accessibility: keyboard navigation in the list, contrast, ARIA for map controls.
-- SEO: static pages `/`, `/history`, `/about`; "about" lists sources, attribution
+- SEO: static pages per locale (see 4.6); "about" lists sources, attribution
   (OSM, OpenFreeMap, Photon/OSRM), last update time, disclaimer.
 
 ---
@@ -275,7 +295,9 @@ net_benefit   = savings − fuel_cost − time_cost
 ### 0. Foundation
 - Repo structure (`scripts/`, `src/`, `data/`, `public/`), Vite + TS, ESLint/Prettier, Vitest.
 - GitHub Actions: lint + test on PRs; Pages deploy from `main`.
-- Outcome: empty site with a map of Lithuania deployed.
+- i18n scaffolding: `lt.json` / `en.json`, `t()` helper, locale routing (`/` and `/en/`),
+  language switcher, key-parity CI check – so every later feature is written bilingual.
+- Outcome: empty site with a map of Lithuania deployed, switchable between LT and EN.
 
 ### 1. Data pipeline MVP
 - OSM station import + brand normalisation.
@@ -299,8 +321,9 @@ net_benefit   = savings − fuel_cost − time_cost
 - `history.json` chart, ranges, brand comparison, mini-chart in popups.
 
 ### 6. PWA and quality
-- Manifest / service worker / offline, performance optimisation, accessibility, SEO, "about" page.
-- Playwright tests: map loads, "around me" with mocked geolocation, route flow.
+- Manifest / service worker / offline, performance optimisation, accessibility, SEO
+  (hreflang, per-locale meta), "about" page in both languages.
+- Playwright tests in both locales: map loads, "around me" with mocked geolocation, route flow.
 
 ### 7. Maintenance and monitoring
 - Adapter failure notifications, data quality report in the CI summary.
@@ -320,4 +343,5 @@ net_benefit   = savings − fuel_cost − time_cost
   (debounce, top-N candidates), keep a heuristic fallback.
 - **Repo growth** from daily files – monitor; archive into yearly files if needed.
 - **Assumptions** (changeable): fuel types 95, 98, D, LPG; prices updated once a day;
-  defaults 7 l/100 km, 40 l, time value 0 €/h; Lithuanian-only UI in phase one.
+  defaults 7 l/100 km, 40 l, time value 0 €/h; UI in Lithuanian (default) and English, with
+  Lithuanian at the root URL and English under `/en/`.
