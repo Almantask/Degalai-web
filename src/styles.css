@@ -523,7 +523,7 @@ body,
   .header {
     left: 16px;
     right: auto;
-    width: min(640px, calc(100% - 420px));
+    width: min(760px, calc(100% - 400px));
   }
 
   .list {
@@ -531,7 +531,7 @@ body,
     right: 16px;
     left: auto;
     bottom: 16px;
-    width: 380px;
+    width: 360px;
     max-height: none;
   }
 
@@ -567,7 +567,7 @@ body,
     left: 16px;
     right: auto;
     top: 150px;
-    max-width: min(640px, calc(100% - 420px));
+    max-width: min(760px, calc(100% - 400px));
   }
 }
 

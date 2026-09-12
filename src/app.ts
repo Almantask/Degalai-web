@@ -13,6 +13,7 @@ import {
 import {
   distanceAlongLineKm,
   distanceToPolylineKm,
+  inLithuania,
   nearestPointOnPolyline,
   roadDistanceKm,
   type LngLat,
@@ -87,7 +88,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let destStatus: DestStatus = "idle";
   let pendingDest = false;
   let popup: maplibregl.Popup | null = null;
-  let locateStatus: "idle" | "pending" | "denied" = "idle";
+  let locateStatus: "idle" | "pending" | "denied" | "outside" = "idle";
 
   root.innerHTML = shellHtml();
   const mapDiv = root.querySelector<HTMLElement>("#map")!;
@@ -321,7 +322,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (pendingDest) destStatus = "locating";
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        userLocation = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        const ll = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        if (!inLithuania(ll)) {
+          locateStatus = "outside";
+          userLocation = null;
+          if (pendingDest) {
+            destStatus = "denied";
+            pickMode = "dest-start";
+          }
+          render();
+          return;
+        }
+        userLocation = ll;
         locateStatus = "idle";
         if (aroundOpen) void runAroundMe();
         if (pendingDest && endHit) void runRoute();
@@ -342,7 +354,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   async function runAroundMe(): Promise<void> {
     aroundOpen = true;
     const origin = aroundOrigin ?? userLocation;
-    if (!origin) {
+    if (!origin || !inLithuania(origin)) {
       requestLocation(true);
       render();
       return;
@@ -391,7 +403,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       render();
       return;
     }
-    if (!start) {
+    if (!start || !inLithuania(start)) {
       destStatus = "denied";
       pickMode = "dest-start";
       render();
@@ -516,6 +528,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       return;
     }
     if (pickMode === "dest-start" || (pendingDest && !userLocation)) {
+      if (!inLithuania(ll)) return;
       userLocation = ll;
       pickMode = null;
       locateStatus = "idle";
@@ -525,7 +538,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function originForEta(): LngLat | null {
-    return userLocation ?? aroundOrigin;
+    const origin = userLocation ?? aroundOrigin;
+    return origin && inLithuania(origin) ? origin : null;
   }
 
   function etaParts(distKm: number): { dist: string; eta: string; label: string } {
@@ -719,7 +733,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function aroundHtml(): string {
     return `<section class="panel" aria-label="${escapeHtml(t("around.title"))}">
       <header><h2>${escapeHtml(t("around.title"))}</h2><button type="button" data-act="close-panel">${escapeHtml(t("action.close"))}</button></header>
-      <p>${locateStatus === "pending" ? escapeHtml(t("around.locating")) : locateStatus === "denied" && !aroundOrigin ? escapeHtml(t("around.denied")) : escapeHtml(t("around.baseline"))}</p>
+      <p>${locateStatus === "pending" ? escapeHtml(t("around.locating")) : (locateStatus === "denied" || locateStatus === "outside") && !aroundOrigin ? escapeHtml(t("around.denied")) : escapeHtml(t("around.baseline"))}</p>
       <div class="radii">${[5, 15, 30]
         .map(
           (km) =>
@@ -753,7 +767,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (destStatus === "routing")
       return `<div class="banner info">${escapeHtml(t("dest.routing"))}</div>`;
     if (destStatus === "denied") {
-      return `<div class="banner">${escapeHtml(pickMode === "dest-start" ? t("dest.pickStart") : t("dest.denied"))}</div>`;
+      const msg =
+        locateStatus === "outside"
+          ? t("dest.outside")
+          : pickMode === "dest-start"
+            ? t("dest.pickStart")
+            : t("dest.denied");
+      return `<div class="banner">${escapeHtml(msg)}</div>`;
     }
     if (destStatus === "not-found")
       return `<div class="banner">${escapeHtml(t("dest.notFound"))}</div>`;

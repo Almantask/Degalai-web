@@ -22,6 +22,7 @@
   "dest.from": "From my location",
   "dest.locating": "Finding your location…",
   "dest.denied": "Allow location access or tap the map to set a start.",
+  "dest.outside": "You are outside Lithuania. Tap the map to set a starting point.",
   "dest.routing": "Picking the route…",
   "dest.notFound": "Could not find a route. Check the place.",
   "dest.needEnd": "Enter a destination.",

@@ -1,6 +1,6 @@
 import { extraMinutesFromKm, minutesAtMaxSpeed, netBenefit } from "../src/calc.ts";
 import { formatDuration } from "../src/format.ts";
-import { haversineKm, roadDistanceKm } from "../src/geo.ts";
+import { haversineKm, inLithuania, roadDistanceKm } from "../src/geo.ts";
 import { pluralCategory, setLocale } from "../src/i18n/index.ts";
 import { normalizeBrand } from "../src/brands.ts";
 import { PRICE_RANGE } from "../scripts/validate.ts";
@@ -63,6 +63,11 @@ describe("geo", () => {
 
   it("applies the road factor", () => {
     expect(roadDistanceKm({ lat: 0, lon: 0 }, { lat: 0, lon: 0 }, 1.3)).toBe(0);
+  });
+
+  it("recognises Lithuania and rejects a far origin", () => {
+    expect(inLithuania({ lat: 54.687, lon: 25.28 })).toBe(true);
+    expect(inLithuania({ lat: 37.39, lon: -122.08 })).toBe(false);
   });
 });
 

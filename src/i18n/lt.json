@@ -22,6 +22,7 @@
   "dest.from": "Nuo mano vietos",
   "dest.locating": "Nustatoma jūsų vieta…",
   "dest.denied": "Leiskite vietos nustatymą arba bakstelėkite žemėlapį pradžiai.",
+  "dest.outside": "Esate už Lietuvos. Bakstelėkite žemėlapį, kad parinktume pradžią.",
   "dest.routing": "Parenkamas maršrutas…",
   "dest.notFound": "Nepavyko rasti maršruto. Patikrinkite vietą.",
   "dest.needEnd": "Įveskite kelionės tikslą.",
