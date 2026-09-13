@@ -197,7 +197,7 @@ body,
   color: var(--green-dark);
 }
 
-.header .donate-btn:hover:not(.on) {
+.header .donate-btn:hover {
   background: var(--green-soft);
 }
 
@@ -538,29 +538,6 @@ body,
   padding: 10px;
   font: inherit;
   cursor: pointer;
-}
-
-.panel a.donate-option {
-  display: block;
-  text-align: center;
-  text-decoration: none;
-  border-radius: 12px;
-  padding: 10px;
-  font: inherit;
-  font-weight: 600;
-}
-
-.panel a.donate-option.primary {
-  background: var(--green);
-  color: #fff;
-}
-
-.panel a.donate-option.secondary {
-  border: 1px solid var(--line);
-  background: #fff;
-  color: var(--muted);
-  font-size: 0.86rem;
-  font-weight: 500;
 }
 
 .check {
