@@ -184,6 +184,28 @@ body,
   margin-left: auto;
 }
 
+.header a.donate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--green-dark);
+}
+
+.header a.donate-btn:hover {
+  background: var(--green-soft);
+}
+
+.donate-heart {
+  flex: 0 0 auto;
+  color: #db61a2;
+}
+
 .header a,
 .header button {
   color: inherit;

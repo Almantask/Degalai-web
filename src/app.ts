@@ -43,6 +43,8 @@ import { fuelFromUrl, loadSettings, saveSettings } from "./settings.ts";
 import type { Station } from "./types.ts";
 import { DEFAULT_SETTINGS } from "./types.ts";
 
+const DONATE_URL = "https://github.com/sponsors/Almantask";
+
 interface AroundRow {
   station: Station;
   price: number;
@@ -761,6 +763,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
               <a data-act="locale" data-locale="en" href="${hrefFor(view, "en", settings.fuel)}" hreflang="en" class="${locale === "en" ? "on" : ""}">EN</a>
             </div>
             <button type="button" class="icon-btn ${aroundOpen ? "on" : ""}" data-act="around">${escapeHtml(t("action.around"))}</button>
+            <a class="icon-btn donate-btn" href="${DONATE_URL}" target="_blank" rel="noopener noreferrer">
+              <svg class="donate-heart" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                <path fill="currentColor" d="M7.97 14s-5.3-3.18-6.76-6C.02 5.36 1.3 2.2 4.2 2.2c1.4 0 2.5.8 3.77 2.16C9.24 3 10.34 2.2 11.75 2.2c2.9 0 4.18 3.16 2.99 5.8C13.28 10.82 7.97 14 7.97 14z"/>
+              </svg>
+              ${escapeHtml(t("action.donate"))}
+            </a>
             <button type="button" class="icon-btn ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">⚙</button>
           </div>
         </div>

@@ -16,6 +16,10 @@ test("English locale loads without history or about", async ({ page }) => {
   await page.goto("/en/");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByPlaceholder("Where are you going?")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Donate" })).toHaveAttribute(
+    "href",
+    "https://github.com/sponsors/Almantask",
+  );
   await expect(page.getByRole("link", { name: "About" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "History" })).toHaveCount(0);
 });
@@ -89,6 +93,14 @@ test("fuel filter has no 95/98 petrol grades", async ({ page }) => {
   await expect(page.getByRole("button", { name: "95", exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "98", exact: true })).toHaveCount(0);
   await expect(page.locator(".fuel-filter button")).toHaveCount(3);
+});
+
+test("donate button links to GitHub Sponsors", async ({ page }) => {
+  await page.goto("/");
+  const donate = page.getByRole("link", { name: "Remti" });
+  await expect(donate).toBeVisible();
+  await expect(donate).toHaveAttribute("href", "https://github.com/sponsors/Almantask");
+  await expect(donate).toHaveAttribute("target", "_blank");
 });
 
 test("zoom controls sit in the top-right", async ({ page }) => {
