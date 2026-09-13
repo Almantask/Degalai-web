@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 test("Lithuanian map shell loads", async ({ page }) => {
   await page.goto("/");
@@ -60,6 +60,43 @@ test("search header can be minimised for a full map", async ({ page }) => {
   await expect(page.locator("#map")).toBeVisible();
   await page.getByRole("button", { name: /Išskleisti paiešką|Expand search/ }).click();
   await expect(page.getByPlaceholder("Kur važiuojate?")).toBeVisible();
+});
+
+async function dragVertically(
+  page: Page,
+  box: { x: number; y: number; width: number; height: number },
+  dy: number,
+): Promise<void> {
+  const x = box.x + box.width / 2;
+  const y = box.y + Math.min(12, box.height / 2);
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x, y + dy, { steps: 10 });
+  await page.mouse.up();
+}
+
+test("mobile sheets use a grabber and minimise by dragging", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await expect(page.locator(".list-body")).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator(".list-handle")).toBeVisible();
+  await expect(page.locator(".header-handle")).toBeVisible();
+  await expect(page.locator(".list-chevron")).toBeHidden();
+  await expect(page.locator(".header-chevron")).toBeHidden();
+
+  const listHead = page.locator(".list-head");
+  const listBox = await listHead.boundingBox();
+  expect(listBox).toBeTruthy();
+  await dragVertically(page, listBox!, 90);
+  await expect(page.locator(".sheet")).toHaveClass(/is-min/);
+  await expect(page.locator(".list-body")).toBeHidden();
+
+  const headerToggle = page.locator(".header-toggle");
+  const headerBox = await headerToggle.boundingBox();
+  expect(headerBox).toBeTruthy();
+  await dragVertically(page, headerBox!, -90);
+  await expect(page.locator("#header")).toHaveClass(/is-min/);
+  await expect(page.getByPlaceholder("Kur važiuojate?")).toBeHidden();
 });
 
 test("header has no Around me button", async ({ page }) => {

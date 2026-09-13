@@ -42,6 +42,13 @@ import { hrefFor, navigate, parsePath, pathFor, type View } from "./router.ts";
 import { fetchRoute, geocode, type GeoHit, type RouteResult } from "./routing.ts";
 import DOMPurify from "dompurify";
 import { fuelFromUrl, loadSettings, saveSettings } from "./settings.ts";
+import {
+  SHEET_COMPACT_MQ,
+  isSheetDrag,
+  sheetDragTranslate,
+  sheetFromDrag,
+  type MinimizeSign,
+} from "./sheet-gesture.ts";
 import type { Station } from "./types.ts";
 import { DEFAULT_SETTINGS } from "./types.ts";
 
@@ -127,6 +134,89 @@ export async function startApp(root: HTMLElement): Promise<void> {
   render();
 
   function bind(): void {
+    let skipSheetClick = false;
+    root.addEventListener(
+      "click",
+      (e) => {
+        if (!skipSheetClick) return;
+        skipSheetClick = false;
+        e.preventDefault();
+        e.stopPropagation();
+      },
+      true,
+    );
+    root.addEventListener("pointerdown", (e) => {
+      if (!window.matchMedia(SHEET_COMPACT_MQ).matches) return;
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      const target = e.target as HTMLElement;
+      const headerHandle = target.closest<HTMLElement>(".header-toggle");
+      const listHandle = target.closest<HTMLElement>(".list-head");
+      if (headerHandle) startSheetDrag(e, "header", headerHandle);
+      else if (listHandle) startSheetDrag(e, "list", listHandle);
+    });
+
+    function startSheetDrag(e: PointerEvent, kind: "header" | "list", handle: HTMLElement): void {
+      const el =
+        kind === "header"
+          ? root.querySelector<HTMLElement>("#header")
+          : root.querySelector<HTMLElement>("#list");
+      if (!el) return;
+      try {
+        handle.setPointerCapture(e.pointerId);
+      } catch {
+        /* capture is optional; window listeners still track the drag */
+      }
+      const startY = e.clientY;
+      const startX = e.clientX;
+      const wasMin = kind === "header" ? headerMinimized : listMinimized;
+      const sign: MinimizeSign = kind === "header" ? -1 : 1;
+      let dragging = false;
+      const onMove = (ev: PointerEvent) => {
+        const dy = ev.clientY - startY;
+        const dx = ev.clientX - startX;
+        if (!dragging) {
+          if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+          if (!isSheetDrag(dx, dy)) {
+            finish(ev, false);
+            return;
+          }
+          dragging = true;
+          el.classList.add("is-dragging");
+        }
+        ev.preventDefault();
+        el.style.transform = `translateY(${sheetDragTranslate(dy, sign, wasMin)}px)`;
+      };
+      const finish = (ev: PointerEvent, apply = true) => {
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+        window.removeEventListener("pointercancel", onUp);
+        try {
+          if (handle.hasPointerCapture(e.pointerId)) handle.releasePointerCapture(e.pointerId);
+        } catch {
+          /* already released */
+        }
+        el.style.transform = "";
+        el.classList.remove("is-dragging");
+        if (!apply || !dragging) return;
+        skipSheetClick = true;
+        window.setTimeout(() => {
+          skipSheetClick = false;
+        }, 0);
+        const next = sheetFromDrag(ev.clientY - startY, sign, wasMin);
+        if (kind === "header") {
+          headerMinimized = next;
+          applyHeaderMinimized();
+        } else if (next !== listMinimized) {
+          listMinimized = next;
+          renderList();
+        }
+      };
+      const onUp = (ev: PointerEvent) => finish(ev, true);
+      window.addEventListener("pointermove", onMove, { passive: false });
+      window.addEventListener("pointerup", onUp);
+      window.addEventListener("pointercancel", onUp);
+    }
+
     root.addEventListener("click", (e) => {
       const tEl = (e.target as HTMLElement).closest<HTMLElement>("[data-act]");
       if (!tEl) return;
