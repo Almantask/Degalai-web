@@ -195,6 +195,7 @@ body,
   font-size: 0.86rem;
   font-weight: 600;
   color: var(--green-dark);
+  white-space: nowrap;
 }
 
 .header .donate-btn:hover {
