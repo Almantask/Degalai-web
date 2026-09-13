@@ -12,7 +12,9 @@ const PREFERENCE_SET = new Set<string>(["shortest", "fastest"]);
 const RADIUS_SET = new Set<number>(AROUND_RADIUS_KM);
 
 function clampNumber(value: unknown, fallback: number, min: number, max: number): number {
-  const n = typeof value === "number" ? value : typeof value === "string" ? Number(value) : NaN;
+  let n = Number.NaN;
+  if (typeof value === "number") n = value;
+  else if (typeof value === "string") n = Number(value);
   if (!Number.isFinite(n)) return fallback;
   return Math.min(max, Math.max(min, n));
 }
