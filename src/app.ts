@@ -33,15 +33,17 @@ import {
   setRouteData,
   setStationData,
   stationPopupHtml,
+  stationsInView,
   type Emphasis,
-  visibleStationIds,
 } from "./map.ts";
 import { orderRouteRows } from "./route-list.ts";
 import { hrefFor, navigate, parsePath, pathFor, type View } from "./router.ts";
 import { fetchRoute, geocode, type GeoHit, type RouteResult } from "./routing.ts";
 import { fuelFromUrl, loadSettings, saveSettings } from "./settings.ts";
-import type { FuelType, Station } from "./types.ts";
+import type { Station } from "./types.ts";
 import { DEFAULT_SETTINGS } from "./types.ts";
+
+const DONATE_URL = "https://github.com/sponsors/Almantask";
 
 interface AroundRow {
   station: Station;
@@ -104,6 +106,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     render();
   });
   map.on("moveend", () => renderList());
+  window.addEventListener("resize", () => syncMapControls());
 
   window.addEventListener("popstate", () => {
     const next = parsePath();
@@ -143,15 +146,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         refreshMap();
       } else if (act === "fuel-group") {
         const g = tEl.dataset.group as "diesel" | "petrol" | "gas";
-        const fuels = FUEL_BY_GROUP[g];
-        settings.fuel =
-          g === "petrol" && (settings.fuel === "95" || settings.fuel === "98")
-            ? settings.fuel
-            : fuels[0];
-        persistFuel();
-        onFuelChange();
-      } else if (act === "fuel") {
-        settings.fuel = tEl.dataset.fuel as FuelType;
+        settings.fuel = FUEL_BY_GROUP[g][0];
         persistFuel();
         onFuelChange();
       } else if (act === "around") {
@@ -562,13 +557,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (!s) return;
     const routeRow = routeRows.find((r) => r.station.id === id);
     const aroundRow = aroundRows.find((r) => r.station.id === id);
+    const showEta = Boolean(endHit || aroundOpen);
     const origin = originForEta();
-    const distKm =
-      routeRow?.distFromStartKm ??
-      aroundRow?.distKm ??
-      (origin
-        ? roadDistanceKm(origin, { lat: s.lat, lon: s.lon }, settings.roadFactor)
-        : undefined);
+    let distKm: number | undefined;
+    if (showEta) {
+      distKm = routeRow?.distFromStartKm ?? aroundRow?.distKm;
+      if (distKm == null && origin) {
+        distKm = roadDistanceKm(origin, { lat: s.lat, lon: s.lon }, settings.roadFactor);
+      }
+    }
     popup?.remove();
     popup = new maplibregl.Popup({ offset: 16, maxWidth: "300px" })
       .setLngLat([s.lon, s.lat])
@@ -594,6 +591,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     renderList();
     const banner = root.querySelector("#banner")!;
     banner.innerHTML = statusHtml();
+    syncMapControls();
   }
 
   function renderList(): void {
@@ -669,37 +667,28 @@ export async function startApp(root: HTMLElement): Promise<void> {
       list.innerHTML = listWrap([], t("route.noStations"));
       return;
     }
-    const ids = new Set(visibleStationIds(map));
-    const origin = originForEta();
-    const rows = data.stations.filter((s) => ids.size === 0 || ids.has(s.id));
-    const priced = rows
+    const priced = stationsInView(map, data.stations)
       .map((s) => ({
         s,
         price: data.prices?.prices[s.id]?.[settings.fuel]?.price,
-        distKm: origin
-          ? roadDistanceKm(origin, { lat: s.lat, lon: s.lon }, settings.roadFactor)
-          : undefined,
       }))
-      .filter((r) => r.price != null)
-      .sort((a, b) => a.price! - b.price!);
+      .filter((r): r is { s: Station; price: number } => r.price != null)
+      .sort((a, b) => a.price - b.price || a.s.id.localeCompare(b.s.id));
     if (priced.length === 0) {
       list.innerHTML = listWrap([], t("list.empty"));
       return;
     }
-    const cheapestId = priced[0]?.s.id;
+    const last = priced.length - 1;
     list.innerHTML = listWrap(
-      priced
-        .slice(0, 60)
-        .map((r, i) =>
-          stationRow(
-            r.s,
-            r.price!,
-            r.distKm,
-            "",
-            r.s.id === cheapestId ? "is-pick" : "",
-            i === 0 ? `<span class="badge">${escapeHtml(t("list.cheapest"))}</span>` : "",
-          ),
-        ),
+      priced.map((r, i) => {
+        const badges = [
+          i === 0 ? `<span class="badge">${escapeHtml(t("list.cheapest"))}</span>` : "",
+          i === last && last > 0
+            ? `<span class="badge muted">${escapeHtml(t("list.expensive"))}</span>`
+            : "",
+        ].join("");
+        return stationRow(r.s, r.price, undefined, "", i === 0 ? "is-pick" : "", badges);
+      }),
     );
   }
 
@@ -728,6 +717,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     badges = "",
   ): string {
     const eta = distKm != null ? etaParts(distKm) : null;
+    const etaLine = [eta?.label, extra].filter(Boolean).join(" ");
     const cls = ["station-row", className].filter(Boolean).join(" ");
     return `<li><button type="button" class="${cls}" data-act="station" data-id="${escapeHtml(s.id)}">
       <span class="swatch" data-brand="${escapeHtml(s.brand)}"></span>
@@ -735,7 +725,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ${badges ? `<span class="station-badges">${badges}</span>` : ""}
         <strong>${escapeHtml(s.name)}</strong>
         <small class="station-addr">${escapeHtml(stationAddress(s))}</small>
-        <small class="station-eta">${eta ? `${escapeHtml(eta.label)}` : ""}${extra ? ` ${escapeHtml(extra)}` : ""}</small>
+        ${etaLine ? `<small class="station-eta">${escapeHtml(etaLine)}</small>` : ""}
       </span>
       <span class="station-price">${escapeHtml(formatPrice(price))}</span>
     </button></li>`;
@@ -750,43 +740,45 @@ export async function startApp(root: HTMLElement): Promise<void> {
     btn.setAttribute("aria-label", headerMinimized ? t("header.expand") : t("header.collapse"));
     const chev = btn.querySelector(".header-chevron");
     if (chev) chev.textContent = headerMinimized ? "▾" : "▴";
+    syncMapControls();
+  }
+
+  function syncMapControls(): void {
+    const header = root.querySelector<HTMLElement>("#header");
+    if (!header) return;
+    root.style.setProperty("--header-h", `${Math.round(header.getBoundingClientRect().height)}px`);
   }
 
   function headerHtml(): string {
     const g = fuelGroupOf(settings.fuel);
-    const petrolOpen = g === "petrol";
     const destVal = destQuery || endHit?.label || "";
     const minLabel = destVal || t("app.name");
     return `
       <div class="header-body">
         <div class="topbar">
           <a class="logo" data-act="view" data-view="map" href="${pathFor("map", locale)}">${escapeHtml(t("app.name"))}</a>
-          <div class="fuel-filter" role="group" aria-label="${escapeHtml(t("fuel.diesel"))}">
-            ${(["diesel", "petrol", "gas"] as const)
-              .map(
-                (group) =>
-                  `<button type="button" class="${g === group ? "on" : ""}" data-act="fuel-group" data-group="${group}">${escapeHtml(t(`fuel.group.${group}` as MessageKey))}</button>`,
-              )
-              .join("")}
-          </div>
-          ${
-            petrolOpen
-              ? `<div class="fuel-sub">${["95", "98"]
-                  .map(
-                    (f) =>
-                      `<button type="button" class="${settings.fuel === f ? "on" : ""}" data-act="fuel" data-fuel="${f}">${f}</button>`,
-                  )
-                  .join("")}</div>`
-              : ""
-          }
           <div class="topbar-end">
             <div class="lang">
               <a data-act="locale" data-locale="lt" href="${hrefFor(view, "lt", settings.fuel)}" hreflang="lt" class="${locale === "lt" ? "on" : ""}">LT</a>
               <a data-act="locale" data-locale="en" href="${hrefFor(view, "en", settings.fuel)}" hreflang="en" class="${locale === "en" ? "on" : ""}">EN</a>
             </div>
             <button type="button" class="icon-btn ${aroundOpen ? "on" : ""}" data-act="around">${escapeHtml(t("action.around"))}</button>
+            <a class="icon-btn donate-btn" href="${DONATE_URL}" target="_blank" rel="noopener noreferrer">
+              <svg class="donate-heart" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                <path fill="currentColor" d="M7.97 14s-5.3-3.18-6.76-6C.02 5.36 1.3 2.2 4.2 2.2c1.4 0 2.5.8 3.77 2.16C9.24 3 10.34 2.2 11.75 2.2c2.9 0 4.18 3.16 2.99 5.8C13.28 10.82 7.97 14 7.97 14z"/>
+              </svg>
+              ${escapeHtml(t("action.donate"))}
+            </a>
             <button type="button" class="icon-btn ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">⚙</button>
           </div>
+        </div>
+        <div class="fuel-filter" role="group" aria-label="${escapeHtml(t("fuel.filter"))}">
+          ${(["diesel", "petrol", "gas"] as const)
+            .map(
+              (group) =>
+                `<button type="button" class="${g === group ? "on" : ""}" data-act="fuel-group" data-group="${group}">${escapeHtml(t(`fuel.group.${group}` as MessageKey))}</button>`,
+            )
+            .join("")}
         </div>
         <div class="dest">
           <div class="dest-from">

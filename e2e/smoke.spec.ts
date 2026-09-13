@@ -16,6 +16,10 @@ test("English locale loads without history or about", async ({ page }) => {
   await page.goto("/en/");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByPlaceholder("Where are you going?")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Donate" })).toHaveAttribute(
+    "href",
+    "https://github.com/sponsors/Almantask",
+  );
   await expect(page.getByRole("link", { name: "About" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "History" })).toHaveCount(0);
 });
@@ -25,6 +29,9 @@ test("station list is cheapest-first with a badge on top", async ({ page }) => {
   const first = page.locator(".station-row").first();
   await expect(first).toBeVisible({ timeout: 15_000 });
   await expect(first.locator(".badge")).toHaveText(/Pigiausia/);
+  const last = page.locator(".station-row").last();
+  await expect(last.locator(".badge")).toHaveText(/Brangiausia/);
+  await expect(page.locator(".station-eta")).toHaveCount(0);
   const texts = await page.locator(".station-row .station-price").allTextContents();
   const values = texts.map((s) => Number(s.replace(/[^\d,.-]/g, "").replace(",", ".")));
   expect(values.length).toBeGreaterThan(1);
@@ -72,14 +79,34 @@ test("around me with mocked geolocation (Vilnius)", async ({ page }) => {
     navigator.geolocation.getCurrentPosition = (ok) => ok(pos as GeolocationPosition);
   });
   await page.goto("/");
+  const first = page.locator(".station-row").first();
+  await expect(first).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator(".station-eta")).toHaveCount(0);
+  await expect(page.getByText(/max\. greičiu/)).toHaveCount(0);
   await page.getByRole("button", { name: "Aplink mane" }).click();
   await expect(page.getByRole("heading", { name: "Aplink mane" })).toBeVisible();
 });
 
-test("fuel filter switches petrol grades", async ({ page }) => {
+test("fuel filter has no 95/98 petrol grades", async ({ page }) => {
   await page.goto("/?fuel=petrol");
   await page.getByRole("button", { name: "Benzinas" }).click();
-  await expect(page.getByRole("button", { name: "95", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "98", exact: true }).click();
-  await expect(page).toHaveURL(/fuel=98/);
+  await expect(page.getByRole("button", { name: "95", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "98", exact: true })).toHaveCount(0);
+  await expect(page.locator(".fuel-filter button")).toHaveCount(3);
+});
+
+test("donate button links to GitHub Sponsors", async ({ page }) => {
+  await page.goto("/");
+  const donate = page.getByRole("link", { name: "Remti" });
+  await expect(donate).toBeVisible();
+  await expect(donate).toHaveAttribute("href", "https://github.com/sponsors/Almantask");
+  await expect(donate).toHaveAttribute("target", "_blank");
+});
+
+test("zoom controls sit in the top-right", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".maplibregl-ctrl-top-right .maplibregl-ctrl-zoom-in")).toBeVisible();
+  await expect(page.locator(".maplibregl-ctrl-bottom-left .maplibregl-ctrl-zoom-in")).toHaveCount(
+    0,
+  );
 });

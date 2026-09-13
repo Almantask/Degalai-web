@@ -157,12 +157,22 @@ body,
 .dest,
 .topbar-end,
 .fuel-filter,
-.fuel-sub,
 .lang,
 .radii {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.fuel-filter {
+  width: 100%;
+  align-items: stretch;
+}
+
+.fuel-filter button {
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
 }
 
 .topbar {
@@ -172,6 +182,28 @@ body,
 
 .topbar-end {
   margin-left: auto;
+}
+
+.header a.donate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--green-dark);
+}
+
+.header a.donate-btn:hover {
+  background: var(--green-soft);
+}
+
+.donate-heart {
+  flex: 0 0 auto;
+  color: #db61a2;
 }
 
 .header a,
@@ -192,7 +224,6 @@ body,
 }
 
 .fuel-filter button,
-.fuel-sub button,
 .icon-btn,
 .lang a,
 .radii button,
@@ -209,7 +240,6 @@ body,
 }
 
 .fuel-filter button.on,
-.fuel-sub button.on,
 .icon-btn.on,
 .lang a.on,
 .radii button.on {
@@ -458,7 +488,7 @@ body,
 .panel {
   position: absolute;
   z-index: 5;
-  top: 118px;
+  top: 186px;
   left: 12px;
   width: min(360px, calc(100% - 24px));
   background: var(--card);
@@ -519,7 +549,7 @@ body,
 #banner {
   position: absolute;
   z-index: 5;
-  top: 128px;
+  top: 196px;
   left: 12px;
   right: 12px;
   pointer-events: none;
@@ -628,6 +658,23 @@ body,
   font-family: var(--font);
 }
 
+.maplibregl-ctrl-top-right {
+  z-index: 3;
+  top: 8px;
+  right: 12px;
+}
+
+@media (max-width: 899px) {
+  .maplibregl-ctrl-top-right {
+    top: calc(var(--header-h, 178px) + 8px);
+    right: 10px;
+  }
+
+  .app:has(.header.is-min) .maplibregl-ctrl-top-right {
+    top: max(10px, env(safe-area-inset-top));
+  }
+}
+
 @media (min-width: 900px) {
   .header {
     left: 16px;
@@ -678,15 +725,28 @@ body,
   }
 
   .panel {
-    top: 132px;
+    top: 196px;
     left: 16px;
   }
 
   #banner {
     left: 16px;
     right: auto;
-    top: 150px;
+    top: 214px;
     max-width: min(760px, calc(100% - 400px));
+  }
+
+  .maplibregl-ctrl-top-right {
+    top: 16px;
+    right: 392px;
+  }
+
+  .app:has(.header.is-min) .maplibregl-ctrl-top-right {
+    top: 16px;
+  }
+
+  .app:has(.list .is-min) .maplibregl-ctrl-top-right {
+    right: 16px;
   }
 }
 
