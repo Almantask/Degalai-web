@@ -12,10 +12,7 @@ on:
       - "reports/**"
 
 permissions:
-  contents: write
-  pages: write
-  id-token: write
-  issues: write
+  contents: read
 
 concurrency:
   group: pages
@@ -24,6 +21,9 @@ concurrency:
 jobs:
   pipeline:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,7 +32,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - name: Run data pipeline
         if: github.event_name != 'push'
         run: npm run pipeline -- --backfill
@@ -88,6 +88,9 @@ jobs:
     needs: pipeline
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

@@ -41,17 +41,27 @@ export function pathFor(view: View, locale: Locale = getLocale()): string {
   return `${basePath()}${paths[view]}`;
 }
 
+function fuelQueryParam(fuel: FuelType): string | null {
+  if (fuel === "D") return "diesel";
+  if (fuel === "LPG") return "gas";
+  if (fuel === "95" || fuel === "98") return fuel;
+  return null;
+}
+
 export function hrefFor(view: View, locale: Locale, fuel?: FuelType): string {
   const path = pathFor(view, locale);
   if (!fuel) return path;
-  const q = fuel === "D" ? "diesel" : fuel === "LPG" ? "gas" : fuel;
-  return `${path}${path.includes("?") ? "&" : "?"}fuel=${q}`;
+  const q = fuelQueryParam(fuel);
+  if (!q) return path;
+  const sep = path.includes("?") ? "&" : "?";
+  return `${path}${sep}fuel=${q}`;
 }
 
 export function navigate(view: View, locale: Locale, fuel?: FuelType, replace = false): void {
   const path = pathFor(view, locale);
   const url = new URL(path, window.location.origin);
-  if (fuel) url.searchParams.set("fuel", fuel === "D" ? "diesel" : fuel === "LPG" ? "gas" : fuel);
+  const q = fuel ? fuelQueryParam(fuel) : null;
+  if (q) url.searchParams.set("fuel", q);
   if (replace) history.replaceState({ view, locale }, "", url);
   else history.pushState({ view, locale }, "", url);
   setLocale(locale);

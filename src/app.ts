@@ -39,7 +39,8 @@ import {
 import { orderRouteRows } from "./route-list.ts";
 import { hrefFor, navigate, parsePath, pathFor, type View } from "./router.ts";
 import { fetchRoute, geocode, type GeoHit, type RouteResult } from "./routing.ts";
-import { fuelFromUrl, loadSettings, saveSettings } from "./settings.ts";
+import DOMPurify from "dompurify";
+import { AROUND_RADIUS_KM, fuelFromUrl, loadSettings, saveSettings } from "./settings.ts";
 import type { Station } from "./types.ts";
 import { DEFAULT_SETTINGS } from "./types.ts";
 
@@ -168,9 +169,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
         aroundOpen = true;
         render();
       } else if (act === "radius") {
-        settings.aroundRadiusKm = Number(tEl.dataset.km);
-        saveSettings(settings);
-        void runAroundMe();
+        const km = Number(tEl.dataset.km);
+        if ((AROUND_RADIUS_KM as readonly number[]).includes(km)) {
+          settings.aroundRadiusKm = km;
+          saveSettings(settings);
+          void runAroundMe();
+        }
       } else if (act === "station") {
         openStation(tEl.dataset.id!);
       } else if (act === "clear-dest") {
@@ -570,10 +574,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     popup = new maplibregl.Popup({ offset: 16, maxWidth: "300px" })
       .setLngLat([s.lon, s.lat])
       .setHTML(
-        stationPopupHtml(
-          s,
-          data.prices,
-          distKm != null ? { etaLabel: etaParts(distKm).label } : undefined,
+        DOMPurify.sanitize(
+          stationPopupHtml(
+            s,
+            data.prices,
+            distKm != null ? { etaLabel: etaParts(distKm).label } : undefined,
+          ),
+          { USE_PROFILES: { html: true } },
         ),
       )
       .addTo(map);
@@ -759,8 +766,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
           <a class="logo" data-act="view" data-view="map" href="${pathFor("map", locale)}">${escapeHtml(t("app.name"))}</a>
           <div class="topbar-end">
             <div class="lang">
-              <a data-act="locale" data-locale="lt" href="${hrefFor(view, "lt", settings.fuel)}" hreflang="lt" class="${locale === "lt" ? "on" : ""}">LT</a>
-              <a data-act="locale" data-locale="en" href="${hrefFor(view, "en", settings.fuel)}" hreflang="en" class="${locale === "en" ? "on" : ""}">EN</a>
+              <a data-act="locale" data-locale="lt" href="${escapeHtml(hrefFor(view, "lt", settings.fuel))}" hreflang="lt" class="${locale === "lt" ? "on" : ""}">LT</a>
+              <a data-act="locale" data-locale="en" href="${escapeHtml(hrefFor(view, "en", settings.fuel))}" hreflang="en" class="${locale === "en" ? "on" : ""}">EN</a>
             </div>
             <button type="button" class="icon-btn ${aroundOpen ? "on" : ""}" data-act="around">${escapeHtml(t("action.around"))}</button>
             <a class="icon-btn donate-btn" href="${DONATE_URL}" target="_blank" rel="noopener noreferrer">
@@ -801,12 +808,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
     return `<section class="panel" aria-label="${escapeHtml(t("around.title"))}">
       <header><h2>${escapeHtml(t("around.title"))}</h2><button type="button" data-act="close-panel">${escapeHtml(t("action.close"))}</button></header>
       <p>${locateStatus === "pending" ? escapeHtml(t("around.locating")) : (locateStatus === "denied" || locateStatus === "outside") && !aroundOrigin ? escapeHtml(t("around.denied")) : escapeHtml(t("around.baseline"))}</p>
-      <div class="radii">${[5, 15, 30]
-        .map(
-          (km) =>
-            `<button type="button" class="${settings.aroundRadiusKm === km ? "on" : ""}" data-act="radius" data-km="${km}">${escapeHtml(t("around.km", { n: km }))}</button>`,
-        )
-        .join("")}</div>
+      <div class="radii">${AROUND_RADIUS_KM.map(
+        (km) =>
+          `<button type="button" class="${settings.aroundRadiusKm === km ? "on" : ""}" data-act="radius" data-km="${km}">${escapeHtml(t("around.km", { n: km }))}</button>`,
+      ).join("")}</div>
       <button type="button" data-act="pick-around">${escapeHtml(pickMode === "around" ? t("around.picking") : t("around.pickMap"))}</button>
     </section>`;
   }
@@ -814,11 +819,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function settingsHtml(): string {
     return `<section class="panel" aria-label="${escapeHtml(t("settings.title"))}">
       <header><h2>${escapeHtml(t("settings.title"))}</h2><button type="button" data-act="close-panel">${escapeHtml(t("action.close"))}</button></header>
-      <label>${escapeHtml(t("settings.consumption"))}<input id="set-cons" type="number" min="3" max="20" step="0.1" value="${settings.consumption}" /></label>
-      <label>${escapeHtml(t("settings.litres"))}<input id="set-litres" type="number" min="5" max="80" step="1" value="${settings.litres}" /></label>
-      <label>${escapeHtml(t("settings.timeValue"))}<input id="set-time" type="number" min="0" max="50" step="1" value="${settings.timeValue}" /></label>
-      <label>${escapeHtml(t("settings.roadFactor"))}<input id="set-factor" type="number" min="1" max="2" step="0.05" value="${settings.roadFactor}" /></label>
-      <label>${escapeHtml(t("settings.detourKm"))}<input id="set-detour" type="number" min="1" max="15" step="1" value="${settings.routeDetourKm}" /></label>
+      <label>${escapeHtml(t("settings.consumption"))}<input id="set-cons" type="number" min="3" max="20" step="0.1" value="${escapeHtml(String(settings.consumption))}" /></label>
+      <label>${escapeHtml(t("settings.litres"))}<input id="set-litres" type="number" min="5" max="80" step="1" value="${escapeHtml(String(settings.litres))}" /></label>
+      <label>${escapeHtml(t("settings.timeValue"))}<input id="set-time" type="number" min="0" max="50" step="1" value="${escapeHtml(String(settings.timeValue))}" /></label>
+      <label>${escapeHtml(t("settings.roadFactor"))}<input id="set-factor" type="number" min="1" max="2" step="0.05" value="${escapeHtml(String(settings.roadFactor))}" /></label>
+      <label>${escapeHtml(t("settings.detourKm"))}<input id="set-detour" type="number" min="1" max="15" step="1" value="${escapeHtml(String(settings.routeDetourKm))}" /></label>
       <label class="check"><input id="set-return" type="checkbox" ${settings.aroundReturn ? "checked" : ""} /> ${escapeHtml(t("settings.returnTrip"))}</label>
       <label class="check"><input id="set-hide" type="checkbox" ${settings.hideUnpriced ? "checked" : ""} /> ${escapeHtml(t("settings.hideUnpriced"))}</label>
     </section>`;

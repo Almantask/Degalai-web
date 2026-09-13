@@ -14,11 +14,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: npm run i18n:check
       - run: npm run lint
       - run: npm test
-      - run: npx tsc --noEmit
+      - run: npm run typecheck
       - run: npm run build
         env:
           BASE_URL: /Degalai-web/
