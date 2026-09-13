@@ -46,6 +46,7 @@ export function formatDateTime(iso: string): string {
   return new Intl.DateTimeFormat(intlLocale(), {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "Europe/Vilnius",
   }).format(new Date(iso));
 }
 

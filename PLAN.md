@@ -48,7 +48,7 @@ map tiles, geocoding and routing.
 | Routing | OSRM (see section 5 – options) | fast, open |
 | Chart | uPlot (or Chart.js) | tiny, fast on long time ranges |
 | PWA | vite-plugin-pwa (manifest + service worker) | "works like an app", offline last-known data |
-| CI | GitHub Actions cron (daily ~06:00 LT) | free, commits data and deploys |
+| CI | GitHub Actions cron (06:00 and 14:45 LT) | free, commits data and deploys |
 | Tests | Vitest (pipeline, calculations), Playwright (critical UI flows) | |
 
 ---
@@ -147,7 +147,7 @@ with the 2–3 largest chains that publish per-station prices publicly.
   archive into yearly files if it grows too much).
 
 ### 3.6 CI (`.github/workflows/daily.yml`)
-1. `cron: "0 3 * * *"` (06:00 LT) + manual `workflow_dispatch`.
+1. `cron: "0 3 * * *"` (06:00 LT) and `cron: "45 11 * * *"` (14:45 LT) + manual `workflow_dispatch`.
 2. `npm run pipeline` → generates `data/`.
 3. `git commit -m "data: YYYY-MM-DD"` (only if something changed).
 4. `npm run build` → deploy to Pages.

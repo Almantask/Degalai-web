@@ -2,7 +2,10 @@ name: Daily data + deploy
 
 on:
   schedule:
+    # 06:00 Lithuania time (EEST)
     - cron: "0 3 * * *"
+    # 14:45 Lithuania time (EEST)
+    - cron: "45 11 * * *"
   workflow_dispatch:
   push:
     branches: [main]
