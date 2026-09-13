@@ -43,7 +43,7 @@ import { fuelFromUrl, loadSettings, saveSettings } from "./settings.ts";
 import type { Station } from "./types.ts";
 import { DEFAULT_SETTINGS } from "./types.ts";
 
-const DONATE_EMAIL = "almantusk@gmail.com";
+const DONATE_URL = "https://github.com/sponsors/Almantask";
 
 interface AroundRow {
   station: Station;
@@ -81,8 +81,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let pickMode: "around" | "dest-start" | null = null;
   let aroundOpen = false;
   let settingsOpen = false;
-  let donateOpen = false;
-  let donateCopied = false;
   let listMinimized = false;
   let headerMinimized = false;
   let aroundRows: AroundRow[] = [];
@@ -154,25 +152,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
       } else if (act === "around") {
         aroundOpen = !aroundOpen;
         settingsOpen = false;
-        donateOpen = false;
         if (aroundOpen) void runAroundMe();
         render();
       } else if (act === "settings") {
         settingsOpen = !settingsOpen;
         aroundOpen = false;
-        donateOpen = false;
         render();
-      } else if (act === "donate") {
-        donateOpen = !donateOpen;
-        aroundOpen = false;
-        settingsOpen = false;
-        render();
-      } else if (act === "copy-donate-email") {
-        void copyDonateEmail();
       } else if (act === "close-panel") {
         aroundOpen = false;
         settingsOpen = false;
-        donateOpen = false;
         if (pickMode === "around") pickMode = null;
         render();
       } else if (act === "pick-around") {
@@ -268,7 +256,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     destQuery = hit.label;
     aroundOpen = false;
     settingsOpen = false;
-    donateOpen = false;
     pendingDest = true;
     if (!userLocation) {
       destStatus = locateStatus === "denied" ? "denied" : "locating";
@@ -600,7 +587,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     header.innerHTML = headerHtml();
     applyHeaderMinimized();
     const panels = root.querySelector("#panels")!;
-    panels.innerHTML = `${settingsOpen ? settingsHtml() : ""}${aroundOpen ? aroundHtml() : ""}${donateOpen ? donateHtml() : ""}`;
+    panels.innerHTML = `${settingsOpen ? settingsHtml() : ""}${aroundOpen ? aroundHtml() : ""}`;
     renderList();
     const banner = root.querySelector("#banner")!;
     banner.innerHTML = statusHtml();
@@ -776,12 +763,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
               <a data-act="locale" data-locale="en" href="${hrefFor(view, "en", settings.fuel)}" hreflang="en" class="${locale === "en" ? "on" : ""}">EN</a>
             </div>
             <button type="button" class="icon-btn ${aroundOpen ? "on" : ""}" data-act="around">${escapeHtml(t("action.around"))}</button>
-            <button type="button" class="icon-btn donate-btn ${donateOpen ? "on" : ""}" data-act="donate">
-              <svg class="donate-heart" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-                <path fill="currentColor" d="M7.97 14s-5.3-3.18-6.76-6C.02 5.36 1.3 2.2 4.2 2.2c1.4 0 2.5.8 3.77 2.16C9.24 3 10.34 2.2 11.75 2.2c2.9 0 4.18 3.16 2.99 5.8C13.28 10.82 7.97 14 7.97 14z"/>
-              </svg>
+            <a class="icon-btn donate-btn" href="${DONATE_URL}" target="_blank" rel="noopener noreferrer">
               ${escapeHtml(t("action.donate"))}
-            </button>
+            </a>
             <button type="button" class="icon-btn ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">⚙</button>
           </div>
         </div>
@@ -825,40 +809,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
         .join("")}</div>
       <button type="button" data-act="pick-around">${escapeHtml(pickMode === "around" ? t("around.picking") : t("around.pickMap"))}</button>
     </section>`;
-  }
-
-  function donateHtml(): string {
-    return `<section class="panel donate-panel" aria-label="${escapeHtml(t("donate.title"))}">
-      <header><h2>${escapeHtml(t("donate.title"))}</h2><button type="button" data-act="close-panel">${escapeHtml(t("action.close"))}</button></header>
-      <p>${escapeHtml(t("donate.lead"))}</p>
-      <p class="donate-email-label">${escapeHtml(t("donate.emailLabel"))}</p>
-      <div class="donate-email">
-        <code>${escapeHtml(DONATE_EMAIL)}</code>
-        <button type="button" class="primary" data-act="copy-donate-email">${escapeHtml(donateCopied ? t("donate.copied") : t("donate.copy"))}</button>
-      </div>
-    </section>`;
-  }
-
-  async function copyDonateEmail(): Promise<void> {
-    try {
-      await navigator.clipboard.writeText(DONATE_EMAIL);
-    } catch {
-      const ta = document.createElement("textarea");
-      ta.value = DONATE_EMAIL;
-      ta.setAttribute("readonly", "");
-      ta.style.position = "fixed";
-      ta.style.left = "-9999px";
-      document.body.append(ta);
-      ta.select();
-      document.execCommand("copy");
-      ta.remove();
-    }
-    donateCopied = true;
-    render();
-    window.setTimeout(() => {
-      donateCopied = false;
-      if (donateOpen) render();
-    }, 1600);
   }
 
   function settingsHtml(): string {
