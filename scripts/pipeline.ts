@@ -5,7 +5,7 @@ import { fetchLeaWorkbook } from "./adapters/lea.ts";
 import { geocodePhoton, loadGeocodeCache, saveGeocodeCache, sleep } from "./geocode.ts";
 import { recomputeHistory } from "./history.ts";
 import { loadOverrides, matchByAddress, matchObservations } from "./match.ts";
-import { fetchOsmStations } from "./osm.ts";
+import { chooseOsmStations, fetchOsmStations } from "./osm.ts";
 import { applyStale, observationsToDaily } from "./validate.ts";
 
 const ROOT = join(import.meta.dirname, "..");
@@ -68,12 +68,12 @@ async function enrichCoords(observations: Observation[]): Promise<Observation[]>
         out.push(...group);
         continue;
       }
-    try {
-      hit = q.length > 8 ? await geocodePhoton(q, "lt") : null;
-    } catch (e) {
-      console.warn(`Geocode failed for "${q}":`, e);
-      hit = null;
-    }
+      try {
+        hit = q.length > 8 ? await geocodePhoton(q, "lt") : null;
+      } catch (e) {
+        console.warn(`Geocode failed for "${q}":`, e);
+        hit = null;
+      }
       cache.set(q, hit);
       lookups++;
       if (lookups % 10 === 0) saveGeocodeCache(cachePath, cache);
@@ -100,9 +100,15 @@ async function loadOsm(force: boolean): Promise<Station[]> {
     return existing;
   }
   console.log("Fetching OSM fuel stations…");
-  const stations = await fetchOsmStations();
-  console.log(`OSM stations: ${stations.length}`);
-  return stations;
+  try {
+    const stations = chooseOsmStations(existing, await fetchOsmStations());
+    console.log(`OSM stations: ${stations.length}`);
+    return stations;
+  } catch (e) {
+    const fallback = chooseOsmStations(existing, undefined, e);
+    console.warn(`OSM fetch failed; reusing ${fallback.length} cached stations:`, e);
+    return fallback;
+  }
 }
 
 async function main(): Promise<void> {
@@ -173,7 +179,9 @@ async function main(): Promise<void> {
   writeJson(join(REPORTS, "unmatched.json"), matched.unmatched);
 
   const prevDate = latestPriceDate();
-  const previous = prevDate ? readJson<DailyPrices | null>(join(PRICES, `${prevDate}.json`), null) : null;
+  const previous = prevDate
+    ? readJson<DailyPrices | null>(join(PRICES, `${prevDate}.json`), null)
+    : null;
   const { daily, log } = observationsToDaily(date, matched.observations, previous);
   applyStale(daily, previous, prevDate);
   writeJson(join(PRICES, `${date}.json`), daily);
@@ -192,7 +200,9 @@ async function main(): Promise<void> {
     sources: adapterNames,
   };
   writeJson(join(DATA, "meta.json"), meta);
-  console.log(`Wrote ${stations.length} stations, ${priced} with prices for ${date}. Unmatched groups: ${matched.unmatched.length}`);
+  console.log(
+    `Wrote ${stations.length} stations, ${priced} with prices for ${date}. Unmatched groups: ${matched.unmatched.length}`,
+  );
 
   const otherDates = leaDates.filter((d) => d !== date);
   if (otherDates.length && Object.keys(matched.sourceToStation).length) {

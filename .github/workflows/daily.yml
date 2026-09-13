@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: "0 3 * * *"
   workflow_dispatch:
+  push:
+    branches: [main]
+    # Data-only commits from this workflow already build+deploy in the same run.
+    paths-ignore:
+      - "data/**"
+      - "reports/**"
 
 permissions:
   contents: write
@@ -28,8 +34,10 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Run data pipeline
+        if: github.event_name != 'push'
         run: npm run pipeline -- --backfill
       - name: Commit data if changed
+        if: github.event_name != 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
