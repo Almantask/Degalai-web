@@ -14,7 +14,7 @@
   "fuel.group.gas": "Gas (LPG)",
   "fuel.filter": "Fuel type",
   "action.around": "Around me",
-  "action.donate": "My Revolut",
+  "action.donate": "Stripe",
   "action.settings": "Settings",
   "action.close": "Close",
   "action.navigate": "Navigate",

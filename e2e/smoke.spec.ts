@@ -16,9 +16,9 @@ test("English locale loads without history or about", async ({ page }) => {
   await page.goto("/en/");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByPlaceholder("Where are you going?")).toBeVisible();
-  await expect(page.getByRole("link", { name: "My Revolut" })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: "Stripe" })).toHaveAttribute(
     "href",
-    "https://revolut.me/almantad9j",
+    "https://github.com/sponsors/Almantask",
   );
   await expect(page.getByRole("link", { name: "About" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "History" })).toHaveCount(0);
@@ -95,14 +95,15 @@ test("fuel filter has no 95/98 petrol grades", async ({ page }) => {
   await expect(page.locator(".fuel-filter button")).toHaveCount(3);
 });
 
-test("donate button is a Revolut payment link", async ({ page }) => {
+test("donate button is a GitHub Sponsors Stripe link", async ({ page }) => {
   await page.goto("/");
-  const donate = page.getByRole("link", { name: "My Revolut" });
+  const donate = page.getByRole("link", { name: "Stripe" });
   await expect(donate).toBeVisible();
-  await expect(donate).toHaveAttribute("href", "https://revolut.me/almantad9j");
+  await expect(donate).toHaveAttribute("href", "https://github.com/sponsors/Almantask");
   await expect(donate).toHaveAttribute("target", "_blank");
   await expect(page.getByRole("heading", { name: "Paremkite projektą" })).toHaveCount(0);
   await expect(page.getByText("almantusk@gmail.com")).toHaveCount(0);
+  await expect(page.locator("a[href*='revolut.me']")).toHaveCount(0);
 });
 
 test("zoom controls sit in the top-right", async ({ page }) => {

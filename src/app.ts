@@ -43,7 +43,7 @@ import { fuelFromUrl, loadSettings, saveSettings } from "./settings.ts";
 import type { Station } from "./types.ts";
 import { DEFAULT_SETTINGS } from "./types.ts";
 
-const DONATE_URL = "https://revolut.me/almantad9j";
+const DONATE_URL = "https://github.com/sponsors/Almantask";
 
 interface AroundRow {
   station: Station;
