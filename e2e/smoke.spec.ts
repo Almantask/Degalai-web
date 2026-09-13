@@ -16,7 +16,7 @@ test("English locale loads without history or about", async ({ page }) => {
   await page.goto("/en/");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByPlaceholder("Where are you going?")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Stripe" })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: "Donate" })).toHaveAttribute(
     "href",
     "https://github.com/sponsors/Almantask",
   );
@@ -95,9 +95,9 @@ test("fuel filter has no 95/98 petrol grades", async ({ page }) => {
   await expect(page.locator(".fuel-filter button")).toHaveCount(3);
 });
 
-test("donate button is a GitHub Sponsors Stripe link", async ({ page }) => {
+test("donate button is a GitHub Sponsors link", async ({ page }) => {
   await page.goto("/");
-  const donate = page.getByRole("link", { name: "Stripe" });
+  const donate = page.getByRole("link", { name: "Paremk" });
   await expect(donate).toBeVisible();
   await expect(donate).toHaveAttribute("href", "https://github.com/sponsors/Almantask");
   await expect(donate).toHaveAttribute("target", "_blank");
