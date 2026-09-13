@@ -548,23 +548,22 @@ body,
 
 .donate-email {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   gap: 8px;
 }
 
 .donate-email code {
-  flex: 1;
-  min-width: 0;
   padding: 8px 10px;
   border-radius: 12px;
   background: #fff;
   border: 1px solid var(--line);
   font-size: 0.86rem;
-  overflow-wrap: anywhere;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .donate-email .primary {
-  flex: 0 0 auto;
   padding: 8px 12px;
   border-radius: 12px;
 }
