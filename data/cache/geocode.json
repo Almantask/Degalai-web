@@ -3284,5 +3284,335 @@
     "lat": 55.0671367,
     "lon": 24.2879695,
     "label": "Taurostos g., Jonava"
+  },
+  "Obeliai, Dariaus ir Girėno g. 36, 42209, Rokiškio r. sav., Lietuva": {
+    "lat": 55.9485496,
+    "lon": 25.8143193,
+    "label": "Dariaus ir Girėno g., Obeliai"
+  },
+  "Vilnius, Šv. Stepono g. 44, 01312, Vilniaus m. sav., Lietuva": {
+    "lat": 54.669143,
+    "lon": 25.2787962,
+    "label": "Alauša, Šv. Stepono g., Vilnius"
+  },
+  "Rietavas, Dariaus ir Girėno g. 19, 90316, Rietavo sav., Lietuva": {
+    "lat": 55.7194009,
+    "lon": 21.9285021,
+    "label": "Baltic Petroleum, Dariaus ir Girėno g., Rietavas"
+  },
+  "Ukmergė, Dariaus ir Girėno g. 31, 20154, Ukmergės r. sav., Lietuva": {
+    "lat": 55.2405433,
+    "lon": 24.7875661,
+    "label": "Bemija, Dariaus ir Girėno g., Ukmergė"
+  },
+  "Taurai, Tilžės pl. 46, 72142, Tauragės r. sav., Lietuva": {
+    "lat": 55.2422134,
+    "lon": 22.2493274,
+    "label": "Savitarnos plovykla, Tilžės pl., Taurai"
+  },
+  "Kaunas, Sukilėlių pr. 120, 49237, Kauno m. sav., Lietuva": {
+    "lat": 54.9283933,
+    "lon": 23.92897,
+    "label": "Circle K „Sukilėlių“, Sukilėlių pr., Kaunas"
+  },
+  "Tauragė, Dariaus ir Girėno g. 83A, 72192, Tauragės r. sav., Lietuva": {
+    "lat": 55.266997,
+    "lon": 22.3098059,
+    "label": "Circle K „Automatas Tauragė“, Dariaus ir Girėno g., Tauragė"
+  },
+  "Kaunas, Tvirtovės al. 33A, 50157, Kauno m. sav., Lietuva": {
+    "lat": 54.9131287,
+    "lon": 23.9260738,
+    "label": "Circle K „Tvirtovės“, Tvirtovės al., Kaunas"
+  },
+  "Vilnius, Geležinio Vilko g. 24, 08412, Vilniaus m. sav., Lietuva": {
+    "lat": 54.7514091,
+    "lon": 25.2663978,
+    "label": "Circle K, Geležinio Vilko g., Vilnius"
+  },
+  "Kaunas, Karaliaus Mindaugo pr. 34A, 44306, Kauno m. sav., Lietuva": {
+    "lat": 54.8941634,
+    "lon": 23.9142007,
+    "label": "Circle K Karaliaus Mindaugo pr., Karaliaus Mindaugo pr., Kaunas"
+  },
+  "Jonava, Vasario 16-osios g. 33, 55164, Jonavos r. sav., Lietuva": {
+    "lat": 55.0703819,
+    "lon": 24.2635482,
+    "label": "Circle K Jonava, Vasario 16-osios g., Jonava"
+  },
+  "Kaunas, Raudondvario pl. 107A, 47186, Kauno m. sav., Lietuva": {
+    "lat": 54.9081595,
+    "lon": 23.8652652,
+    "label": "Circle K, Raudondvario pl., Kaunas"
+  },
+  "Panevėžys, G. Petkevičaitės-Bitės g. 35C, 37138, Panevėžio m. sav., Lietuva": {
+    "lat": 55.7224376,
+    "lon": 24.3421829,
+    "label": "Deliuvis, G. Petkevičaitės-Bitės g., Panevėžys"
+  },
+  "Vilnius, Savanorių pr. 225, 02300, Vilniaus m. sav., Lietuva": {
+    "lat": 54.641028,
+    "lon": 25.1841354,
+    "label": "EMSI, Savanorių pr., Vilnius"
+  },
+  "Klaipėda, Taikos pr. 124, 94286, Klaipėdos m. sav., Lietuva": {
+    "lat": 55.7001378,
+    "lon": 21.1491373,
+    "label": "Klaipėdos Marijos Taikos Karalienės parapijos Caritas, Taikos pr., Klaipėda"
+  },
+  "Kaunas, Vandžiogalos pl. 86A, 47478, Kauno r. sav., Lietuva": {
+    "lat": 54.9515318,
+    "lon": 23.8936351,
+    "label": "EMSI, Vandžiogalos pl., Kaunas"
+  },
+  "Jonava, Vasario 16-osios g. 70, 55165, Jonavos r. sav., Lietuva": {
+    "lat": 55.0708603,
+    "lon": 24.2588537,
+    "label": "Emsi, Vasario 16-osios g., Jonava"
+  },
+  "Vilnius, Laisvės pr. 80B, 06125, Vilniaus m. sav., Lietuva": {
+    "lat": 54.7228371,
+    "lon": 25.23303,
+    "label": "Lietuvos šaulių sąjungos Karaliaus Mindaugo šaulių 10-osios rinktinės būstinė, Laisvės pr., Vilnius"
+  },
+  "Kaunas, Ateities pl. 40B, 52112, Kauno m. sav., Lietuva": {
+    "lat": 54.9218463,
+    "lon": 24.0477225,
+    "label": "Emsi, Ateities pl., Kaunas"
+  },
+  "Žemaičių Naumiestis, Klaipėdos g. 76, 99206, Šilutės r. sav., Lietuva": {
+    "lat": 55.3552823,
+    "lon": 21.6800586,
+    "label": "Klaipėdos g., Žemaičių Naumiestis"
+  },
+  "Šilalė, Rytinio Kelio g. 2a, 75122, Šilalės r. sav., Lietuva": {
+    "lat": 55.4859035,
+    "lon": 22.1996267,
+    "label": "Milda, Rytinio Kelio g., Šilalė"
+  },
+  "Plungė, Dariaus ir Girėno g. 31, 90118, Plungės r. sav., Lietuva": {
+    "lat": 55.9221937,
+    "lon": 21.8620249,
+    "label": "Dariaus ir Girėno g., Plungė"
+  },
+  "Vilnius, Baltosios Vokės g. 35, 02243, Vilniaus m. sav., Lietuva": {
+    "lat": 54.6133594,
+    "lon": 25.1837307,
+    "label": "Baltosios Vokės g., Vilnius"
+  },
+  "Kaunas, Baltų pr. 141A, 47126, Kauno m. sav., Lietuva": {
+    "lat": 54.922867,
+    "lon": 23.8698791,
+    "label": "Jozita, Baltų pr., Kaunas"
+  },
+  "Klaipėda, Taikos pr. 157, 94285, Klaipėdos m. sav., Lietuva": {
+    "lat": 55.6654212,
+    "lon": 21.1743522,
+    "label": "Taikos pr., Klaipėda"
+  },
+  "Tauragė, Dariaus ir Girėno g. 49, 72221, Tauragės r. sav., Lietuva": {
+    "lat": 55.2582123,
+    "lon": 22.2945669,
+    "label": "Susyskintos Dujos, Dariaus ir Girėno g., Tauragė"
+  },
+  "Tauragė, Dariaus ir Girėno g. 130A, 72194, Tauragės r. sav., Lietuva": {
+    "lat": 55.2653157,
+    "lon": 22.3088337,
+    "label": "Neste, Dariaus ir Girėno g., Tauragė"
+  },
+  "Ukmergė, Kauno g. 45B, 20119, Ukmergės r. sav., Lietuva": {
+    "lat": 55.2420375,
+    "lon": 24.7429222,
+    "label": "Neste „Ukmergės“, Kauno g., Ukmergė"
+  },
+  "Marijampolė, Stoties g. 4C, 68112, Marijampolės sav., Lietuva": {
+    "lat": 54.5603639,
+    "lon": 23.3659257,
+    "label": "Neste „Marijampolės“, Stoties g., Marijampolė"
+  },
+  "Klaipėda, Taikos pr. 60, 93225, Klaipėdos m. sav., Lietuva": {
+    "lat": 55.6889111,
+    "lon": 21.1551766,
+    "label": "Neste „Taikos“, Taikos pr., Klaipėda"
+  },
+  "Kaunas, Europos pr. 43, 46329, Kauno m. sav., Lietuva": {
+    "lat": 54.8756555,
+    "lon": 23.9117765,
+    "label": "Benu, Europos pr., Kaunas"
+  },
+  "Kaunas, Raudondvario pl. 103, 47185, Kauno m. sav., Lietuva": {
+    "lat": 54.9068617,
+    "lon": 23.8728216,
+    "label": "Neste, Raudondvario pl., Kaunas"
+  },
+  "Kaunas, Islandijos pl. 191E, 49168, Kauno m. sav., Lietuva": {
+    "lat": 54.9314194,
+    "lon": 23.9508055,
+    "label": "Neste „Islandijos“, Islandijos pl., Kaunas"
+  },
+  "Kaunas, Žemaičių pl. 26, 48256, Kauno m. sav., Lietuva": {
+    "lat": 54.9255312,
+    "lon": 23.8917929,
+    "label": "Neste, Žemaičių pl., Kaunas"
+  },
+  "Kaunas, Pramonės pr. 6A, 51267, Kauno m. sav., Lietuva": {
+    "lat": 54.9099418,
+    "lon": 23.9837672,
+    "label": "Neste „Pramonės“, Pramonės pr., Kaunas"
+  },
+  "Vilnius, Geležinio Vilko g. 41, 09300, Vilniaus m. sav., Lietuva": {
+    "lat": 54.7040978,
+    "lon": 25.2668956,
+    "label": "Caffeine, Geležinio Vilko g., Vilnius"
+  },
+  "Vilnius, Eišiškių pl. 82, 02200, Vilniaus m. sav., Lietuva": {
+    "lat": 54.6123283,
+    "lon": 25.2196504,
+    "label": "Eišiškių pl., Vilnius"
+  },
+  "Vilnius, Pilaitės pr. 27, 06269, Vilniaus m. sav., Lietuva": {
+    "lat": 54.7091436,
+    "lon": 25.1899222,
+    "label": "Švaros broliai, Pilaitės pr., Vilnius"
+  },
+  "Vilnius, Dariaus ir Girėno g. 17, 02169, Vilniaus m. sav., Lietuva": {
+    "lat": 54.6550654,
+    "lon": 25.2706669,
+    "label": "Neste „Kirtimų“, Dariaus ir Girėno g., Vilnius"
+  },
+  "Vilnius, Savanorių pr. 220A, 02301, Vilniaus m. sav., Lietuva": {
+    "lat": 54.6440341,
+    "lon": 25.2074576,
+    "label": "Švaros Broliai, Savanorių pr., Vilnius"
+  },
+  "Kazlų Rūda, S. Daukanto g. 19D, 69430, Kazlų Rūdos sav., Lietuva": {
+    "lat": 54.7392942,
+    "lon": 23.4962233,
+    "label": "Regusa, S. Daukanto g., Kazlų Rūda"
+  },
+  "Kaunas, Marijampolės pl. 20, 46147, Kauno m. sav., Lietuva": {
+    "lat": 54.8502039,
+    "lon": 23.9657416,
+    "label": "Regusa, Marijampolės pl., Kaunas"
+  },
+  "Šilalė, Rytinio kelio g. 19, 75133, Šilalės r. sav., Lietuva": {
+    "lat": 55.4918497,
+    "lon": 22.1992774,
+    "label": "Saurida, Rytinio Kelio g., Šilalė"
+  },
+  "Klaipėda, Jūrininkų pr. 29, 95225, Klaipėdos r. sav., Lietuva": {
+    "lat": 55.6568391,
+    "lon": 21.1838207,
+    "label": "Saurida, Jūrininkų pr., Klaipėda"
+  },
+  "Naujoji Akmenė,  V. Kudirkos g. 18A, 85171, Akmenės r. sav., Lietuva": {
+    "lat": 56.3041917,
+    "lon": 22.8873837,
+    "label": "V. Kudirkos g., Naujoji Akmenė"
+  },
+  "Simnas, Alytaus g. 48, 64313, Alytaus r. sav., Lietuva": {
+    "lat": 54.3838453,
+    "lon": 23.659403,
+    "label": "Skulas, Alytaus g., Simnas"
+  },
+  "Gargždai, Klaipėdos g. 39, 96157, Klaipėdos r. sav., Lietuva": {
+    "lat": 55.7125119,
+    "lon": 21.3819574,
+    "label": "Trevena, Klaipėdos g., Gargždai"
+  },
+  "Visaginas, Taikos pr. 23B, 31107, Visagino sav., Lietuva": {
+    "lat": 55.6053701,
+    "lon": 26.4331081,
+    "label": "Visagino poliklinika, Taikos pr., Visaginas"
+  },
+  "Vilnius, Pilaitės pr. 28, 06264, Vilniaus m. sav., Lietuva": {
+    "lat": 54.7014526,
+    "lon": 25.2032929,
+    "label": "Pilaitės pr., Vilnius"
+  },
+  "Vilnius, Pilaitės pr. 13, 06264, Vilniaus m. sav., Lietuva": {
+    "lat": 54.7030486,
+    "lon": 25.2041172,
+    "label": "Viada, Pilaitės pr., Vilnius"
+  },
+  "Vilnius, Grigiškės, Kovo 11-osios g. 75, 27119, Vilniaus m. sav., Lietuva": {
+    "lat": 54.6691856,
+    "lon": 25.1048756,
+    "label": "Viada, Kovo 11-osios g., Grigiškės"
+  },
+  "Vilnius, Dariaus ir Girėno g. 30A, 02169, Vilniaus m. sav., Lietuva": {
+    "lat": 54.6529651,
+    "lon": 25.2722027,
+    "label": "Viada, Dariaus ir Girėno g., Vilnius"
+  },
+  "Tauragė, Dariaus ir Girėno g. 138, 72194, Tauragės r. sav., Lietuva": {
+    "lat": 55.2665138,
+    "lon": 22.3115648,
+    "label": "Viada, Dariaus ir Girėno g., Tauragė"
+  },
+  "Šiauliai, Dubijos g. 1C,, Šiaulių m. sav., Lietuva": {
+    "lat": 55.9263963,
+    "lon": 23.3076339,
+    "label": "Viada, Dubijos g., Šiauliai"
+  },
+  "Plungė, J. Tumo-Vaižganto g. 102, 90160, Plungės r. sav., Lietuva": {
+    "lat": 55.897858,
+    "lon": 21.8270772,
+    "label": "Plungės visuomenės sveikatos biuras, J. Tumo-Vaižganto g., Plungė"
+  },
+  "Pakruojis, Vytauto Didžiojo g. 98, 83162, Pakruojo r. sav., Lietuva": {
+    "lat": 55.9804581,
+    "lon": 23.8579672,
+    "label": "Viada, Vytauto Didžiojo g., Pakruojis"
+  },
+  "Kretingalė, Klaipėdos g. 1A, 96332, Klaipėdos r. sav., Lietuva": {
+    "lat": 55.8331696,
+    "lon": 21.1887368,
+    "label": "Jūros g., Kretingalė"
+  },
+  "Gargždai, Vilniaus pl. 65, 96173, Klaipėdos r. sav., Lietuva": {
+    "lat": 55.7321931,
+    "lon": 21.3761937,
+    "label": "Viada, Vilniaus pl., Gargždai"
+  },
+  "Klaipėda, Taikos pr. 70A-1, 93202, Klaipėdos m. sav., Lietuva": {
+    "lat": 55.6808011,
+    "lon": 21.1632742,
+    "label": "Klaipėdos naujoji apaštalų bažnyčia, Taikos pr., Klaipėda"
+  },
+  "Klaipėda, Šilutės pl. 52, 94181, Klaipėdos m. sav., Lietuva": {
+    "lat": 55.6820055,
+    "lon": 21.1849528,
+    "label": "Šilutės pl., Klaipėda"
+  },
+  "Kaunas, Raudondvario pl. 288, 47164, Kauno m. sav., Lietuva": {
+    "lat": 54.9213913,
+    "lon": 23.8105362,
+    "label": "Viada, Raudondvario pl., Kaunas"
+  },
+  "Kaunas, Pramonės pr. 44, 50302, Kauno m. sav., Lietuva": {
+    "lat": 54.927221,
+    "lon": 23.9747862,
+    "label": "Viada, Pramonės pr., Kaunas"
+  },
+  "Kaunas, Marijampolės pl. 29, 45438, Kauno m. sav., Lietuva": {
+    "lat": 54.8495447,
+    "lon": 23.967082,
+    "label": "Viada, Marijampolės pl., Kaunas"
+  },
+  "Kaunas, Ateities pl. 37A, 52119, Kauno m. sav., Lietuva": {
+    "lat": 54.9182205,
+    "lon": 24.0404488,
+    "label": "Ateities pl., Kaunas"
+  },
+  "Kaunas, Ateities pl. 105, 52119, Kauno m. sav., Lietuva": {
+    "lat": 54.9169683,
+    "lon": 24.0363731,
+    "label": "Ateities pl., Kaunas"
+  },
+  "Kalvarija, Dariaus ir Girėno g. 81, 69206, Kalvarijos sav., Lietuva": {
+    "lat": 54.423664,
+    "lon": 23.2326297,
+    "label": "Kalvarijos veterinarijos paslaugos, Dariaus ir Girėno g., Kalvarija"
   }
 }
