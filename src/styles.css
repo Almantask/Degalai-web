@@ -184,7 +184,7 @@ body,
   margin-left: auto;
 }
 
-.header .donate-btn {
+.header a.donate-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -197,7 +197,7 @@ body,
   color: var(--green-dark);
 }
 
-.header .donate-btn:hover {
+.header a.donate-btn:hover {
   background: var(--green-soft);
 }
 
