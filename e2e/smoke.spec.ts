@@ -98,7 +98,7 @@ test("donate panel offers PayPal without a GitHub account", async ({ page }) => 
   await expect(page.getByRole("heading", { name: "Paremkite projektą" })).toBeVisible();
   const paypal = page.getByRole("link", { name: "Remti per „PayPal“" });
   await expect(paypal).toBeVisible();
-  await expect(paypal).toHaveAttribute("href", /paypal\.com\/donate/);
+  await expect(paypal).toHaveAttribute("href", /paypal\.com\/cgi-bin\/webscr\?cmd=_xclick/);
   await expect(paypal).toHaveAttribute("target", "_blank");
   const github = page.getByRole("link", { name: /GitHub Sponsors/ });
   await expect(github).toHaveAttribute("href", "https://github.com/sponsors/Almantask");

@@ -44,7 +44,7 @@ import type { Station } from "./types.ts";
 import { DEFAULT_SETTINGS } from "./types.ts";
 
 const PAYPAL_DONATE_URL =
-  "https://www.paypal.com/donate/?business=almantusk%40gmail.com&no_recurring=0&item_name=Kur%20degalai&currency_code=EUR";
+  "https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=almantusk%40gmail.com&item_name=Kur%20degalai&currency_code=EUR&no_shipping=1";
 const GITHUB_SPONSORS_URL = "https://github.com/sponsors/Almantask";
 
 interface AroundRow {
