@@ -24,7 +24,7 @@ npm run test:e2e
 
 ## Data
 
-Git is the database. The daily GitHub Actions workflow (06:00 Lithuania time) runs
+Git is the database. The GitHub Actions workflow (06:00 and 14:45 Lithuania time) runs
 `npm run pipeline`, commits `data/` if it changed, and deploys the static site.
 
 | Path | What |

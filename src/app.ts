@@ -4,6 +4,7 @@ import { extraMinutesFromKm, minutesAtMaxSpeed, netBenefit } from "./calc.ts";
 import { loadAppData, type AppData } from "./data.ts";
 import {
   formatDate,
+  formatDateTime,
   formatDuration,
   formatKm,
   formatMoney,
@@ -702,13 +703,20 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function listWrap(items: string[], empty?: string): string {
     const count = items.length;
     const title = count ? `${t("list.title")} · ${tPlural("stations", count)}` : t("list.title");
+    const updatedAt = data.prices?.generatedAt ?? data.meta?.generatedAt;
+    const updated = updatedAt
+      ? `<p class="list-updated">${escapeHtml(t("list.updated", { time: formatDateTime(updatedAt) }))}</p>`
+      : "";
     const body = empty
       ? `<p class="empty">${escapeHtml(empty)}</p>`
       : `<ul class="station-list">${items.join("")}</ul>`;
     return `<div class="sheet${listMinimized ? " is-min" : ""}">
       <button type="button" class="list-head" data-act="toggle-list" aria-expanded="${listMinimized ? "false" : "true"}" aria-label="${escapeHtml(listMinimized ? t("list.expand") : t("list.collapse"))}">
         <span class="list-handle" aria-hidden="true"></span>
-        <h2>${escapeHtml(title)}</h2>
+        <span class="list-head-copy">
+          <h2>${escapeHtml(title)}</h2>
+          ${updated}
+        </span>
         <span class="list-chevron" aria-hidden="true">${listMinimized ? "▴" : "▾"}</span>
       </button>
       <div class="list-body">${body}</div>

@@ -106,10 +106,23 @@ test("donate button is a GitHub Sponsors Stripe link", async ({ page }) => {
   await expect(page.locator("a[href*='revolut.me']")).toHaveCount(0);
 });
 
-test("zoom controls sit in the top-right", async ({ page }) => {
+test("zoom and locate controls sit together in the top-right", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator(".maplibregl-ctrl-top-right .maplibregl-ctrl-zoom-in")).toBeVisible();
+  const corner = page.locator(".maplibregl-ctrl-top-right");
+  await expect(corner.locator(".maplibregl-ctrl-zoom-in")).toBeVisible();
+  await expect(corner.locator(".maplibregl-ctrl-zoom-out")).toBeVisible();
+  await expect(corner.locator(".maplibregl-ctrl-geolocate")).toBeVisible();
   await expect(page.locator(".maplibregl-ctrl-bottom-left .maplibregl-ctrl-zoom-in")).toHaveCount(
     0,
   );
+  await expect(page.locator(".maplibregl-ctrl-bottom-left .maplibregl-ctrl-geolocate")).toHaveCount(
+    0,
+  );
+});
+
+test("station list shows last updated time", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".list-updated")).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator(".list-updated")).toContainText(/Atnaujinta/);
+  await expect(page.locator(".list-updated")).toContainText(/\d{1,2}:\d{2}/);
 });
