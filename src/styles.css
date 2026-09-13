@@ -157,8 +157,7 @@ body,
 .dest,
 .topbar-end,
 .fuel-filter,
-.lang,
-.radii {
+.lang {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -222,7 +221,6 @@ body,
 .fuel-filter button,
 .icon-btn,
 .lang a,
-.radii button,
 .panel button:not(.primary) {
   border: 1px solid var(--line);
   background: #fff;
@@ -237,8 +235,7 @@ body,
 
 .fuel-filter button.on,
 .icon-btn.on,
-.lang a.on,
-.radii button.on {
+.lang a.on {
   background: var(--green-dark);
   border-color: var(--green-dark);
   color: #fff;
@@ -457,7 +454,6 @@ body,
 .station-eta,
 .hint,
 .empty,
-.popup-meta,
 .popup-addr,
 .popup-brand,
 .popup-eta {
@@ -592,13 +588,6 @@ body,
   justify-content: space-between;
   gap: 8px;
   padding: 2px 0;
-}
-
-.popup-nav {
-  display: inline-block;
-  margin-top: 8px;
-  color: var(--green-dark);
-  font-weight: 650;
 }
 
 .popup-eta {

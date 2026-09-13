@@ -41,19 +41,23 @@ import { orderRouteRows } from "./route-list.ts";
 import { hrefFor, navigate, parsePath, pathFor, type View } from "./router.ts";
 import { fetchRoute, geocode, type GeoHit, type RouteResult } from "./routing.ts";
 import DOMPurify from "dompurify";
-import { AROUND_RADIUS_KM, fuelFromUrl, loadSettings, saveSettings } from "./settings.ts";
+import { fuelFromUrl, loadSettings, saveSettings } from "./settings.ts";
 import type { Station } from "./types.ts";
 import { DEFAULT_SETTINGS } from "./types.ts";
 
 const DONATE_URL = "https://github.com/sponsors/Almantask";
 
-interface AroundRow {
-  station: Station;
-  price: number;
-  distKm: number;
-  benefit: ReturnType<typeof netBenefit>;
-  extraKm: number;
-  extraMin: number;
+/** Price-delta savings only — user consumption and time value stay out of ranking. */
+function priceBenefit(baselinePrice: number, stationPrice: number): ReturnType<typeof netBenefit> {
+  return netBenefit({
+    baselinePrice,
+    stationPrice,
+    litres: DEFAULT_SETTINGS.litres,
+    extraKm: 0,
+    extraMin: 0,
+    consumptionLPer100km: 0,
+    timeValueEurH: 0,
+  });
 }
 
 interface RouteStationRow {
@@ -80,13 +84,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let view: View = parsed.view;
   const data: AppData = await loadAppData();
   let userLocation: LngLat | null = null;
-  let pickMode: "around" | "dest-start" | null = null;
-  let aroundOpen = false;
+  let pickMode: "dest-start" | null = null;
   let settingsOpen = false;
   let listMinimized = false;
   let headerMinimized = false;
-  let aroundRows: AroundRow[] = [];
-  let aroundOrigin: LngLat | null = null;
   let routeRows: RouteStationRow[] = [];
   let routeLine: RouteResult | null = null;
   let endHit: GeoHit | null = null;
@@ -151,31 +152,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
         settings.fuel = FUEL_BY_GROUP[g][0];
         persistFuel();
         onFuelChange();
-      } else if (act === "around") {
-        aroundOpen = !aroundOpen;
-        settingsOpen = false;
-        if (aroundOpen) void runAroundMe();
-        render();
       } else if (act === "settings") {
         settingsOpen = !settingsOpen;
-        aroundOpen = false;
         render();
       } else if (act === "close-panel") {
-        aroundOpen = false;
         settingsOpen = false;
-        if (pickMode === "around") pickMode = null;
         render();
-      } else if (act === "pick-around") {
-        pickMode = "around";
-        aroundOpen = true;
-        render();
-      } else if (act === "radius") {
-        const km = Number(tEl.dataset.km);
-        if ((AROUND_RADIUS_KM as readonly number[]).includes(km)) {
-          settings.aroundRadiusKm = km;
-          saveSettings(settings);
-          void runAroundMe();
-        }
       } else if (act === "station") {
         openStation(tEl.dataset.id!);
       } else if (act === "clear-dest") {
@@ -194,18 +176,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
       if (el.id === "dest") destQuery = el.value;
       else if (el.id === "set-cons")
         settings.consumption = num(el.value, DEFAULT_SETTINGS.consumption);
-      else if (el.id === "set-litres") settings.litres = num(el.value, DEFAULT_SETTINGS.litres);
       else if (el.id === "set-time") settings.timeValue = num(el.value, 0);
-      else if (el.id === "set-factor") settings.roadFactor = num(el.value, 1.3);
-      else if (el.id === "set-detour") settings.routeDetourKm = num(el.value, 5);
     });
     root.addEventListener("change", (e) => {
       const el = e.target as HTMLInputElement;
-      if (el.id === "set-return") settings.aroundReturn = el.checked;
-      if (el.id === "set-hide") settings.hideUnpriced = el.checked;
       if (el.id.startsWith("set-")) saveSettings(settings);
-      if (el.id === "set-hide") refreshMap();
-      if (aroundOpen) void runAroundMe();
     });
     root.addEventListener("keyup", (e) => {
       const el = e.target as HTMLInputElement;
@@ -259,7 +234,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   async function selectDestination(hit: GeoHit): Promise<void> {
     endHit = hit;
     destQuery = hit.label;
-    aroundOpen = false;
     settingsOpen = false;
     pendingDest = true;
     if (!userLocation) {
@@ -292,7 +266,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function onFuelChange(): void {
     if (routeLine) void evaluateRouteStations(routeLine);
-    if (aroundOpen && aroundOrigin) aroundRows = computeAround(aroundOrigin);
     refreshMap();
     render();
   }
@@ -340,7 +313,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
         }
         userLocation = ll;
         locateStatus = "idle";
-        if (aroundOpen) void runAroundMe();
         if (pendingDest && endHit) void runRoute();
         else render();
       },
@@ -354,50 +326,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 60_000 },
     );
-  }
-
-  async function runAroundMe(): Promise<void> {
-    aroundOpen = true;
-    const origin = aroundOrigin ?? userLocation;
-    if (!origin || !inLithuania(origin)) {
-      requestLocation(true);
-      render();
-      return;
-    }
-    aroundOrigin = origin;
-    aroundRows = computeAround(origin);
-    map.easeTo({ center: [origin.lon, origin.lat], zoom: 11 });
-    render();
-  }
-
-  function computeAround(origin: LngLat): AroundRow[] {
-    const radius = settings.aroundRadiusKm;
-    const candidates: Array<{ station: Station; price: number; distKm: number }> = [];
-    for (const s of data.stations) {
-      const price = data.prices?.prices[s.id]?.[settings.fuel]?.price;
-      if (price == null) continue;
-      const distKm = roadDistanceKm(origin, { lat: s.lat, lon: s.lon }, settings.roadFactor);
-      if (distKm <= radius) candidates.push({ station: s, price, distKm });
-    }
-    candidates.sort((a, b) => a.distKm - b.distKm);
-    if (candidates.length === 0) return [];
-    const baseline = candidates[0];
-    return candidates
-      .map((c) => {
-        const extraKm = settings.aroundReturn ? c.distKm * 2 : c.distKm;
-        const extraMin = extraMinutesFromKm(extraKm);
-        const benefit = netBenefit({
-          baselinePrice: baseline.price,
-          stationPrice: c.price,
-          litres: settings.litres,
-          extraKm,
-          extraMin,
-          consumptionLPer100km: settings.consumption,
-          timeValueEurH: settings.timeValue,
-        });
-        return { ...c, benefit, extraKm, extraMin };
-      })
-      .sort((a, b) => b.benefit.netBenefit - a.benefit.netBenefit);
   }
 
   async function runRoute(): Promise<void> {
@@ -453,33 +381,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
           distFromStartKm: along,
           extraKm: 0,
           extraMin: 0,
-          benefit: netBenefit({
-            baselinePrice: price,
-            stationPrice: price,
-            litres: settings.litres,
-            extraKm: 0,
-            extraMin: 0,
-            consumptionLPer100km: settings.consumption,
-            timeValueEurH: settings.timeValue,
-          }),
+          benefit: priceBenefit(price, price),
         });
-      } else if (d <= settings.routeDetourKm) {
+      } else if (d <= DEFAULT_SETTINGS.routeDetourKm) {
         detours.push({
           station: s,
           price,
           kind: "detour",
           distFromStartKm: along,
-          extraKm: 2 * d * settings.roadFactor,
-          extraMin: extraMinutesFromKm(2 * d * settings.roadFactor),
-          benefit: netBenefit({
-            baselinePrice: 0,
-            stationPrice: price,
-            litres: settings.litres,
-            extraKm: 2 * d * settings.roadFactor,
-            extraMin: extraMinutesFromKm(2 * d * settings.roadFactor),
-            consumptionLPer100km: settings.consumption,
-            timeValueEurH: settings.timeValue,
-          }),
+          extraKm: 2 * d * DEFAULT_SETTINGS.roadFactor,
+          extraMin: extraMinutesFromKm(2 * d * DEFAULT_SETTINGS.roadFactor),
+          benefit: priceBenefit(0, price),
           connector: [p, nearest.point],
         });
       }
@@ -488,15 +400,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const baselinePrice = onWay.length ? Math.min(...onWay.map((r) => r.price)) : undefined;
     for (const row of onWay) {
       if (baselinePrice == null) continue;
-      row.benefit = netBenefit({
-        baselinePrice,
-        stationPrice: row.price,
-        litres: settings.litres,
-        extraKm: 0,
-        extraMin: 0,
-        consumptionLPer100km: settings.consumption,
-        timeValueEurH: settings.timeValue,
-      });
+      row.benefit = priceBenefit(baselinePrice, row.price);
     }
     detours.sort((a, b) => a.price - b.price);
     const top = detours.slice(0, 15);
@@ -510,15 +414,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         row.extraKm = Math.max(0, viaRoute.distanceKm - res.distanceKm);
         row.extraMin = Math.max(0, viaRoute.durationMin - res.durationMin);
       }
-      row.benefit = netBenefit({
-        baselinePrice,
-        stationPrice: row.price,
-        litres: settings.litres,
-        extraKm: row.extraKm,
-        extraMin: row.extraMin,
-        consumptionLPer100km: settings.consumption,
-        timeValueEurH: settings.timeValue,
-      });
+      row.benefit = priceBenefit(baselinePrice, row.price);
     }
     routeRows = [...onWay, ...top.filter((r) => r.benefit.netBenefit > -5)].sort(
       (a, b) => a.distFromStartKm - b.distFromStartKm,
@@ -526,12 +422,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function handleMapPick(ll: LngLat): void {
-    if (pickMode === "around") {
-      aroundOrigin = ll;
-      pickMode = null;
-      void runAroundMe();
-      return;
-    }
     if (pickMode === "dest-start" || (pendingDest && !userLocation)) {
       if (!inLithuania(ll)) return;
       userLocation = ll;
@@ -543,8 +433,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function originForEta(): LngLat | null {
-    const origin = userLocation ?? aroundOrigin;
-    return origin && inLithuania(origin) ? origin : null;
+    return userLocation && inLithuania(userLocation) ? userLocation : null;
   }
 
   function etaParts(distKm: number): { dist: string; eta: string; label: string } {
@@ -561,14 +450,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const s = data.stations.find((x) => x.id === id);
     if (!s) return;
     const routeRow = routeRows.find((r) => r.station.id === id);
-    const aroundRow = aroundRows.find((r) => r.station.id === id);
-    const showEta = Boolean(endHit || aroundOpen);
     const origin = originForEta();
     let distKm: number | undefined;
-    if (showEta) {
-      distKm = routeRow?.distFromStartKm ?? aroundRow?.distKm;
+    if (endHit) {
+      distKm = routeRow?.distFromStartKm;
       if (distKm == null && origin) {
-        distKm = roadDistanceKm(origin, { lat: s.lat, lon: s.lon }, settings.roadFactor);
+        distKm = roadDistanceKm(origin, { lat: s.lat, lon: s.lon }, DEFAULT_SETTINGS.roadFactor);
       }
     }
     popup?.remove();
@@ -595,7 +482,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     header.innerHTML = headerHtml();
     applyHeaderMinimized();
     const panels = root.querySelector("#panels")!;
-    panels.innerHTML = `${settingsOpen ? settingsHtml() : ""}${aroundOpen ? aroundHtml() : ""}`;
+    panels.innerHTML = settingsOpen ? settingsHtml() : "";
     renderList();
     const banner = root.querySelector("#banner")!;
     banner.innerHTML = statusHtml();
@@ -604,31 +491,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function renderList(): void {
     const list = root.querySelector("#list")!;
-    if (aroundOpen && aroundRows.length) {
-      const cheapest = [...aroundRows].sort(
-        (a, b) => a.price - b.price || a.station.id.localeCompare(b.station.id),
-      )[0];
-      const rest = aroundRows.filter((r) => r.station.id !== cheapest.station.id);
-      const ordered = [cheapest, ...rest].slice(0, 40);
-      list.innerHTML = listWrap(
-        ordered.map((r, i) => {
-          const worth =
-            r.benefit.netBenefit > 0
-              ? t("around.save", { amount: formatMoney(r.benefit.netBenefit) })
-              : t("around.notWorth", { amount: formatMoney(r.benefit.netBenefit) });
-          const isCheapest = r.station.id === cheapest.station.id;
-          return stationRow(
-            r.station,
-            r.price,
-            r.distKm,
-            worth,
-            isCheapest && i === 0 ? "is-pick" : "",
-            isCheapest ? `<span class="badge">${escapeHtml(t("list.cheapest"))}</span>` : "",
-          );
-        }),
-      );
-      return;
-    }
     if (routeLine && routeRows.length) {
       const { cheapestOn, cheapestOverall, ordered } = orderRouteRows(routeRows);
       list.innerHTML = listWrap(
@@ -777,7 +639,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
               <a data-act="locale" data-locale="lt" href="${escapeHtml(hrefFor(view, "lt", settings.fuel))}" hreflang="lt" class="${locale === "lt" ? "on" : ""}">LT</a>
               <a data-act="locale" data-locale="en" href="${escapeHtml(hrefFor(view, "en", settings.fuel))}" hreflang="en" class="${locale === "en" ? "on" : ""}">EN</a>
             </div>
-            <button type="button" class="icon-btn ${aroundOpen ? "on" : ""}" data-act="around">${escapeHtml(t("action.around"))}</button>
             <a class="icon-btn donate-btn" href="${DONATE_URL}" target="_blank" rel="noopener noreferrer">
               ${escapeHtml(t("action.donate"))}
             </a>
@@ -812,28 +673,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     `;
   }
 
-  function aroundHtml(): string {
-    return `<section class="panel" aria-label="${escapeHtml(t("around.title"))}">
-      <header><h2>${escapeHtml(t("around.title"))}</h2><button type="button" data-act="close-panel">${escapeHtml(t("action.close"))}</button></header>
-      <p>${locateStatus === "pending" ? escapeHtml(t("around.locating")) : (locateStatus === "denied" || locateStatus === "outside") && !aroundOrigin ? escapeHtml(t("around.denied")) : escapeHtml(t("around.baseline"))}</p>
-      <div class="radii">${AROUND_RADIUS_KM.map(
-        (km) =>
-          `<button type="button" class="${settings.aroundRadiusKm === km ? "on" : ""}" data-act="radius" data-km="${km}">${escapeHtml(t("around.km", { n: km }))}</button>`,
-      ).join("")}</div>
-      <button type="button" data-act="pick-around">${escapeHtml(pickMode === "around" ? t("around.picking") : t("around.pickMap"))}</button>
-    </section>`;
-  }
-
   function settingsHtml(): string {
     return `<section class="panel" aria-label="${escapeHtml(t("settings.title"))}">
       <header><h2>${escapeHtml(t("settings.title"))}</h2><button type="button" data-act="close-panel">${escapeHtml(t("action.close"))}</button></header>
       <label>${escapeHtml(t("settings.consumption"))}<input id="set-cons" type="number" min="3" max="20" step="0.1" value="${escapeHtml(String(settings.consumption))}" /></label>
-      <label>${escapeHtml(t("settings.litres"))}<input id="set-litres" type="number" min="5" max="80" step="1" value="${escapeHtml(String(settings.litres))}" /></label>
       <label>${escapeHtml(t("settings.timeValue"))}<input id="set-time" type="number" min="0" max="50" step="1" value="${escapeHtml(String(settings.timeValue))}" /></label>
-      <label>${escapeHtml(t("settings.roadFactor"))}<input id="set-factor" type="number" min="1" max="2" step="0.05" value="${escapeHtml(String(settings.roadFactor))}" /></label>
-      <label>${escapeHtml(t("settings.detourKm"))}<input id="set-detour" type="number" min="1" max="15" step="1" value="${escapeHtml(String(settings.routeDetourKm))}" /></label>
-      <label class="check"><input id="set-return" type="checkbox" ${settings.aroundReturn ? "checked" : ""} /> ${escapeHtml(t("settings.returnTrip"))}</label>
-      <label class="check"><input id="set-hide" type="checkbox" ${settings.hideUnpriced ? "checked" : ""} /> ${escapeHtml(t("settings.hideUnpriced"))}</label>
     </section>`;
   }
 

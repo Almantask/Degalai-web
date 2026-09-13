@@ -2,7 +2,7 @@ import maplibregl from "maplibre-gl";
 import type { DailyPrices, FuelType, Station, UserSettings } from "./types.ts";
 import { LT_BOUNDS, LT_CENTER } from "./types.ts";
 import type { LngLat } from "./geo.ts";
-import { formatDateTime, formatPrice, escapeHtml } from "./format.ts";
+import { formatPrice, escapeHtml } from "./format.ts";
 import { brandLabel, t } from "./i18n/index.ts";
 
 const SOURCE = "stations";
@@ -307,10 +307,6 @@ export function stationPopupHtml(
       return `<div class="popup-row"><span>${escapeHtml(t(`fuel.${f}` as "fuel.D"))}</span><strong>${escapeHtml(price)}</strong>${flags ? `<small>${escapeHtml(flags)}</small>` : ""}</div>`;
     })
     .join("");
-  const nav = `https://www.openstreetmap.org/directions?from=&to=${s.lat}%2C${s.lon}`;
-  const updated = prices?.generatedAt
-    ? `${t("popup.updated")}: ${escapeHtml(formatDateTime(prices.generatedAt))}`
-    : "";
   const addr = s.address || s.city || t("list.addressMissing");
   const eta = extra?.etaLabel ? `<p class="popup-eta">${escapeHtml(extra.etaLabel)}</p>` : "";
   return `<div class="popup">
@@ -319,8 +315,6 @@ export function stationPopupHtml(
     <p class="popup-addr">${escapeHtml(addr)}</p>
     ${eta}
     ${fuels}
-    <p class="popup-meta">${updated}</p>
-    <a class="popup-nav" href="${nav}" target="_blank" rel="noreferrer">${escapeHtml(t("action.navigate"))}</a>
   </div>`;
 }
 

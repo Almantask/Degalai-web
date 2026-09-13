@@ -62,29 +62,14 @@ test("search header can be minimised for a full map", async ({ page }) => {
   await expect(page.getByPlaceholder("Kur važiuojate?")).toBeVisible();
 });
 
-test("around me with mocked geolocation (Vilnius)", async ({ page }) => {
-  await page.addInitScript(() => {
-    const pos = {
-      coords: {
-        latitude: 54.687,
-        longitude: 25.28,
-        accuracy: 10,
-        altitude: null,
-        altitudeAccuracy: null,
-        heading: null,
-        speed: null,
-      },
-      timestamp: Date.now(),
-    };
-    navigator.geolocation.getCurrentPosition = (ok) => ok(pos as GeolocationPosition);
-  });
+test("header has no Around me button", async ({ page }) => {
   await page.goto("/");
+  await expect(page.getByRole("button", { name: "Aplink mane" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Around me" })).toHaveCount(0);
   const first = page.locator(".station-row").first();
   await expect(first).toBeVisible({ timeout: 15_000 });
   await expect(page.locator(".station-eta")).toHaveCount(0);
   await expect(page.getByText(/max\. greičiu/)).toHaveCount(0);
-  await page.getByRole("button", { name: "Aplink mane" }).click();
-  await expect(page.getByRole("heading", { name: "Aplink mane" })).toBeVisible();
 });
 
 test("fuel filter has no 95/98 petrol grades", async ({ page }) => {
@@ -125,4 +110,29 @@ test("station list shows last updated time", async ({ page }) => {
   await expect(page.locator(".list-updated")).toBeVisible({ timeout: 15_000 });
   await expect(page.locator(".list-updated")).toContainText(/Atnaujinta/);
   await expect(page.locator(".list-updated")).toContainText(/\d{1,2}:\d{2}/);
+});
+
+test("settings keep only consumption and time value", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Nustatymai" }).click();
+  await expect(page.getByRole("heading", { name: "Nustatymai" })).toBeVisible();
+  await expect(page.getByText("Sąnaudos (l/100 km)")).toBeVisible();
+  await expect(page.getByText("Laiko vertė (€/h)")).toBeVisible();
+  await expect(page.getByText("Planuojama pripilti")).toHaveCount(0);
+  await expect(page.getByText("Kelio koeficientas")).toHaveCount(0);
+  await expect(page.getByText("Grįžtu į tą pačią vietą")).toHaveCount(0);
+  await expect(page.getByText("Slėpti degalines")).toHaveCount(0);
+  await expect(page.getByText("Užsukimo")).toHaveCount(0);
+});
+
+test("station popup has no navigate or updated text", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".station-row").first()).toBeVisible({ timeout: 15_000 });
+  await page.locator(".station-row").first().click();
+  await expect(page.locator(".maplibregl-popup")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Naviguoti" })).toHaveCount(0);
+  await expect(page.locator(".popup-nav")).toHaveCount(0);
+  await expect(page.locator(".popup-meta")).toHaveCount(0);
+  await expect(page.locator(".maplibregl-popup")).not.toContainText(/Atnaujinta/);
+  await expect(page.locator(".list-updated")).toContainText(/Atnaujinta/);
 });

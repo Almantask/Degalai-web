@@ -37,15 +37,16 @@ describe("stationsInView", () => {
 });
 
 describe("stationPopupHtml", () => {
-  it("shows last updated date and time", () => {
+  it("omits navigate and last-updated, which already live in the station list", () => {
     setLocale("en");
     const html = stationPopupHtml(station, {
       date: "2026-09-11",
       generatedAt: "2026-09-12T19:09:22.245Z",
       prices: {},
     });
-    expect(html).toContain("Updated:");
-    expect(html).toContain("22:09");
-    expect(html).not.toContain("Updated: 2026-09-11");
+    expect(html).toContain("Test station");
+    expect(html).not.toContain("Updated");
+    expect(html).not.toContain("Navigate");
+    expect(html).not.toContain("openstreetmap.org/directions");
   });
 });
