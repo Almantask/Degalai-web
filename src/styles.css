@@ -184,7 +184,7 @@ body,
   margin-left: auto;
 }
 
-.header a.donate-btn {
+.header .donate-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -197,7 +197,7 @@ body,
   color: var(--green-dark);
 }
 
-.header a.donate-btn:hover {
+.header .donate-btn:hover:not(.on) {
   background: var(--green-soft);
 }
 
@@ -538,6 +538,34 @@ body,
   padding: 10px;
   font: inherit;
   cursor: pointer;
+}
+
+.donate-email-label {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.donate-email {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.donate-email code {
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+  font-size: 0.86rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.donate-email .primary {
+  padding: 8px 12px;
+  border-radius: 12px;
 }
 
 .check {
