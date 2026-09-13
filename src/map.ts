@@ -31,7 +31,7 @@ export function createMap(container: HTMLElement, handlers: MapHandlers): maplib
       [LT_BOUNDS.maxLon + 0.3, LT_BOUNDS.maxLat + 0.3],
     ],
   });
-  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-left");
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
   map.addControl(
     new maplibregl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
@@ -270,17 +270,18 @@ export function setRouteData(
   }
 }
 
-export function visibleStationIds(map: maplibregl.Map): string[] {
-  if (!map.getLayer(POINTS)) return [];
-  const canvas = map.getCanvas();
-  const feats = map.queryRenderedFeatures(
-    [
-      [0, 0],
-      [canvas.width, canvas.height],
-    ],
-    { layers: [POINTS] },
-  );
-  return [...new Set(feats.map((f) => String(f.properties?.id)))];
+/** Stations whose coordinates fall inside the current map viewport. */
+export function stationsInView<T extends { lat: number; lon: number }>(
+  map: maplibregl.Map,
+  stations: T[],
+): T[] {
+  let bounds: maplibregl.LngLatBounds;
+  try {
+    bounds = map.getBounds();
+  } catch {
+    return stations;
+  }
+  return stations.filter((s) => bounds.contains([s.lon, s.lat]));
 }
 
 export function flyToStation(map: maplibregl.Map, s: Station): void {
