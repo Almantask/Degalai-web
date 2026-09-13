@@ -1,14 +1,86 @@
-node_modules
-dist
-dev-dist
-.DS_Store
+# Dependencies
+node_modules/
+
+# Build
+dist/
+dist-ssr/
+dev-dist/
+
+# Vite
+.vite/
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Logs
+logs/
 *.log
-playwright-report
-test-results
-public/data
-data/downloads
-data/cache/*
-!data/cache/.gitkeep
-!data/cache/geocode.json
-.vite
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment (local secrets such as VITE_ORS_KEY)
+.env
+.env.*
+!.env.example
+
+# Tests / coverage
+coverage/
+*.lcov
+.nyc_output/
+playwright-report/
+blob-report/
+test-results/
+playwright/.cache/
+
+# Caches
 .eslintcache
+.stylelintcache
+*.tsbuildinfo
+.npm
+.cache
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Local leftovers
+*.local
+.cursor/
+
+# Downloaded source workbooks / dumps
+*.xlsx
+*.xls
+
+# Copied dataset used only by the static preview
+public/data/
+
+# data/ is the published dataset — ignore pipeline scratch and anything else
+/data/*
+!/data/stations.json
+!/data/history.json
+!/data/meta.json
+!/data/prices/
+/data/prices/**
+!/data/prices/.gitkeep
+!/data/prices/*.json
+!/data/overrides/
+/data/overrides/**
+!/data/overrides/*.json
+!/data/cache/
+/data/cache/**
+!/data/cache/.gitkeep
+!/data/cache/geocode.json
+
+# reports/ — keep only the review files the pipeline commits
+/reports/*
+!/reports/unmatched.json
+!/reports/validation.json
