@@ -104,6 +104,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     render();
   });
   map.on("moveend", () => renderList());
+  window.addEventListener("resize", () => syncMapControls());
 
   window.addEventListener("popstate", () => {
     const next = parsePath();
@@ -588,6 +589,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     renderList();
     const banner = root.querySelector("#banner")!;
     banner.innerHTML = statusHtml();
+    syncMapControls();
   }
 
   function renderList(): void {
@@ -736,6 +738,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     btn.setAttribute("aria-label", headerMinimized ? t("header.expand") : t("header.collapse"));
     const chev = btn.querySelector(".header-chevron");
     if (chev) chev.textContent = headerMinimized ? "▾" : "▴";
+    syncMapControls();
+  }
+
+  function syncMapControls(): void {
+    const header = root.querySelector<HTMLElement>("#header");
+    if (!header) return;
+    root.style.setProperty("--header-h", `${Math.round(header.getBoundingClientRect().height)}px`);
   }
 
   function headerHtml(): string {

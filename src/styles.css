@@ -644,7 +644,7 @@ body,
 
 @media (max-width: 899px) {
   .maplibregl-ctrl-top-right {
-    top: 178px;
+    top: calc(var(--header-h, 178px) + 8px);
     right: 10px;
   }
 
