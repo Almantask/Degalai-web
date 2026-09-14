@@ -160,8 +160,9 @@ test("fuel filter has no 95/98 petrol grades", async ({ page }) => {
 
 test("donate button is a GitHub Sponsors link", async ({ page }) => {
   await page.goto("/");
-  const donate = page.getByRole("link", { name: "Paremk" });
+  const donate = page.getByRole("link", { name: "Remti" });
   await expect(donate).toBeVisible();
+  await expect(donate.locator(".donate-heart")).toBeVisible();
   await expect(donate).toHaveAttribute("href", "https://github.com/sponsors/Almantask");
   await expect(donate).toHaveAttribute("target", "_blank");
   await expect(page.getByRole("heading", { name: "Paremkite projektą" })).toHaveCount(0);

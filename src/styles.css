@@ -221,6 +221,11 @@ body,
   background: var(--green-soft);
 }
 
+.donate-heart {
+  flex: 0 0 auto;
+  color: #db61a2;
+}
+
 .header a,
 .header button {
   color: inherit;

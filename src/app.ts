@@ -64,6 +64,10 @@ import { DEFAULT_SETTINGS } from "./types.ts";
 
 const DONATE_URL = "https://github.com/sponsors/Almantask";
 
+const DONATE_HEART = `<svg class="donate-heart" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+  <path fill="currentColor" d="M7.97 14s-5.3-3.18-6.76-6C.02 5.36 1.3 2.2 4.2 2.2c1.4 0 2.5.8 3.77 2.16C9.24 3 10.34 2.2 11.75 2.2c2.9 0 4.18 3.16 2.99 5.8C13.28 10.82 7.97 14 7.97 14z"/>
+</svg>`;
+
 const SETTINGS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
   <path d="M4 21v-7"/>
   <path d="M4 10V3"/>
@@ -1063,6 +1067,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
             </div>
             <a class="icon-btn ${view === "history" ? "on" : ""}" data-act="view" data-view="history" href="${escapeHtml(hrefFor("history", locale, settings.fuel))}">${escapeHtml(t("nav.history"))}</a>
             <a class="icon-btn donate-btn" href="${DONATE_URL}" target="_blank" rel="noopener noreferrer">
+              ${DONATE_HEART}
               ${escapeHtml(t("action.donate"))}
             </a>
             <button type="button" class="icon-btn icon-settings ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">${SETTINGS_ICON}</button>
