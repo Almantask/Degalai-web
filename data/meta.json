@@ -1,6 +1,6 @@
 {
   "date": "2026-09-14",
-  "generatedAt": "2026-09-14T08:39:52.548Z",
+  "generatedAt": "2026-09-14T23:08:43.052Z",
   "stationCount": 981,
   "pricedStationCount": 745,
   "sources": [
@@ -8,11 +8,6 @@
   ],
   "cheapestHours": {
     "95": [
-      {
-        "start": 7,
-        "end": 7,
-        "price": 1.906
-      },
       {
         "start": 11,
         "end": 11,
@@ -23,14 +18,14 @@
       {
         "start": 7,
         "end": 7,
-        "price": 2.148
+        "price": 2.161
       }
     ],
     "LPG": [
       {
         "start": 7,
         "end": 7,
-        "price": 0.779
+        "price": 0.783
       }
     ]
   }

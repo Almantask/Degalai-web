@@ -1,4 +1,11 @@
 {
   "dropped": [],
-  "suspicious": []
+  "suspicious": [
+    {
+      "stationId": "osm:way:62200455",
+      "fuel": "LPG",
+      "prev": 0.729,
+      "next": 0.849
+    }
+  ]
 }
