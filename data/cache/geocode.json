@@ -3614,5 +3614,175 @@
     "lat": 54.423664,
     "lon": 23.2326297,
     "label": "Kalvarijos veterinarijos paslaugos, Dariaus ir Girėno g., Kalvarija"
+  },
+  "Mažeikiai, Žemaitijos g. 42, 89239, Mažeikių r. sav., Lietuva": {
+    "lat": 56.3024538,
+    "lon": 22.3454238,
+    "label": "Circle K „Mažeikiai“, Žemaitijos g., Mažeikiai"
+  },
+  "Kaunas, Varnių g. 50, 48401, Kauno m. sav., Lietuva": {
+    "lat": 54.9138013,
+    "lon": 23.9068499,
+    "label": "Orlen, Varnių g., Kaunas"
+  },
+  "Mažeikiai, Skuodo g. 14, 89100, Mažeikių r. sav., Lietuva": {
+    "lat": 56.3144551,
+    "lon": 22.3109727,
+    "label": "Orlen, Skuodo g., Mažeikiai"
+  },
+  "Klaipėda, Minijos g. 44, 91197, Klaipėdos m. sav., Lietuva": {
+    "lat": 55.6938676,
+    "lon": 21.1402705,
+    "label": "Orlen, Minijos g., Klaipėda"
+  },
+  "Alytus, Kauno g. 73, 62107, Alytaus m. sav., Lietuva": {
+    "lat": 54.400935,
+    "lon": 24.048116,
+    "label": "Alytaus sinagoga, Kauno g., Alytus"
+  },
+  "Kakliniškių k., Žilvičių g. 1A, 26138, Elektrėnų sav., Lietuva": {
+    "lat": 54.7915703,
+    "lon": 24.6690373,
+    "label": "Kakliniškių kapinės, Žilvičių g., Kakliniškės"
+  },
+  "Žiežmarių k., Kauno pl. 6, 56232, Kaišiadorių r. sav., Lietuva": {
+    "lat": 54.8159618,
+    "lon": 24.4334433,
+    "label": "Orlen, Kauno pl., Žiežmariai"
+  },
+  "Kaunas, Kalvarijos g. 138, 46403, Kauno m. sav., Lietuva": {
+    "lat": 54.856795,
+    "lon": 23.8534006,
+    "label": "Kalvarijos g., Kaunas"
+  },
+  "Kaunas, Veiverių g. 148B, 46392, Kauno m. sav., Lietuva": {
+    "lat": 54.8673208,
+    "lon": 23.8872771,
+    "label": "Orlen, Veiverių g., Kaunas"
+  },
+  "Biruliškių k., 54469, Kauno r. sav., Lietuva": {
+    "lat": 54.9510447,
+    "lon": 24.0290411,
+    "label": "Biruliškių g., Ramučiai"
+  },
+  "Ringaudų k., Beržų g. 2N, 53335, Kauno r. sav., Lietuva": {
+    "lat": 54.8888853,
+    "lon": 23.8178211,
+    "label": "Beržų g., Ringaudai"
+  },
+  "Klaipėda, Šilutės pl. 26A, 91177, Klaipėdos m. sav., Lietuva": {
+    "lat": 55.6972319,
+    "lon": 21.1688416,
+    "label": "Klaipėdos rajoninė katilinė, Šilutės pl., Klaipėda"
+  },
+  "Jakų k., Vilniaus pl. 13, 92498, Klaipėdos r. sav., Lietuva": {
+    "lat": 55.7123445,
+    "lon": 21.243809,
+    "label": "Klaipėdos aerodromas, Vilniaus pl., Jakai"
+  },
+  "Vilimiškės k., 97220, Kretingos r. sav., Lietuva": {
+    "lat": 55.9686093,
+    "lon": 21.3604059,
+    "label": "Kretingos rajono savivaldybė"
+  },
+  "Aleksandravo k., 68100, Marijampolės sav., Lietuva": {
+    "lat": 54.419463,
+    "lon": 23.0387666,
+    "label": "Aleksandravas"
+  },
+  "Panevėžys, Senamiesčio g. 115, 35114, Panevėžio m. sav., Lietuva": {
+    "lat": 55.7481994,
+    "lon": 24.3908149,
+    "label": "Senamiesčio g., Panevėžys"
+  },
+  "Panevėžys, Klaipėdos g. 162 D, 37372, Panevėžio m. sav., Lietuva": {
+    "lat": 55.7327342,
+    "lon": 24.3057112,
+    "label": "Klaipėdos g., Panevėžys"
+  },
+  "Nausodė, Šiaulių g. 50, 38366, Panevėžio r. sav., Lietuva": {
+    "lat": 55.7338433,
+    "lon": 24.2635593,
+    "label": "Orlen, Šiaulių g., Nausodė"
+  },
+  "Verbyliškių k., Alytaus g. 2, 59431, Prienų r. sav., Lietuva": {
+    "lat": 54.578844,
+    "lon": 24.1706387,
+    "label": "Orlen, Alytaus g., Verbyliškės"
+  },
+  "Pikelių k. 8, 60375, Raseinių r. sav., Lietuva": {
+    "lat": 55.4656023,
+    "lon": 22.6901519,
+    "label": "60375"
+  },
+  "Nemakščių apyl., Pikelių k. 6, 60375, Raseinių r. sav., Lietuva": {
+    "lat": 55.4656023,
+    "lon": 22.6901519,
+    "label": "60375"
+  },
+  "Šiauliai, Serbentų g. 82, 77126, Šiaulių m. sav., Lietuva": {
+    "lat": 55.9139254,
+    "lon": 23.3369683,
+    "label": "Orlen, Serbentų g., Šiauliai"
+  },
+  "Telšiai, Plungės g. 33 D, 87329, Telšių r. sav., Lietuva": {
+    "lat": 55.9792186,
+    "lon": 22.2266776,
+    "label": "Plungės g., Telšiai"
+  },
+  "Vilnius, Žirmūnų g. 1T, 09239, Vilniaus m. sav., Lietuva": {
+    "lat": 54.7112792,
+    "lon": 25.3068802,
+    "label": "Vilniaus lopšelis-darželis „Žirmūnėliai“, Žirmūnų g., Vilnius"
+  },
+  "Vilnius, Ukmergės g. 319, 06305, Vilniaus m. sav., Lietuva": {
+    "lat": 54.7369256,
+    "lon": 25.2321131,
+    "label": "Orlen, Ukmergės g., Vilnius"
+  },
+  "Vilnius, O. Milašiaus g. 31, 10102, Vilniaus m. sav., Lietuva": {
+    "lat": 54.7280491,
+    "lon": 25.3270109,
+    "label": "Orlen, O. Milašiaus g., Vilnius"
+  },
+  "Vilnius, Juodasis kl. 32, 11307, Vilniaus m. sav., Lietuva": {
+    "lat": 54.6629447,
+    "lon": 25.3423921,
+    "label": "Orlen, Juodasis kel., Vilnius"
+  },
+  "Tauragė, Gedimino g. 46, 72336, Tauragės r. sav., Lietuva": {
+    "lat": 55.2440986,
+    "lon": 22.3039604,
+    "label": "Orlen Lietuva plovykla, Gedimino g., Tauragė"
+  },
+  "Kartena, Kretingos g. 51, 97351, Kretingos r. sav., Lietuva": {
+    "lat": 55.9180804,
+    "lon": 21.4731246,
+    "label": "Kretingos g., Kartena"
+  },
+  "Migonių k., Kalvių g. 4, 56292, Kaišiadorių r. sav., Lietuva": {
+    "lat": 54.7260902,
+    "lon": 24.2363611,
+    "label": "AOIL, Kalvių g., Šventininkai"
+  },
+  "Marijampolė, P. Armino g. 69, 68127, Marijampolės sav., Lietuva": {
+    "lat": 54.5338041,
+    "lon": 23.353361,
+    "label": "Baltic Petroleum, P. Armino g., Marijampolė"
+  },
+  "Marijampolė, Gėlių g. 25,, Marijampolės sav., Lietuva": {
+    "lat": 54.5517352,
+    "lon": 23.3590452,
+    "label": "Gėlių g., Marijampolė"
+  },
+  "Osijos k., Pamiškės g. 1, 70205, Vilkaviškio r. sav., Lietuva": {
+    "lat": 54.6375733,
+    "lon": 22.9967108,
+    "label": "Kadagių g., Paežeriai"
+  },
+  "Vilkaviškis, Vytauto g. 2D, 70137, Vilkaviškio r. sav., Lietuva": {
+    "lat": 54.6433403,
+    "lon": 23.0530856,
+    "label": "Vildega, Vytauto g., Vilkaviškis"
   }
 }

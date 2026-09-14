@@ -12,6 +12,10 @@
             "min": 1.64,
             "median": 1.789
           },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.729
+          },
           "baltic-petroleum": {
             "min": 1.699,
             "median": 1.789
@@ -48,7 +52,7 @@
       },
       "D": {
         "min": 2.09,
-        "median": 2.324,
+        "median": 2.319,
         "max": 2.389,
         "minStationId": "osm:way:520745385",
         "byBrand": {
@@ -56,13 +60,17 @@
             "min": 2.09,
             "median": 2.149
           },
+          "orlen": {
+            "min": 2.099,
+            "median": 2.199
+          },
           "independent": {
             "min": 2.099,
             "median": 2.25
           },
           "baltic-petroleum": {
             "min": 2.159,
-            "median": 2.2645
+            "median": 2.269
           },
           "jozita": {
             "min": 2.22,
@@ -92,7 +100,7 @@
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.959,
+        "median": 0.9495,
         "max": 1.039,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -111,6 +119,10 @@
           "kvistija": {
             "min": 0.88,
             "median": 0.89
+          },
+          "orlen": {
+            "min": 0.899,
+            "median": 0.929
           },
           "circle-k": {
             "min": 0.929,
@@ -152,6 +164,10 @@
           "baltic-petroleum": {
             "min": 1.709,
             "median": 1.769
+          },
+          "orlen": {
+            "min": 1.719,
+            "median": 1.759
           },
           "kvistija": {
             "min": 1.719,
@@ -209,6 +225,10 @@
             "min": 2.139,
             "median": 2.2119999999999997
           },
+          "orlen": {
+            "min": 2.149,
+            "median": 2.199
+          },
           "emsi": {
             "min": 2.16,
             "median": 2.22
@@ -229,7 +249,7 @@
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.949,
+        "median": 0.94,
         "max": 1.039,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -249,6 +269,10 @@
             "min": 0.879,
             "median": 0.929
           },
+          "orlen": {
+            "min": 0.88,
+            "median": 0.929
+          },
           "emsi": {
             "min": 0.88,
             "median": 0.929
@@ -256,10 +280,6 @@
           "kvistija": {
             "min": 0.88,
             "median": 0.89
-          },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
           },
           "neste": {
             "min": 0.9,
@@ -322,7 +342,7 @@
       },
       "D": {
         "min": 2.069,
-        "median": 2.174,
+        "median": 2.1715,
         "max": 2.299,
         "minStationId": "osm:way:303670948",
         "byBrand": {
@@ -340,7 +360,7 @@
           },
           "neste": {
             "min": 2.099,
-            "median": 2.1665
+            "median": 2.164
           },
           "independent": {
             "min": 2.109,
@@ -358,7 +378,7 @@
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.949,
+        "median": 0.94,
         "max": 1.029,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -378,13 +398,13 @@
             "min": 0.879,
             "median": 0.929
           },
+          "orlen": {
+            "min": 0.88,
+            "median": 0.929
+          },
           "kvistija": {
             "min": 0.88,
             "median": 0.8945000000000001
-          },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
           },
           "emsi": {
             "min": 0.89,
@@ -415,7 +435,7 @@
     "byFuel": {
       "95": {
         "min": 1.64,
-        "median": 1.749,
+        "median": 1.74,
         "max": 1.859,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -442,6 +462,10 @@
           "jozita": {
             "min": 1.69,
             "median": 1.69
+          },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.749
           },
           "kvistija": {
             "min": 1.699,
@@ -491,6 +515,10 @@
             "min": 2.09,
             "median": 2.09
           },
+          "orlen": {
+            "min": 2.099,
+            "median": 2.159
+          },
           "emsi": {
             "min": 2.099,
             "median": 2.139
@@ -511,7 +539,7 @@
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.949,
+        "median": 0.94,
         "max": 0.999,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -527,13 +555,13 @@
             "min": 0.869,
             "median": 0.929
           },
+          "orlen": {
+            "min": 0.88,
+            "median": 0.929
+          },
           "kvistija": {
             "min": 0.88,
             "median": 0.8945000000000001
-          },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
           },
           "alausa": {
             "min": 0.889,
@@ -578,7 +606,7 @@
           },
           "baltic-petroleum": {
             "min": 1.669,
-            "median": 1.754
+            "median": 1.759
           },
           "emsi": {
             "min": 1.679,
@@ -590,6 +618,10 @@
           },
           "alausa": {
             "min": 1.694,
+            "median": 1.749
+          },
+          "orlen": {
+            "min": 1.699,
             "median": 1.749
           },
           "kvistija": {
@@ -616,7 +648,7 @@
       },
       "D": {
         "min": 2.08,
-        "median": 2.19,
+        "median": 2.189,
         "max": 2.309,
         "minStationId": "osm:way:181736105",
         "byBrand": {
@@ -626,7 +658,7 @@
           },
           "baltic-petroleum": {
             "min": 2.089,
-            "median": 2.1544999999999996
+            "median": 2.159
           },
           "emsi": {
             "min": 2.09,
@@ -644,6 +676,10 @@
             "min": 2.09,
             "median": 2.244
           },
+          "orlen": {
+            "min": 2.099,
+            "median": 2.169
+          },
           "alausa": {
             "min": 2.119,
             "median": 2.154
@@ -654,7 +690,7 @@
           },
           "neste": {
             "min": 2.149,
-            "median": 2.199
+            "median": 2.194
           },
           "viada": {
             "min": 2.179,
@@ -664,7 +700,7 @@
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.949,
+        "median": 0.94,
         "max": 0.999,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -680,6 +716,10 @@
             "min": 0.869,
             "median": 0.929
           },
+          "orlen": {
+            "min": 0.88,
+            "median": 0.929
+          },
           "emsi": {
             "min": 0.88,
             "median": 0.929
@@ -687,10 +727,6 @@
           "kvistija": {
             "min": 0.88,
             "median": 0.8945000000000001
-          },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
           },
           "alausa": {
             "min": 0.899,
@@ -721,7 +757,7 @@
     "byFuel": {
       "95": {
         "min": 1.64,
-        "median": 1.769,
+        "median": 1.76,
         "max": 1.869,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -732,6 +768,10 @@
           "stateta": {
             "min": 1.657,
             "median": 1.657
+          },
+          "orlen": {
+            "min": 1.659,
+            "median": 1.699
           },
           "alausa": {
             "min": 1.659,
@@ -769,13 +809,17 @@
       },
       "D": {
         "min": 1.999,
-        "median": 2.179,
+        "median": 2.169,
         "max": 2.29,
         "minStationId": "osm:way:258573448",
         "byBrand": {
           "independent": {
             "min": 1.999,
             "median": 2.15
+          },
+          "orlen": {
+            "min": 2.059,
+            "median": 2.099
           },
           "alausa": {
             "min": 2.059,
@@ -825,6 +869,10 @@
             "min": 0.79,
             "median": 0.91
           },
+          "orlen": {
+            "min": 0.839,
+            "median": 0.899
+          },
           "alausa": {
             "min": 0.839,
             "median": 0.899
@@ -844,10 +892,6 @@
           "kvistija": {
             "min": 0.88,
             "median": 0.8945000000000001
-          },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
           },
           "neste": {
             "min": 0.89,
@@ -874,7 +918,7 @@
     "byFuel": {
       "95": {
         "min": 1.64,
-        "median": 1.744,
+        "median": 1.739,
         "max": 1.869,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -892,11 +936,15 @@
           },
           "baltic-petroleum": {
             "min": 1.659,
-            "median": 1.7195
+            "median": 1.719
           },
           "emsi": {
             "min": 1.659,
             "median": 1.729
+          },
+          "orlen": {
+            "min": 1.679,
+            "median": 1.699
           },
           "neste": {
             "min": 1.679,
@@ -928,7 +976,7 @@
         "byBrand": {
           "baltic-petroleum": {
             "min": 1.999,
-            "median": 2.114
+            "median": 2.109
           },
           "independent": {
             "min": 1.999,
@@ -950,6 +998,10 @@
             "min": 2.048,
             "median": 2.144
           },
+          "orlen": {
+            "min": 2.059,
+            "median": 2.099
+          },
           "emsi": {
             "min": 2.059,
             "median": 2.13
@@ -970,7 +1022,7 @@
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.942,
+        "median": 0.939,
         "max": 0.999,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -986,6 +1038,10 @@
             "min": 0.85,
             "median": 0.85
           },
+          "orlen": {
+            "min": 0.869,
+            "median": 0.899
+          },
           "baltic-petroleum": {
             "min": 0.869,
             "median": 0.929
@@ -997,10 +1053,6 @@
           "kvistija": {
             "min": 0.879,
             "median": 0.9095
-          },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
           },
           "alausa": {
             "min": 0.899,
@@ -1027,7 +1079,7 @@
     "byFuel": {
       "95": {
         "min": 1.609,
-        "median": 1.72,
+        "median": 1.719,
         "max": 1.859,
         "minStationId": "osm:way:145036838",
         "byBrand": {
@@ -1058,6 +1110,10 @@
           "circle-k": {
             "min": 1.669,
             "median": 1.759
+          },
+          "orlen": {
+            "min": 1.679,
+            "median": 1.699
           },
           "emsi": {
             "min": 1.679,
@@ -1107,6 +1163,10 @@
             "min": 2.022,
             "median": 2.022
           },
+          "orlen": {
+            "min": 2.039,
+            "median": 2.059
+          },
           "emsi": {
             "min": 2.069,
             "median": 2.099
@@ -1123,7 +1183,7 @@
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.94,
+        "median": 0.939,
         "max": 1.019,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -1134,6 +1194,10 @@
           "jozita": {
             "min": 0.85,
             "median": 0.85
+          },
+          "orlen": {
+            "min": 0.869,
+            "median": 0.899
           },
           "baltic-petroleum": {
             "min": 0.869,
@@ -1150,10 +1214,6 @@
           "emsi": {
             "min": 0.88,
             "median": 0.929
-          },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
           },
           "alausa": {
             "min": 0.899,
@@ -1216,6 +1276,10 @@
             "min": 1.65,
             "median": 1.65
           },
+          "orlen": {
+            "min": 1.669,
+            "median": 1.699
+          },
           "viada": {
             "min": 1.679,
             "median": 1.769
@@ -1268,6 +1332,10 @@
             "min": 1.997,
             "median": 1.997
           },
+          "orlen": {
+            "min": 1.999,
+            "median": 2.059
+          },
           "viada": {
             "min": 1.999,
             "median": 2.089
@@ -1300,6 +1368,10 @@
             "min": 0.859,
             "median": 0.929
           },
+          "orlen": {
+            "min": 0.869,
+            "median": 0.899
+          },
           "neste": {
             "min": 0.87,
             "median": 0.87
@@ -1307,10 +1379,6 @@
           "emsi": {
             "min": 0.88,
             "median": 0.929
-          },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
           },
           "viada": {
             "min": 0.899,
@@ -1333,7 +1401,7 @@
     "byFuel": {
       "95": {
         "min": 1.63,
-        "median": 1.754,
+        "median": 1.749,
         "max": 1.829,
         "minStationId": "lea:18-39104-baltic-g-mūšos-pasvalio-pasvalys-petroleum-r-sav-uab",
         "byBrand": {
@@ -1360,6 +1428,10 @@
           "jozita": {
             "min": 1.65,
             "median": 1.65
+          },
+          "orlen": {
+            "min": 1.669,
+            "median": 1.699
           },
           "kvistija": {
             "min": 1.689,
@@ -1413,6 +1485,10 @@
             "min": 1.981,
             "median": 1.987
           },
+          "orlen": {
+            "min": 1.999,
+            "median": 2.019
+          },
           "circle-k": {
             "min": 2.019,
             "median": 2.099
@@ -1429,7 +1505,7 @@
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.939,
+        "median": 0.93,
         "max": 1.019,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -1449,6 +1525,10 @@
             "min": 0.85,
             "median": 0.85
           },
+          "orlen": {
+            "min": 0.859,
+            "median": 0.889
+          },
           "alausa": {
             "min": 0.864,
             "median": 0.929
@@ -1460,10 +1540,6 @@
           "neste": {
             "min": 0.87,
             "median": 0.87
-          },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
           },
           "viada": {
             "min": 0.899,
@@ -1486,7 +1562,7 @@
     "byFuel": {
       "95": {
         "min": 1.63,
-        "median": 1.729,
+        "median": 1.719,
         "max": 1.819,
         "minStationId": "lea:4-96357-dituvos-g-k-klaipėdos-kristoforo-r-sav-trevena-uab-šv",
         "byBrand": {
@@ -1514,9 +1590,13 @@
             "min": 1.65,
             "median": 1.65
           },
+          "orlen": {
+            "min": 1.659,
+            "median": 1.689
+          },
           "neste": {
             "min": 1.659,
-            "median": 1.724
+            "median": 1.719
           },
           "stateta": {
             "min": 1.671,
@@ -1534,13 +1614,17 @@
       },
       "D": {
         "min": 1.879,
-        "median": 2.029,
+        "median": 2.024,
         "max": 2.139,
         "minStationId": "lea:3-59370-borusta-g-piliakalnio-prienų-r-sav-stakliškės-uab",
         "byBrand": {
           "independent": {
             "min": 1.879,
             "median": 2.0164999999999997
+          },
+          "orlen": {
+            "min": 1.899,
+            "median": 1.939
           },
           "alausa": {
             "min": 1.899,
@@ -1582,13 +1666,17 @@
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.939,
+        "median": 0.929,
         "max": 0.999,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
           "independent": {
             "min": 0.79,
             "median": 0.9
+          },
+          "orlen": {
+            "min": 0.839,
+            "median": 0.889
           },
           "alausa": {
             "min": 0.839,
@@ -1604,7 +1692,7 @@
           },
           "baltic-petroleum": {
             "min": 0.869,
-            "median": 0.9195
+            "median": 0.919
           },
           "emsi": {
             "min": 0.87,
@@ -1613,10 +1701,6 @@
           "neste": {
             "min": 0.87,
             "median": 0.87
-          },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
           },
           "circle-k": {
             "min": 0.91,
@@ -1639,7 +1723,7 @@
     "byFuel": {
       "95": {
         "min": 1.629,
-        "median": 1.719,
+        "median": 1.709,
         "max": 1.819,
         "minStationId": "osm:way:221444190",
         "byBrand": {
@@ -1657,7 +1741,7 @@
           },
           "neste": {
             "min": 1.649,
-            "median": 1.709
+            "median": 1.704
           },
           "emsi": {
             "min": 1.65,
@@ -1666,6 +1750,10 @@
           "jozita": {
             "min": 1.65,
             "median": 1.65
+          },
+          "orlen": {
+            "min": 1.659,
+            "median": 1.679
           },
           "alausa": {
             "min": 1.664,
@@ -1687,7 +1775,7 @@
       },
       "D": {
         "min": 1.879,
-        "median": 2.009,
+        "median": 2.002,
         "max": 2.139,
         "minStationId": "lea:3-59370-borusta-g-piliakalnio-prienų-r-sav-stakliškės-uab",
         "byBrand": {
@@ -1709,7 +1797,11 @@
           },
           "neste": {
             "min": 1.929,
-            "median": 1.999
+            "median": 1.9915
+          },
+          "orlen": {
+            "min": 1.939,
+            "median": 1.979
           },
           "emsi": {
             "min": 1.94,
@@ -1735,13 +1827,17 @@
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.939,
+        "median": 0.929,
         "max": 0.999,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
           "independent": {
             "min": 0.79,
             "median": 0.9
+          },
+          "orlen": {
+            "min": 0.839,
+            "median": 0.889
           },
           "kvistija": {
             "min": 0.84,
@@ -1767,10 +1863,6 @@
             "min": 0.87,
             "median": 0.87
           },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
-          },
           "circle-k": {
             "min": 0.909,
             "median": 0.959
@@ -1792,7 +1884,7 @@
     "byFuel": {
       "95": {
         "min": 1.61,
-        "median": 1.709,
+        "median": 1.699,
         "max": 1.819,
         "minStationId": "osm:way:177140270",
         "byBrand": {
@@ -1814,6 +1906,10 @@
           },
           "neste": {
             "min": 1.649,
+            "median": 1.699
+          },
+          "orlen": {
+            "min": 1.659,
             "median": 1.699
           },
           "emsi": {
@@ -1872,6 +1968,10 @@
             "min": 1.9,
             "median": 2.0140000000000002
           },
+          "orlen": {
+            "min": 1.939,
+            "median": 1.969
+          },
           "emsi": {
             "min": 1.94,
             "median": 1.989
@@ -1888,13 +1988,17 @@
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.939,
+        "median": 0.929,
         "max": 0.999,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
           "independent": {
             "min": 0.79,
             "median": 0.9
+          },
+          "orlen": {
+            "min": 0.839,
+            "median": 0.889
           },
           "jozita": {
             "min": 0.85,
@@ -1920,10 +2024,6 @@
             "min": 0.879,
             "median": 0.914
           },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
-          },
           "circle-k": {
             "min": 0.909,
             "median": 0.959
@@ -1945,13 +2045,13 @@
     "byFuel": {
       "95": {
         "min": 1.629,
-        "median": 1.709,
+        "median": 1.7,
         "max": 1.829,
         "minStationId": "osm:way:585453953",
         "byBrand": {
           "baltic-petroleum": {
             "min": 1.629,
-            "median": 1.6795
+            "median": 1.679
           },
           "emsi": {
             "min": 1.629,
@@ -1971,11 +2071,15 @@
           },
           "neste": {
             "min": 1.644,
-            "median": 1.679
+            "median": 1.674
           },
           "kvistija": {
             "min": 1.66,
             "median": 1.694
+          },
+          "orlen": {
+            "min": 1.669,
+            "median": 1.699
           },
           "stateta": {
             "min": 1.681,
@@ -1993,7 +2097,7 @@
       },
       "D": {
         "min": 1.829,
-        "median": 1.95,
+        "median": 1.959,
         "max": 2.119,
         "minStationId": "osm:way:145036838",
         "byBrand": {
@@ -2003,7 +2107,7 @@
           },
           "neste": {
             "min": 1.849,
-            "median": 1.884
+            "median": 1.8815
           },
           "independent": {
             "min": 1.85,
@@ -2036,18 +2140,26 @@
           "stateta": {
             "min": 1.929,
             "median": 1.929
+          },
+          "orlen": {
+            "min": 1.939,
+            "median": 1.969
           }
         }
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.93,
+        "median": 0.929,
         "max": 0.999,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
           "independent": {
             "min": 0.79,
             "median": 0.9
+          },
+          "orlen": {
+            "min": 0.839,
+            "median": 0.889
           },
           "jozita": {
             "min": 0.85,
@@ -2073,10 +2185,6 @@
             "min": 0.879,
             "median": 0.914
           },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
-          },
           "circle-k": {
             "min": 0.91,
             "median": 0.959
@@ -2098,7 +2206,7 @@
     "byFuel": {
       "95": {
         "min": 1.639,
-        "median": 1.809,
+        "median": 1.799,
         "max": 1.899,
         "minStationId": "lea:11-69338-emsi-europos-g-k-marijampolės-sav-skaisčiūnų-uab",
         "byBrand": {
@@ -2126,6 +2234,10 @@
             "min": 1.66,
             "median": 1.694
           },
+          "orlen": {
+            "min": 1.689,
+            "median": 1.739
+          },
           "alausa": {
             "min": 1.699,
             "median": 1.7915
@@ -2146,7 +2258,7 @@
       },
       "D": {
         "min": 1.86,
-        "median": 2.08,
+        "median": 2.079,
         "max": 2.159,
         "minStationId": "osm:way:177140270",
         "byBrand": {
@@ -2173,6 +2285,10 @@
           "alausa": {
             "min": 1.919,
             "median": 2.061
+          },
+          "orlen": {
+            "min": 1.929,
+            "median": 2.029
           },
           "stateta": {
             "min": 1.929,
@@ -2202,6 +2318,10 @@
             "min": 0.79,
             "median": 0.9
           },
+          "orlen": {
+            "min": 0.839,
+            "median": 0.869
+          },
           "baltic-petroleum": {
             "min": 0.849,
             "median": 0.919
@@ -2226,10 +2346,6 @@
             "min": 0.879,
             "median": 0.914
           },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
-          },
           "circle-k": {
             "min": 0.91,
             "median": 0.959
@@ -2250,11 +2366,15 @@
     "date": "2026-04-29",
     "byFuel": {
       "95": {
-        "min": 1.64,
-        "median": 1.79,
+        "min": 1.639,
+        "median": 1.789,
         "max": 1.899,
-        "minStationId": "lea:4-83169-jozita-k-kuosiškių-pakruojo-r-sav-uab",
+        "minStationId": "lea:54469-ab-baltics-biruliškių-k-kauno-orlen-r-retail-sav",
         "byBrand": {
+          "orlen": {
+            "min": 1.639,
+            "median": 1.699
+          },
           "jozita": {
             "min": 1.64,
             "median": 1.75
@@ -2293,16 +2413,20 @@
           },
           "neste": {
             "min": 1.769,
-            "median": 1.804
+            "median": 1.799
           }
         }
       },
       "D": {
         "min": 1.859,
-        "median": 2.049,
+        "median": 2.039,
         "max": 2.149,
-        "minStationId": "lea:29149-32a-a-alauša-anykščiai-anykščių-g-r-sav-uab-vienuolio",
+        "minStationId": "lea:68100-ab-aleksandravo-baltics-k-marijampolės-orlen-retail-sav",
         "byBrand": {
+          "orlen": {
+            "min": 1.859,
+            "median": 1.899
+          },
           "alausa": {
             "min": 1.859,
             "median": 1.859
@@ -2359,9 +2483,13 @@
             "min": 0.819,
             "median": 0.849
           },
+          "orlen": {
+            "min": 0.839,
+            "median": 0.869
+          },
           "baltic-petroleum": {
             "min": 0.849,
-            "median": 0.9145000000000001
+            "median": 0.91
           },
           "jozita": {
             "min": 0.85,
@@ -2378,10 +2506,6 @@
           "kvistija": {
             "min": 0.879,
             "median": 0.914
-          },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
           },
           "circle-k": {
             "min": 0.91,
@@ -2404,7 +2528,7 @@
     "byFuel": {
       "95": {
         "min": 1.64,
-        "median": 1.7705,
+        "median": 1.769,
         "max": 1.899,
         "minStationId": "lea:4-83169-jozita-k-kuosiškių-pakruojo-r-sav-uab",
         "byBrand": {
@@ -2447,6 +2571,10 @@
           "viada": {
             "min": 1.739,
             "median": 1.839
+          },
+          "orlen": {
+            "min": 1.749,
+            "median": 1.759
           }
         }
       },
@@ -2488,6 +2616,10 @@
             "min": 1.95,
             "median": 1.999
           },
+          "orlen": {
+            "min": 1.959,
+            "median": 1.999
+          },
           "circle-k": {
             "min": 1.959,
             "median": 2.035
@@ -2508,9 +2640,13 @@
             "min": 0.79,
             "median": 0.9
           },
+          "orlen": {
+            "min": 0.849,
+            "median": 0.869
+          },
           "baltic-petroleum": {
             "min": 0.849,
-            "median": 0.9145000000000001
+            "median": 0.91
           },
           "jozita": {
             "min": 0.85,
@@ -2531,10 +2667,6 @@
           "kvistija": {
             "min": 0.879,
             "median": 0.914
-          },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
           },
           "circle-k": {
             "min": 0.91,
@@ -2557,7 +2689,7 @@
     "byFuel": {
       "95": {
         "min": 1.669,
-        "median": 1.779,
+        "median": 1.77,
         "max": 1.899,
         "minStationId": "osm:way:224487513",
         "byBrand": {
@@ -2589,6 +2721,10 @@
             "min": 1.699,
             "median": 1.749
           },
+          "orlen": {
+            "min": 1.749,
+            "median": 1.759
+          },
           "viada": {
             "min": 1.749,
             "median": 1.829
@@ -2605,7 +2741,7 @@
       },
       "D": {
         "min": 1.859,
-        "median": 1.979,
+        "median": 1.98,
         "max": 2.149,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -2648,18 +2784,26 @@
           "stateta": {
             "min": 1.949,
             "median": 1.949
+          },
+          "orlen": {
+            "min": 1.959,
+            "median": 1.999
           }
         }
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.929,
+        "median": 0.925,
         "max": 0.999,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
           "independent": {
             "min": 0.79,
             "median": 0.9
+          },
+          "orlen": {
+            "min": 0.849,
+            "median": 0.869
           },
           "baltic-petroleum": {
             "min": 0.849,
@@ -2685,10 +2829,6 @@
             "min": 0.879,
             "median": 0.914
           },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
-          },
           "circle-k": {
             "min": 0.91,
             "median": 0.959
@@ -2710,7 +2850,7 @@
     "byFuel": {
       "95": {
         "min": 1.679,
-        "median": 1.879,
+        "median": 1.869,
         "max": 1.959,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -2738,6 +2878,10 @@
             "min": 1.739,
             "median": 1.819
           },
+          "orlen": {
+            "min": 1.799,
+            "median": 1.849
+          },
           "stateta": {
             "min": 1.799,
             "median": 1.799
@@ -2758,7 +2902,7 @@
       },
       "D": {
         "min": 1.859,
-        "median": 2.079,
+        "median": 2.072,
         "max": 2.169,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -2786,6 +2930,10 @@
             "min": 1.949,
             "median": 2.054
           },
+          "orlen": {
+            "min": 1.999,
+            "median": 2.059
+          },
           "stateta": {
             "min": 1.999,
             "median": 1.999
@@ -2806,7 +2954,7 @@
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.929,
+        "median": 0.919,
         "max": 0.999,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -2817,6 +2965,10 @@
           "baltic-petroleum": {
             "min": 0.839,
             "median": 0.899
+          },
+          "orlen": {
+            "min": 0.849,
+            "median": 0.879
           },
           "jozita": {
             "min": 0.85,
@@ -2837,10 +2989,6 @@
           "kvistija": {
             "min": 0.879,
             "median": 0.914
-          },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
           },
           "circle-k": {
             "min": 0.91,
@@ -2863,7 +3011,7 @@
     "byFuel": {
       "95": {
         "min": 1.679,
-        "median": 1.84,
+        "median": 1.839,
         "max": 1.959,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -2891,6 +3039,10 @@
             "min": 1.71,
             "median": 1.799
           },
+          "orlen": {
+            "min": 1.739,
+            "median": 1.799
+          },
           "circle-k": {
             "min": 1.769,
             "median": 1.899
@@ -2911,7 +3063,7 @@
       },
       "D": {
         "min": 1.859,
-        "median": 2.049,
+        "median": 2.0395000000000003,
         "max": 2.169,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -2925,11 +3077,15 @@
           },
           "baltic-petroleum": {
             "min": 1.879,
-            "median": 2.004
+            "median": 1.999
           },
           "jozita": {
             "min": 1.89,
             "median": 1.95
+          },
+          "orlen": {
+            "min": 1.899,
+            "median": 1.999
           },
           "stateta": {
             "min": 1.899,
@@ -2959,7 +3115,7 @@
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.929,
+        "median": 0.919,
         "max": 0.999,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -2974,6 +3130,10 @@
           "baltic-petroleum": {
             "min": 0.839,
             "median": 0.899
+          },
+          "orlen": {
+            "min": 0.849,
+            "median": 0.879
           },
           "jozita": {
             "min": 0.85,
@@ -2990,10 +3150,6 @@
           "neste": {
             "min": 0.87,
             "median": 0.87
-          },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
           },
           "circle-k": {
             "min": 0.899,
@@ -3016,7 +3172,7 @@
     "byFuel": {
       "95": {
         "min": 1.679,
-        "median": 1.82,
+        "median": 1.819,
         "max": 1.979,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -3038,7 +3194,7 @@
           },
           "baltic-petroleum": {
             "min": 1.719,
-            "median": 1.794
+            "median": 1.789
           },
           "alausa": {
             "min": 1.749,
@@ -3048,13 +3204,17 @@
             "min": 1.749,
             "median": 1.749
           },
+          "orlen": {
+            "min": 1.759,
+            "median": 1.799
+          },
           "circle-k": {
             "min": 1.769,
             "median": 1.859
           },
           "neste": {
             "min": 1.779,
-            "median": 1.829
+            "median": 1.824
           },
           "viada": {
             "min": 1.799,
@@ -3064,7 +3224,7 @@
       },
       "D": {
         "min": 1.85,
-        "median": 2.01,
+        "median": 2.009,
         "max": 2.159,
         "minStationId": "lea:1-73406-bonsa-k-r-sav-tauragės-uab-vaidatonių",
         "byBrand": {
@@ -3078,7 +3238,11 @@
           },
           "baltic-petroleum": {
             "min": 1.899,
-            "median": 1.984
+            "median": 1.979
+          },
+          "orlen": {
+            "min": 1.929,
+            "median": 1.999
           },
           "kvistija": {
             "min": 1.93,
@@ -3112,7 +3276,7 @@
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.919,
+        "median": 0.91,
         "max": 0.999,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -3127,6 +3291,10 @@
           "neste": {
             "min": 0.84,
             "median": 0.86
+          },
+          "orlen": {
+            "min": 0.849,
+            "median": 0.879
           },
           "emsi": {
             "min": 0.85,
@@ -3148,10 +3316,6 @@
             "min": 0.879,
             "median": 0.959
           },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
-          },
           "stateta": {
             "min": 0.899,
             "median": 0.899
@@ -3170,7 +3334,7 @@
       "95": {
         "min": 1.679,
         "median": 1.799,
-        "max": 1.999,
+        "max": 1.94,
         "minStationId": "osm:way:225173105",
         "byBrand": {
           "independent": {
@@ -3183,7 +3347,7 @@
           },
           "baltic-petroleum": {
             "min": 1.699,
-            "median": 1.7694999999999999
+            "median": 1.769
           },
           "kvistija": {
             "min": 1.699,
@@ -3204,6 +3368,10 @@
           "jozita": {
             "min": 1.75,
             "median": 1.75
+          },
+          "orlen": {
+            "min": 1.759,
+            "median": 1.789
           },
           "circle-k": {
             "min": 1.779,
@@ -3245,6 +3413,10 @@
             "min": 1.894,
             "median": 1.939
           },
+          "orlen": {
+            "min": 1.929,
+            "median": 1.979
+          },
           "circle-k": {
             "min": 1.929,
             "median": 2.009
@@ -3265,7 +3437,7 @@
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.919,
+        "median": 0.909,
         "max": 0.999,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -3289,6 +3461,10 @@
             "min": 0.844,
             "median": 0.889
           },
+          "orlen": {
+            "min": 0.849,
+            "median": 0.879
+          },
           "emsi": {
             "min": 0.849,
             "median": 0.89
@@ -3296,10 +3472,6 @@
           "kvistija": {
             "min": 0.869,
             "median": 0.889
-          },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
           },
           "stateta": {
             "min": 0.899,
@@ -3362,6 +3534,10 @@
             "min": 1.75,
             "median": 1.79
           },
+          "orlen": {
+            "min": 1.759,
+            "median": 1.789
+          },
           "stateta": {
             "min": 1.779,
             "median": 1.779
@@ -3376,7 +3552,7 @@
         "byBrand": {
           "neste": {
             "min": 1.849,
-            "median": 1.8965
+            "median": 1.894
           },
           "independent": {
             "min": 1.85,
@@ -3410,6 +3586,10 @@
             "min": 1.92,
             "median": 1.92
           },
+          "orlen": {
+            "min": 1.929,
+            "median": 1.979
+          },
           "stateta": {
             "min": 1.929,
             "median": 1.929
@@ -3418,7 +3598,7 @@
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.919,
+        "median": 0.9,
         "max": 0.999,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -3438,6 +3618,10 @@
             "min": 0.84,
             "median": 0.85
           },
+          "orlen": {
+            "min": 0.849,
+            "median": 0.879
+          },
           "alausa": {
             "min": 0.849,
             "median": 0.889
@@ -3449,10 +3633,6 @@
           "kvistija": {
             "min": 0.869,
             "median": 0.884
-          },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
           },
           "circle-k": {
             "min": 0.899,
@@ -3475,7 +3655,7 @@
     "byFuel": {
       "95": {
         "min": 1.69,
-        "median": 1.879,
+        "median": 1.869,
         "max": 1.984,
         "minStationId": "osm:way:181736105",
         "byBrand": {
@@ -3503,6 +3683,10 @@
             "min": 1.75,
             "median": 1.79
           },
+          "orlen": {
+            "min": 1.779,
+            "median": 1.859
+          },
           "stateta": {
             "min": 1.779,
             "median": 1.779
@@ -3524,7 +3708,7 @@
       "D": {
         "min": 1.839,
         "median": 1.999,
-        "max": 2.099,
+        "max": 2.12,
         "minStationId": "osm:way:225173105",
         "byBrand": {
           "independent": {
@@ -3546,6 +3730,10 @@
           "jozita": {
             "min": 1.92,
             "median": 1.92
+          },
+          "orlen": {
+            "min": 1.929,
+            "median": 1.999
           },
           "stateta": {
             "min": 1.929,
@@ -3571,7 +3759,7 @@
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.9125000000000001,
+        "median": 0.9,
         "max": 0.999,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -3599,13 +3787,13 @@
             "min": 0.849,
             "median": 0.879
           },
+          "orlen": {
+            "min": 0.859,
+            "median": 0.88
+          },
           "kvistija": {
             "min": 0.869,
             "median": 0.884
-          },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
           },
           "circle-k": {
             "min": 0.899,
@@ -3628,13 +3816,17 @@
     "byFuel": {
       "95": {
         "min": 1.694,
-        "median": 1.839,
+        "median": 1.829,
         "max": 1.98,
         "minStationId": "lea:29149-32a-a-alauša-anykščiai-anykščių-g-r-sav-uab-vienuolio",
         "byBrand": {
           "alausa": {
             "min": 1.694,
             "median": 1.699
+          },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.729
           },
           "baltic-petroleum": {
             "min": 1.699,
@@ -3650,7 +3842,7 @@
           },
           "viada": {
             "min": 1.71,
-            "median": 1.909
+            "median": 1.919
           },
           "kvistija": {
             "min": 1.739,
@@ -3688,6 +3880,10 @@
             "min": 1.854,
             "median": 1.859
           },
+          "orlen": {
+            "min": 1.859,
+            "median": 1.879
+          },
           "baltic-petroleum": {
             "min": 1.859,
             "median": 1.959
@@ -3724,13 +3920,17 @@
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.909,
+        "median": 0.899,
         "max": 0.999,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
           "independent": {
             "min": 0.79,
             "median": 0.89
+          },
+          "orlen": {
+            "min": 0.799,
+            "median": 0.879
           },
           "alausa": {
             "min": 0.799,
@@ -3764,10 +3964,6 @@
             "min": 0.869,
             "median": 0.884
           },
-          "orlen": {
-            "min": 0.88,
-            "median": 0.88
-          },
           "stateta": {
             "min": 0.899,
             "median": 0.899
@@ -3781,7 +3977,7 @@
     "byFuel": {
       "95": {
         "min": 1.699,
-        "median": 1.819,
+        "median": 1.814,
         "max": 1.959,
         "minStationId": "osm:way:224487513",
         "byBrand": {
@@ -3791,10 +3987,14 @@
           },
           "independent": {
             "min": 1.699,
-            "median": 1.79
+            "median": 1.7894999999999999
           },
           "emsi": {
             "min": 1.719,
+            "median": 1.779
+          },
+          "orlen": {
+            "min": 1.739,
             "median": 1.779
           },
           "kvistija": {
@@ -3815,7 +4015,7 @@
           },
           "neste": {
             "min": 1.774,
-            "median": 1.809
+            "median": 1.804
           },
           "circle-k": {
             "min": 1.779,
@@ -3829,7 +4029,7 @@
       },
       "D": {
         "min": 1.839,
-        "median": 1.959,
+        "median": 1.954,
         "max": 2.099,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -3843,7 +4043,11 @@
           },
           "baltic-petroleum": {
             "min": 1.869,
-            "median": 1.9495
+            "median": 1.949
+          },
+          "orlen": {
+            "min": 1.879,
+            "median": 1.919
           },
           "emsi": {
             "min": 1.89,
@@ -3871,19 +4075,23 @@
           },
           "viada": {
             "min": 1.939,
-            "median": 2.019
+            "median": 1.999
           }
         }
       },
       "LPG": {
         "min": 0.79,
-        "median": 0.8995,
+        "median": 0.899,
         "max": 0.987,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
           "independent": {
             "min": 0.79,
             "median": 0.89
+          },
+          "orlen": {
+            "min": 0.799,
+            "median": 0.879
           },
           "baltic-petroleum": {
             "min": 0.799,
@@ -3904,10 +4112,6 @@
           "emsi": {
             "min": 0.849,
             "median": 0.869
-          },
-          "orlen": {
-            "min": 0.85,
-            "median": 0.85
           },
           "circle-k": {
             "min": 0.86,
@@ -3934,7 +4138,7 @@
     "byFuel": {
       "95": {
         "min": 1.68,
-        "median": 1.794,
+        "median": 1.79,
         "max": 1.959,
         "minStationId": "osm:way:177140270",
         "byBrand": {
@@ -3966,6 +4170,10 @@
             "min": 1.729,
             "median": 1.729
           },
+          "orlen": {
+            "min": 1.739,
+            "median": 1.779
+          },
           "kvistija": {
             "min": 1.739,
             "median": 1.7645
@@ -3982,7 +4190,7 @@
       },
       "D": {
         "min": 1.82,
-        "median": 1.939,
+        "median": 1.93,
         "max": 2.099,
         "minStationId": "osm:way:177140270",
         "byBrand": {
@@ -4004,15 +4212,19 @@
           },
           "neste": {
             "min": 1.854,
-            "median": 1.899
+            "median": 1.8965
           },
           "baltic-petroleum": {
             "min": 1.859,
-            "median": 1.9344999999999999
+            "median": 1.93
           },
           "kvistija": {
             "min": 1.859,
             "median": 1.9245
+          },
+          "orlen": {
+            "min": 1.879,
+            "median": 1.919
           },
           "circle-k": {
             "min": 1.879,
@@ -4042,13 +4254,17 @@
             "min": 0.79,
             "median": 0.889
           },
+          "orlen": {
+            "min": 0.799,
+            "median": 0.879
+          },
           "alausa": {
             "min": 0.819,
             "median": 0.849
           },
           "baltic-petroleum": {
             "min": 0.829,
-            "median": 0.8594999999999999
+            "median": 0.859
           },
           "neste": {
             "min": 0.84,
@@ -4057,10 +4273,6 @@
           "emsi": {
             "min": 0.849,
             "median": 0.869
-          },
-          "orlen": {
-            "min": 0.85,
-            "median": 0.85
           },
           "kvistija": {
             "min": 0.869,
@@ -4119,6 +4331,10 @@
             "min": 1.739,
             "median": 1.7645
           },
+          "orlen": {
+            "min": 1.749,
+            "median": 1.779
+          },
           "viada": {
             "min": 1.759,
             "median": 1.859
@@ -4136,7 +4352,7 @@
       "D": {
         "min": 1.79,
         "median": 1.909,
-        "max": 2.099,
+        "max": 2.12,
         "minStationId": "osm:way:177140270",
         "byBrand": {
           "jozita": {
@@ -4175,6 +4391,10 @@
             "min": 1.859,
             "median": 1.919
           },
+          "orlen": {
+            "min": 1.879,
+            "median": 1.919
+          },
           "stateta": {
             "min": 1.899,
             "median": 1.899
@@ -4183,7 +4403,7 @@
       },
       "LPG": {
         "min": 0.78,
-        "median": 0.899,
+        "median": 0.89,
         "max": 0.987,
         "minStationId": "osm:node:3764340045",
         "byBrand": {
@@ -4193,11 +4413,15 @@
           },
           "baltic-petroleum": {
             "min": 0.789,
-            "median": 0.8594999999999999
+            "median": 0.859
           },
           "jozita": {
             "min": 0.79,
             "median": 0.79
+          },
+          "orlen": {
+            "min": 0.799,
+            "median": 0.879
           },
           "alausa": {
             "min": 0.799,
@@ -4210,10 +4434,6 @@
           "neste": {
             "min": 0.84,
             "median": 0.86
-          },
-          "orlen": {
-            "min": 0.85,
-            "median": 0.85
           },
           "circle-k": {
             "min": 0.859,
@@ -4240,7 +4460,7 @@
     "byFuel": {
       "95": {
         "min": 1.719,
-        "median": 1.909,
+        "median": 1.899,
         "max": 2.019,
         "minStationId": "osm:way:132641453",
         "byBrand": {
@@ -4263,6 +4483,10 @@
           "alausa": {
             "min": 1.769,
             "median": 1.894
+          },
+          "orlen": {
+            "min": 1.779,
+            "median": 1.889
           },
           "jozita": {
             "min": 1.79,
@@ -4288,7 +4512,7 @@
       },
       "D": {
         "min": 1.819,
-        "median": 2.019,
+        "median": 1.999,
         "max": 2.119,
         "minStationId": "osm:way:132641453",
         "byBrand": {
@@ -4308,6 +4532,10 @@
             "min": 1.84,
             "median": 1.9340000000000002
           },
+          "orlen": {
+            "min": 1.869,
+            "median": 1.999
+          },
           "jozita": {
             "min": 1.89,
             "median": 1.89
@@ -4326,7 +4554,7 @@
           },
           "neste": {
             "min": 1.994,
-            "median": 2.0315
+            "median": 2.029
           },
           "viada": {
             "min": 1.999,
@@ -4336,7 +4564,7 @@
       },
       "LPG": {
         "min": 0.78,
-        "median": 0.899,
+        "median": 0.89,
         "max": 0.987,
         "minStationId": "osm:node:3764340045",
         "byBrand": {
@@ -4352,6 +4580,10 @@
             "min": 0.79,
             "median": 0.79
           },
+          "orlen": {
+            "min": 0.799,
+            "median": 0.859
+          },
           "alausa": {
             "min": 0.799,
             "median": 0.864
@@ -4359,10 +4591,6 @@
           "emsi": {
             "min": 0.81,
             "median": 0.859
-          },
-          "orlen": {
-            "min": 0.84,
-            "median": 0.84
           },
           "neste": {
             "min": 0.84,
@@ -4393,7 +4621,7 @@
     "byFuel": {
       "95": {
         "min": 1.72,
-        "median": 1.869,
+        "median": 1.859,
         "max": 1.979,
         "minStationId": "lea:1-31142-g-kosmoso-saurida-sav-uab-visaginas-visagino",
         "byBrand": {
@@ -4404,6 +4632,10 @@
           "baltic-petroleum": {
             "min": 1.729,
             "median": 1.839
+          },
+          "orlen": {
+            "min": 1.739,
+            "median": 1.739
           },
           "alausa": {
             "min": 1.739,
@@ -4441,7 +4673,7 @@
       },
       "D": {
         "min": 1.839,
-        "median": 1.979,
+        "median": 1.97,
         "max": 2.099,
         "minStationId": "osm:way:132641453",
         "byBrand": {
@@ -4464,6 +4696,10 @@
           "stateta": {
             "min": 1.849,
             "median": 1.849
+          },
+          "orlen": {
+            "min": 1.859,
+            "median": 1.879
           },
           "alausa": {
             "min": 1.859,
@@ -4489,7 +4725,7 @@
       },
       "LPG": {
         "min": 0.769,
-        "median": 0.89,
+        "median": 0.889,
         "max": 0.987,
         "minStationId": "lea:40134-5-g-kupiškio-kupiškis-panevėžio-r-sav-uab-velseka",
         "byBrand": {
@@ -4499,7 +4735,11 @@
           },
           "baltic-petroleum": {
             "min": 0.77,
-            "median": 0.8545
+            "median": 0.85
+          },
+          "orlen": {
+            "min": 0.779,
+            "median": 0.859
           },
           "alausa": {
             "min": 0.779,
@@ -4512,10 +4752,6 @@
           "emsi": {
             "min": 0.81,
             "median": 0.859
-          },
-          "orlen": {
-            "min": 0.84,
-            "median": 0.84
           },
           "neste": {
             "min": 0.84,
@@ -4574,6 +4810,10 @@
             "min": 1.774,
             "median": 1.8265
           },
+          "orlen": {
+            "min": 1.779,
+            "median": 1.819
+          },
           "neste": {
             "min": 1.779,
             "median": 1.839
@@ -4604,14 +4844,18 @@
           },
           "baltic-petroleum": {
             "min": 1.849,
-            "median": 1.944
+            "median": 1.939
           },
           "independent": {
             "min": 1.849,
-            "median": 1.95
+            "median": 1.949
           },
           "kvistija": {
             "min": 1.87,
+            "median": 1.919
+          },
+          "orlen": {
+            "min": 1.879,
             "median": 1.919
           },
           "stateta": {
@@ -4642,7 +4886,7 @@
       },
       "LPG": {
         "min": 0.769,
-        "median": 0.89,
+        "median": 0.889,
         "max": 0.987,
         "minStationId": "lea:40134-5-g-kupiškio-kupiškis-panevėžio-r-sav-uab-velseka",
         "byBrand": {
@@ -4658,6 +4902,10 @@
             "min": 0.79,
             "median": 0.79
           },
+          "orlen": {
+            "min": 0.799,
+            "median": 0.859
+          },
           "emsi": {
             "min": 0.81,
             "median": 0.859
@@ -4665,10 +4913,6 @@
           "alausa": {
             "min": 0.819,
             "median": 0.864
-          },
-          "orlen": {
-            "min": 0.84,
-            "median": 0.84
           },
           "neste": {
             "min": 0.84,
@@ -4735,6 +4979,10 @@
             "min": 1.759,
             "median": 1.7894999999999999
           },
+          "orlen": {
+            "min": 1.769,
+            "median": 1.799
+          },
           "circle-k": {
             "min": 1.794,
             "median": 1.859
@@ -4773,7 +5021,7 @@
           },
           "neste": {
             "min": 1.844,
-            "median": 1.9064999999999999
+            "median": 1.904
           },
           "baltic-petroleum": {
             "min": 1.849,
@@ -4782,6 +5030,10 @@
           "kvistija": {
             "min": 1.87,
             "median": 1.919
+          },
+          "orlen": {
+            "min": 1.879,
+            "median": 1.899
           },
           "circle-k": {
             "min": 1.899,
@@ -4795,7 +5047,7 @@
       },
       "LPG": {
         "min": 0.769,
-        "median": 0.889,
+        "median": 0.879,
         "max": 0.987,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -4811,6 +5063,10 @@
             "min": 0.79,
             "median": 0.79
           },
+          "orlen": {
+            "min": 0.799,
+            "median": 0.859
+          },
           "alausa": {
             "min": 0.799,
             "median": 0.839
@@ -4818,10 +5074,6 @@
           "emsi": {
             "min": 0.81,
             "median": 0.859
-          },
-          "orlen": {
-            "min": 0.84,
-            "median": 0.84
           },
           "neste": {
             "min": 0.84,
@@ -4870,7 +5122,7 @@
           },
           "independent": {
             "min": 1.729,
-            "median": 1.81
+            "median": 1.8
           },
           "neste": {
             "min": 1.729,
@@ -4887,6 +5139,10 @@
           "viada": {
             "min": 1.759,
             "median": 1.859
+          },
+          "orlen": {
+            "min": 1.769,
+            "median": 1.799
           },
           "kvistija": {
             "min": 1.769,
@@ -4914,7 +5170,7 @@
           },
           "independent": {
             "min": 1.819,
-            "median": 1.91
+            "median": 1.907
           },
           "jozita": {
             "min": 1.82,
@@ -4943,12 +5199,16 @@
           "stateta": {
             "min": 1.87,
             "median": 1.879
+          },
+          "orlen": {
+            "min": 1.879,
+            "median": 1.899
           }
         }
       },
       "LPG": {
         "min": 0.769,
-        "median": 0.89,
+        "median": 0.8795,
         "max": 0.969,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -4964,6 +5224,10 @@
             "min": 0.789,
             "median": 0.849
           },
+          "orlen": {
+            "min": 0.799,
+            "median": 0.859
+          },
           "emsi": {
             "min": 0.81,
             "median": 0.859
@@ -4975,10 +5239,6 @@
           "neste": {
             "min": 0.82,
             "median": 0.82
-          },
-          "orlen": {
-            "min": 0.84,
-            "median": 0.84
           },
           "circle-k": {
             "min": 0.859,
@@ -5033,6 +5293,10 @@
             "min": 1.757,
             "median": 1.757
           },
+          "orlen": {
+            "min": 1.769,
+            "median": 1.899
+          },
           "kvistija": {
             "min": 1.769,
             "median": 1.7945
@@ -5054,7 +5318,7 @@
       "D": {
         "min": 1.819,
         "median": 1.979,
-        "max": 2.079,
+        "max": 2.08,
         "minStationId": "lea:127-90107-eu-g-jovaišiškės-k-plungės-r-sav-telšių-uab-verslas",
         "byBrand": {
           "independent": {
@@ -5084,6 +5348,10 @@
           "stateta": {
             "min": 1.867,
             "median": 1.867
+          },
+          "orlen": {
+            "min": 1.879,
+            "median": 1.989
           },
           "neste": {
             "min": 1.909,
@@ -5117,6 +5385,10 @@
             "min": 0.789,
             "median": 0.84
           },
+          "orlen": {
+            "min": 0.799,
+            "median": 0.849
+          },
           "alausa": {
             "min": 0.799,
             "median": 0.859
@@ -5128,10 +5400,6 @@
           "neste": {
             "min": 0.82,
             "median": 0.82
-          },
-          "orlen": {
-            "min": 0.84,
-            "median": 0.84
           },
           "circle-k": {
             "min": 0.859,
@@ -5158,7 +5426,7 @@
     "byFuel": {
       "95": {
         "min": 1.719,
-        "median": 1.859,
+        "median": 1.85,
         "max": 1.999,
         "minStationId": "osm:way:132641453",
         "byBrand": {
@@ -5173,6 +5441,10 @@
           "jozita": {
             "min": 1.72,
             "median": 1.79
+          },
+          "orlen": {
+            "min": 1.729,
+            "median": 1.759
           },
           "alausa": {
             "min": 1.729,
@@ -5206,13 +5478,17 @@
       },
       "D": {
         "min": 1.809,
-        "median": 1.949,
+        "median": 1.9465,
         "max": 2.079,
         "minStationId": "lea:40134-5-g-kupiškio-kupiškis-panevėžio-r-sav-uab-velseka",
         "byBrand": {
           "independent": {
             "min": 1.809,
-            "median": 1.93
+            "median": 1.929
+          },
+          "orlen": {
+            "min": 1.819,
+            "median": 1.849
           },
           "alausa": {
             "min": 1.819,
@@ -5240,7 +5516,7 @@
           },
           "neste": {
             "min": 1.869,
-            "median": 1.944
+            "median": 1.9415
           },
           "circle-k": {
             "min": 1.909,
@@ -5248,7 +5524,7 @@
           },
           "viada": {
             "min": 1.929,
-            "median": 2.019
+            "median": 1.999
           }
         }
       },
@@ -5273,6 +5549,10 @@
           "jozita": {
             "min": 0.77,
             "median": 0.78
+          },
+          "orlen": {
+            "min": 0.799,
+            "median": 0.849
           },
           "emsi": {
             "min": 0.8,
@@ -5307,7 +5587,7 @@
     "byFuel": {
       "95": {
         "min": 1.719,
-        "median": 1.829,
+        "median": 1.82,
         "max": 1.959,
         "minStationId": "osm:way:132641453",
         "byBrand": {
@@ -5325,6 +5605,10 @@
           },
           "baltic-petroleum": {
             "min": 1.729,
+            "median": 1.799
+          },
+          "orlen": {
+            "min": 1.749,
             "median": 1.799
           },
           "neste": {
@@ -5355,7 +5639,7 @@
       },
       "D": {
         "min": 1.719,
-        "median": 1.829,
+        "median": 1.82,
         "max": 1.959,
         "minStationId": "osm:way:132641453",
         "byBrand": {
@@ -5373,6 +5657,10 @@
           },
           "baltic-petroleum": {
             "min": 1.729,
+            "median": 1.799
+          },
+          "orlen": {
+            "min": 1.749,
             "median": 1.799
           },
           "neste": {
@@ -5403,7 +5691,7 @@
       },
       "LPG": {
         "min": 0.749,
-        "median": 0.87,
+        "median": 0.869,
         "max": 0.969,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -5413,7 +5701,7 @@
           },
           "baltic-petroleum": {
             "min": 0.77,
-            "median": 0.8294999999999999
+            "median": 0.83
           },
           "jozita": {
             "min": 0.77,
@@ -5422,6 +5710,10 @@
           "emsi": {
             "min": 0.79,
             "median": 0.839
+          },
+          "orlen": {
+            "min": 0.799,
+            "median": 0.849
           },
           "alausa": {
             "min": 0.799,
@@ -5434,10 +5726,6 @@
           "circle-k": {
             "min": 0.829,
             "median": 0.9195
-          },
-          "orlen": {
-            "min": 0.84,
-            "median": 0.84
           },
           "viada": {
             "min": 0.849,
@@ -5474,7 +5762,7 @@
           },
           "neste": {
             "min": 1.719,
-            "median": 1.779
+            "median": 1.774
           },
           "jozita": {
             "min": 1.72,
@@ -5496,6 +5784,10 @@
             "min": 1.739,
             "median": 1.824
           },
+          "orlen": {
+            "min": 1.749,
+            "median": 1.799
+          },
           "kvistija": {
             "min": 1.76,
             "median": 1.789
@@ -5509,12 +5801,12 @@
       "D": {
         "min": 1.789,
         "median": 1.89,
-        "max": 2.06,
+        "max": 2.08,
         "minStationId": "osm:way:225173105",
         "byBrand": {
           "independent": {
             "min": 1.789,
-            "median": 1.899
+            "median": 1.89
           },
           "jozita": {
             "min": 1.79,
@@ -5544,6 +5836,10 @@
             "min": 1.829,
             "median": 1.879
           },
+          "orlen": {
+            "min": 1.849,
+            "median": 1.879
+          },
           "viada": {
             "min": 1.849,
             "median": 1.959
@@ -5556,7 +5852,7 @@
       },
       "LPG": {
         "min": 0.74,
-        "median": 0.87,
+        "median": 0.869,
         "max": 0.969,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -5574,19 +5870,19 @@
           },
           "baltic-petroleum": {
             "min": 0.759,
-            "median": 0.8245
+            "median": 0.82
           },
           "emsi": {
             "min": 0.79,
             "median": 0.82
           },
+          "orlen": {
+            "min": 0.799,
+            "median": 0.839
+          },
           "circle-k": {
             "min": 0.819,
             "median": 0.919
-          },
-          "orlen": {
-            "min": 0.82,
-            "median": 0.82
           },
           "viada": {
             "min": 0.829,
@@ -5614,7 +5910,7 @@
       "95": {
         "min": 1.669,
         "median": 1.77,
-        "max": 1.919,
+        "max": 1.95,
         "minStationId": "osm:way:145036838",
         "byBrand": {
           "baltic-petroleum": {
@@ -5656,13 +5952,17 @@
           "kvistija": {
             "min": 1.739,
             "median": 1.779
+          },
+          "orlen": {
+            "min": 1.749,
+            "median": 1.799
           }
         }
       },
       "D": {
         "min": 1.739,
-        "median": 1.849,
-        "max": 2.03,
+        "median": 1.85,
+        "max": 2.08,
         "minStationId": "osm:way:1323298029",
         "byBrand": {
           "neste": {
@@ -5704,6 +6004,10 @@
           "kvistija": {
             "min": 1.819,
             "median": 1.859
+          },
+          "orlen": {
+            "min": 1.849,
+            "median": 1.879
           }
         }
       },
@@ -5733,17 +6037,17 @@
             "min": 0.789,
             "median": 0.839
           },
+          "orlen": {
+            "min": 0.799,
+            "median": 0.839
+          },
           "neste": {
             "min": 0.8,
             "median": 0.8
           },
           "viada": {
             "min": 0.819,
-            "median": 0.939
-          },
-          "orlen": {
-            "min": 0.82,
-            "median": 0.82
+            "median": 0.929
           },
           "circle-k": {
             "min": 0.829,
@@ -5780,7 +6084,7 @@
           },
           "baltic-petroleum": {
             "min": 1.709,
-            "median": 1.7995
+            "median": 1.8
           },
           "neste": {
             "min": 1.729,
@@ -5798,6 +6102,10 @@
             "min": 1.739,
             "median": 1.779
           },
+          "orlen": {
+            "min": 1.749,
+            "median": 1.799
+          },
           "alausa": {
             "min": 1.759,
             "median": 1.799
@@ -5810,8 +6118,8 @@
       },
       "D": {
         "min": 1.789,
-        "median": 1.939,
-        "max": 2.059,
+        "median": 1.929,
+        "max": 2.08,
         "minStationId": "osm:way:207762455",
         "byBrand": {
           "baltic-petroleum": {
@@ -5846,6 +6154,10 @@
             "min": 1.839,
             "median": 1.969
           },
+          "orlen": {
+            "min": 1.849,
+            "median": 1.879
+          },
           "viada": {
             "min": 1.949,
             "median": 2.049
@@ -5874,13 +6186,13 @@
             "min": 0.779,
             "median": 0.829
           },
+          "orlen": {
+            "min": 0.799,
+            "median": 0.839
+          },
           "neste": {
             "min": 0.8,
             "median": 0.8
-          },
-          "orlen": {
-            "min": 0.82,
-            "median": 0.82
           },
           "circle-k": {
             "min": 0.829,
@@ -5892,7 +6204,7 @@
           },
           "viada": {
             "min": 0.829,
-            "median": 0.939
+            "median": 0.929
           },
           "kvistija": {
             "min": 0.839,
@@ -5913,11 +6225,15 @@
         "byBrand": {
           "independent": {
             "min": 1.669,
-            "median": 1.789
+            "median": 1.783
           },
           "alausa": {
             "min": 1.674,
             "median": 1.6840000000000002
+          },
+          "orlen": {
+            "min": 1.679,
+            "median": 1.699
           },
           "baltic-petroleum": {
             "min": 1.679,
@@ -5955,13 +6271,17 @@
       },
       "D": {
         "min": 1.754,
-        "median": 1.9,
+        "median": 1.899,
         "max": 2.049,
         "minStationId": "lea:08247-204g-alauša-g-kalvarijų-m-sav-uab-vilniaus-vilnius",
         "byBrand": {
           "alausa": {
             "min": 1.754,
             "median": 1.7665
+          },
+          "orlen": {
+            "min": 1.759,
+            "median": 1.799
           },
           "baltic-petroleum": {
             "min": 1.759,
@@ -6027,6 +6347,10 @@
             "min": 0.739,
             "median": 0.819
           },
+          "orlen": {
+            "min": 0.759,
+            "median": 0.819
+          },
           "neste": {
             "min": 0.79,
             "median": 0.79
@@ -6035,17 +6359,13 @@
             "min": 0.81,
             "median": 0.904
           },
-          "orlen": {
-            "min": 0.82,
-            "median": 0.82
-          },
           "stateta": {
             "min": 0.829,
             "median": 0.829
           },
           "viada": {
             "min": 0.829,
-            "median": 0.939
+            "median": 0.919
           },
           "kvistija": {
             "min": 0.839,
@@ -6060,13 +6380,13 @@
     "byFuel": {
       "95": {
         "min": 1.669,
-        "median": 1.799,
+        "median": 1.79,
         "max": 1.969,
         "minStationId": "osm:way:225173105",
         "byBrand": {
           "independent": {
             "min": 1.669,
-            "median": 1.783
+            "median": 1.78
           },
           "circle-k": {
             "min": 1.669,
@@ -6087,6 +6407,10 @@
           "neste": {
             "min": 1.714,
             "median": 1.779
+          },
+          "orlen": {
+            "min": 1.719,
+            "median": 1.759
           },
           "emsi": {
             "min": 1.719,
@@ -6132,6 +6456,10 @@
             "min": 1.797,
             "median": 1.797
           },
+          "orlen": {
+            "min": 1.799,
+            "median": 1.859
+          },
           "emsi": {
             "min": 1.809,
             "median": 1.859
@@ -6156,7 +6484,7 @@
       },
       "LPG": {
         "min": 0.72,
-        "median": 0.849,
+        "median": 0.84,
         "max": 0.969,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -6171,6 +6499,10 @@
           "jozita": {
             "min": 0.73,
             "median": 0.75
+          },
+          "orlen": {
+            "min": 0.759,
+            "median": 0.819
           },
           "baltic-petroleum": {
             "min": 0.759,
@@ -6190,11 +6522,7 @@
           },
           "viada": {
             "min": 0.819,
-            "median": 0.939
-          },
-          "orlen": {
-            "min": 0.82,
-            "median": 0.82
+            "median": 0.929
           },
           "stateta": {
             "min": 0.829,
@@ -6241,6 +6569,10 @@
             "min": 1.694,
             "median": 1.739
           },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.739
+          },
           "emsi": {
             "min": 1.699,
             "median": 1.759
@@ -6289,6 +6621,10 @@
             "min": 1.694,
             "median": 1.739
           },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.739
+          },
           "emsi": {
             "min": 1.699,
             "median": 1.759
@@ -6309,7 +6645,7 @@
       },
       "LPG": {
         "min": 0.72,
-        "median": 0.839,
+        "median": 0.83,
         "max": 0.969,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -6319,7 +6655,7 @@
           },
           "baltic-petroleum": {
             "min": 0.729,
-            "median": 0.8095000000000001
+            "median": 0.809
           },
           "jozita": {
             "min": 0.73,
@@ -6332,6 +6668,10 @@
           "emsi": {
             "min": 0.75,
             "median": 0.799
+          },
+          "orlen": {
+            "min": 0.759,
+            "median": 0.819
           },
           "neste": {
             "min": 0.77,
@@ -6349,10 +6689,6 @@
             "min": 0.819,
             "median": 0.924
           },
-          "orlen": {
-            "min": 0.82,
-            "median": 0.82
-          },
           "stateta": {
             "min": 0.829,
             "median": 0.829
@@ -6366,7 +6702,7 @@
     "byFuel": {
       "95": {
         "min": 1.629,
-        "median": 1.75,
+        "median": 1.749,
         "max": 1.909,
         "minStationId": "lea:79a-92195-baltic-g-klaipėda-klaipėdos-liepų-m-petroleum-sav-uab",
         "byBrand": {
@@ -6398,6 +6734,10 @@
             "min": 1.679,
             "median": 1.789
           },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.739
+          },
           "stateta": {
             "min": 1.699,
             "median": 1.699
@@ -6420,7 +6760,7 @@
         "byBrand": {
           "baltic-petroleum": {
             "min": 1.709,
-            "median": 1.8245
+            "median": 1.82
           },
           "independent": {
             "min": 1.729,
@@ -6446,6 +6786,10 @@
             "min": 1.779,
             "median": 1.879
           },
+          "orlen": {
+            "min": 1.799,
+            "median": 1.829
+          },
           "stateta": {
             "min": 1.799,
             "median": 1.799
@@ -6462,7 +6806,7 @@
       },
       "LPG": {
         "min": 0.72,
-        "median": 0.839,
+        "median": 0.829,
         "max": 0.969,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -6481,6 +6825,10 @@
           "emsi": {
             "min": 0.75,
             "median": 0.79
+          },
+          "orlen": {
+            "min": 0.759,
+            "median": 0.819
           },
           "neste": {
             "min": 0.77,
@@ -6515,8 +6863,8 @@
     "byFuel": {
       "95": {
         "min": 1.63,
-        "median": 1.854,
-        "max": 1.949,
+        "median": 1.849,
+        "max": 1.95,
         "minStationId": "osm:way:217418223",
         "byBrand": {
           "independent": {
@@ -6526,6 +6874,10 @@
           "jozita": {
             "min": 1.65,
             "median": 1.75
+          },
+          "orlen": {
+            "min": 1.679,
+            "median": 1.799
           },
           "baltic-petroleum": {
             "min": 1.679,
@@ -6563,7 +6915,7 @@
       },
       "D": {
         "min": 1.72,
-        "median": 1.914,
+        "median": 1.899,
         "max": 2.039,
         "minStationId": "osm:way:105854007",
         "byBrand": {
@@ -6583,6 +6935,10 @@
             "min": 1.749,
             "median": 1.829
           },
+          "orlen": {
+            "min": 1.779,
+            "median": 1.879
+          },
           "emsi": {
             "min": 1.79,
             "median": 1.839
@@ -6601,7 +6957,7 @@
           },
           "neste": {
             "min": 1.874,
-            "median": 1.9115
+            "median": 1.909
           },
           "viada": {
             "min": 1.899,
@@ -6611,7 +6967,7 @@
       },
       "LPG": {
         "min": 0.72,
-        "median": 0.84,
+        "median": 0.83,
         "max": 0.969,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -6622,6 +6978,10 @@
           "jozita": {
             "min": 0.72,
             "median": 0.73
+          },
+          "orlen": {
+            "min": 0.739,
+            "median": 0.799
           },
           "baltic-petroleum": {
             "min": 0.749,
@@ -6647,10 +7007,6 @@
             "min": 0.799,
             "median": 0.8194999999999999
           },
-          "orlen": {
-            "min": 0.82,
-            "median": 0.82
-          },
           "stateta": {
             "min": 0.829,
             "median": 0.829
@@ -6669,7 +7025,7 @@
       "95": {
         "min": 1.629,
         "median": 1.799,
-        "max": 1.949,
+        "max": 1.95,
         "minStationId": "osm:way:132641453",
         "byBrand": {
           "emsi": {
@@ -6682,7 +7038,7 @@
           },
           "independent": {
             "min": 1.639,
-            "median": 1.779
+            "median": 1.77
           },
           "stateta": {
             "min": 1.647,
@@ -6691,6 +7047,10 @@
           "alausa": {
             "min": 1.654,
             "median": 1.659
+          },
+          "orlen": {
+            "min": 1.659,
+            "median": 1.679
           },
           "baltic-petroleum": {
             "min": 1.659,
@@ -6716,7 +7076,7 @@
       },
       "D": {
         "min": 1.7,
-        "median": 1.869,
+        "median": 1.864,
         "max": 1.999,
         "minStationId": "osm:way:105854007",
         "byBrand": {
@@ -6736,9 +7096,13 @@
             "min": 1.727,
             "median": 1.727
           },
+          "orlen": {
+            "min": 1.729,
+            "median": 1.799
+          },
           "baltic-petroleum": {
             "min": 1.729,
-            "median": 1.834
+            "median": 1.829
           },
           "emsi": {
             "min": 1.729,
@@ -6758,16 +7122,20 @@
           },
           "viada": {
             "min": 1.849,
-            "median": 1.949
+            "median": 1.939
           }
         }
       },
       "LPG": {
         "min": 0.699,
-        "median": 0.829,
+        "median": 0.819,
         "max": 0.969,
-        "minStationId": "lea:29149-32a-a-alauša-anykščiai-anykščių-g-r-sav-uab-vienuolio",
+        "minStationId": "lea:68100-ab-aleksandravo-baltics-k-marijampolės-orlen-retail-sav",
         "byBrand": {
+          "orlen": {
+            "min": 0.699,
+            "median": 0.779
+          },
           "alausa": {
             "min": 0.699,
             "median": 0.729
@@ -6807,10 +7175,6 @@
           "viada": {
             "min": 0.799,
             "median": 0.899
-          },
-          "orlen": {
-            "min": 0.82,
-            "median": 0.82
           }
         }
       }
@@ -6821,7 +7185,7 @@
     "byFuel": {
       "95": {
         "min": 1.629,
-        "median": 1.779,
+        "median": 1.77,
         "max": 1.949,
         "minStationId": "osm:way:132641453",
         "byBrand": {
@@ -6836,6 +7200,10 @@
           "stateta": {
             "min": 1.677,
             "median": 1.677
+          },
+          "orlen": {
+            "min": 1.679,
+            "median": 1.729
           },
           "baltic-petroleum": {
             "min": 1.679,
@@ -6865,13 +7233,17 @@
       },
       "D": {
         "min": 1.709,
-        "median": 1.839,
+        "median": 1.834,
         "max": 1.999,
         "minStationId": "osm:way:225173105",
         "byBrand": {
           "independent": {
             "min": 1.709,
             "median": 1.84
+          },
+          "orlen": {
+            "min": 1.729,
+            "median": 1.799
           },
           "baltic-petroleum": {
             "min": 1.739,
@@ -6887,7 +7259,7 @@
           },
           "neste": {
             "min": 1.769,
-            "median": 1.8215
+            "median": 1.824
           },
           "viada": {
             "min": 1.774,
@@ -6909,13 +7281,13 @@
       },
       "LPG": {
         "min": 0.7,
-        "median": 0.83,
+        "median": 0.819,
         "max": 0.969,
         "minStationId": "osm:way:217418223",
         "byBrand": {
           "independent": {
             "min": 0.7,
-            "median": 0.8200000000000001
+            "median": 0.81
           },
           "emsi": {
             "min": 0.73,
@@ -6924,6 +7296,10 @@
           "baltic-petroleum": {
             "min": 0.739,
             "median": 0.799
+          },
+          "orlen": {
+            "min": 0.749,
+            "median": 0.779
           },
           "alausa": {
             "min": 0.759,
@@ -6945,10 +7321,6 @@
             "min": 0.799,
             "median": 0.8194999999999999
           },
-          "orlen": {
-            "min": 0.82,
-            "median": 0.82
-          },
           "neste": {
             "min": 0.879,
             "median": 0.879
@@ -6962,7 +7334,7 @@
     "byFuel": {
       "LPG": {
         "min": 0.7,
-        "median": 0.819,
+        "median": 0.8,
         "max": 0.969,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -6982,13 +7354,13 @@
             "min": 0.73,
             "median": 0.779
           },
+          "orlen": {
+            "min": 0.749,
+            "median": 0.779
+          },
           "baltic-petroleum": {
             "min": 0.749,
             "median": 0.79
-          },
-          "orlen": {
-            "min": 0.77,
-            "median": 0.77
           },
           "stateta": {
             "min": 0.777,
@@ -7043,6 +7415,10 @@
             "min": 1.639,
             "median": 1.689
           },
+          "orlen": {
+            "min": 1.649,
+            "median": 1.699
+          },
           "alausa": {
             "min": 1.649,
             "median": 1.689
@@ -7067,7 +7443,7 @@
       },
       "D": {
         "min": 1.689,
-        "median": 1.784,
+        "median": 1.78,
         "max": 1.999,
         "minStationId": "osm:way:62200455",
         "byBrand": {
@@ -7081,7 +7457,7 @@
           },
           "independent": {
             "min": 1.699,
-            "median": 1.79
+            "median": 1.7945
           },
           "neste": {
             "min": 1.699,
@@ -7094,6 +7470,10 @@
           "stateta": {
             "min": 1.727,
             "median": 1.727
+          },
+          "orlen": {
+            "min": 1.729,
+            "median": 1.779
           },
           "alausa": {
             "min": 1.729,
@@ -7115,7 +7495,7 @@
       },
       "LPG": {
         "min": 0.7,
-        "median": 0.819,
+        "median": 0.809,
         "max": 0.969,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -7140,8 +7520,8 @@
             "median": 0.789
           },
           "orlen": {
-            "min": 0.77,
-            "median": 0.77
+            "min": 0.749,
+            "median": 0.7745
           },
           "stateta": {
             "min": 0.777,
@@ -7172,7 +7552,7 @@
     "byFuel": {
       "95": {
         "min": 1.629,
-        "median": 1.844,
+        "median": 1.839,
         "max": 1.94,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -7182,7 +7562,7 @@
           },
           "baltic-petroleum": {
             "min": 1.639,
-            "median": 1.819
+            "median": 1.8239999999999998
           },
           "emsi": {
             "min": 1.639,
@@ -7195,6 +7575,10 @@
           "stateta": {
             "min": 1.657,
             "median": 1.657
+          },
+          "orlen": {
+            "min": 1.739,
+            "median": 1.799
           },
           "alausa": {
             "min": 1.739,
@@ -7216,7 +7600,7 @@
       },
       "D": {
         "min": 1.699,
-        "median": 1.919,
+        "median": 1.899,
         "max": 1.999,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -7240,6 +7624,10 @@
             "min": 1.749,
             "median": 1.789
           },
+          "orlen": {
+            "min": 1.799,
+            "median": 1.859
+          },
           "alausa": {
             "min": 1.799,
             "median": 1.864
@@ -7260,7 +7648,7 @@
       },
       "LPG": {
         "min": 0.7,
-        "median": 0.819,
+        "median": 0.81,
         "max": 0.969,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -7279,6 +7667,10 @@
           "baltic-petroleum": {
             "min": 0.739,
             "median": 0.79
+          },
+          "orlen": {
+            "min": 0.749,
+            "median": 0.779
           },
           "neste": {
             "min": 0.77,
@@ -7299,10 +7691,6 @@
           "viada": {
             "min": 0.789,
             "median": 0.899
-          },
-          "orlen": {
-            "min": 0.79,
-            "median": 0.79
           }
         }
       }
@@ -7313,7 +7701,7 @@
     "byFuel": {
       "D": {
         "min": 1.689,
-        "median": 1.85,
+        "median": 1.849,
         "max": 1.999,
         "minStationId": "lea:40134-5-g-kupiškio-kupiškis-panevėžio-r-sav-uab-velseka",
         "byBrand": {
@@ -7324,6 +7712,10 @@
           "stateta": {
             "min": 1.697,
             "median": 1.697
+          },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.749
           },
           "alausa": {
             "min": 1.699,
@@ -7343,7 +7735,7 @@
           },
           "baltic-petroleum": {
             "min": 1.729,
-            "median": 1.849
+            "median": 1.8439999999999999
           },
           "neste": {
             "min": 1.794,
@@ -7390,6 +7782,10 @@
             "min": 1.627,
             "median": 1.627
           },
+          "orlen": {
+            "min": 1.649,
+            "median": 1.699
+          },
           "kvistija": {
             "min": 1.649,
             "median": 1.729
@@ -7420,7 +7816,7 @@
         "byBrand": {
           "independent": {
             "min": 1.689,
-            "median": 1.81
+            "median": 1.809
           },
           "emsi": {
             "min": 1.699,
@@ -7442,6 +7838,10 @@
             "min": 1.727,
             "median": 1.727
           },
+          "orlen": {
+            "min": 1.729,
+            "median": 1.799
+          },
           "alausa": {
             "min": 1.749,
             "median": 1.779
@@ -7462,7 +7862,7 @@
       },
       "LPG": {
         "min": 0.69,
-        "median": 0.799,
+        "median": 0.79,
         "max": 0.959,
         "minStationId": "lea:68110-6b-emsi-g-marijampolė-marijampolės-sav-stoties-uab",
         "byBrand": {
@@ -7477,6 +7877,10 @@
           "jozita": {
             "min": 0.71,
             "median": 0.71
+          },
+          "orlen": {
+            "min": 0.729,
+            "median": 0.759
           },
           "baltic-petroleum": {
             "min": 0.729,
@@ -7493,10 +7897,6 @@
           "circle-k": {
             "min": 0.75,
             "median": 0.8445
-          },
-          "orlen": {
-            "min": 0.77,
-            "median": 0.77
           },
           "stateta": {
             "min": 0.777,
@@ -7529,7 +7929,7 @@
           },
           "independent": {
             "min": 1.569,
-            "median": 1.7
+            "median": 1.6995
           },
           "alausa": {
             "min": 1.579,
@@ -7551,6 +7951,10 @@
             "min": 1.61,
             "median": 1.629
           },
+          "orlen": {
+            "min": 1.619,
+            "median": 1.674
+          },
           "circle-k": {
             "min": 1.629,
             "median": 1.704
@@ -7567,7 +7971,7 @@
       },
       "D": {
         "min": 1.67,
-        "median": 1.77,
+        "median": 1.769,
         "max": 1.959,
         "minStationId": "lea:105-72175-g-jozita-k-papušynės-r-sav-tauragės-uab-šilalės",
         "byBrand": {
@@ -7593,7 +7997,11 @@
           },
           "baltic-petroleum": {
             "min": 1.694,
-            "median": 1.779
+            "median": 1.774
+          },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.769
           },
           "emsi": {
             "min": 1.71,
@@ -7615,7 +8023,7 @@
       },
       "LPG": {
         "min": 0.68,
-        "median": 0.799,
+        "median": 0.7895000000000001,
         "max": 0.959,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -7637,7 +8045,7 @@
           },
           "orlen": {
             "min": 0.71,
-            "median": 0.71
+            "median": 0.759
           },
           "emsi": {
             "min": 0.72,
@@ -7704,6 +8112,10 @@
             "min": 1.599,
             "median": 1.619
           },
+          "orlen": {
+            "min": 1.619,
+            "median": 1.669
+          },
           "viada": {
             "min": 1.619,
             "median": 1.699
@@ -7720,7 +8132,7 @@
       },
       "D": {
         "min": 1.659,
-        "median": 1.735,
+        "median": 1.739,
         "max": 1.94,
         "minStationId": "osm:way:1328678479",
         "byBrand": {
@@ -7748,6 +8160,10 @@
             "min": 1.679,
             "median": 1.749
           },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.769
+          },
           "emsi": {
             "min": 1.699,
             "median": 1.719
@@ -7768,13 +8184,13 @@
       },
       "LPG": {
         "min": 0.68,
-        "median": 0.799,
+        "median": 0.79,
         "max": 0.959,
         "minStationId": "osm:way:225173105",
         "byBrand": {
           "independent": {
             "min": 0.68,
-            "median": 0.78
+            "median": 0.7795000000000001
           },
           "jozita": {
             "min": 0.68,
@@ -7794,7 +8210,7 @@
           },
           "orlen": {
             "min": 0.71,
-            "median": 0.71
+            "median": 0.759
           },
           "circle-k": {
             "min": 0.75,
@@ -7825,7 +8241,7 @@
     "byFuel": {
       "95": {
         "min": 1.569,
-        "median": 1.725,
+        "median": 1.719,
         "max": 1.829,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -7848,6 +8264,10 @@
           "stateta": {
             "min": 1.599,
             "median": 1.599
+          },
+          "orlen": {
+            "min": 1.629,
+            "median": 1.699
           },
           "alausa": {
             "min": 1.649,
@@ -7873,7 +8293,7 @@
       },
       "D": {
         "min": 1.679,
-        "median": 1.819,
+        "median": 1.799,
         "max": 1.94,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -7901,6 +8321,10 @@
             "min": 1.719,
             "median": 1.749
           },
+          "orlen": {
+            "min": 1.729,
+            "median": 1.799
+          },
           "alausa": {
             "min": 1.729,
             "median": 1.799
@@ -7921,7 +8345,7 @@
       },
       "LPG": {
         "min": 0.68,
-        "median": 0.789,
+        "median": 0.779,
         "max": 0.959,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -7943,7 +8367,7 @@
           },
           "orlen": {
             "min": 0.71,
-            "median": 0.71
+            "median": 0.749
           },
           "alausa": {
             "min": 0.719,
@@ -7978,17 +8402,21 @@
     "byFuel": {
       "95": {
         "min": 1.559,
-        "median": 1.69,
+        "median": 1.689,
         "max": 1.819,
         "minStationId": "lea:40134-5-g-kupiškio-kupiškis-panevėžio-r-sav-uab-velseka",
         "byBrand": {
           "independent": {
             "min": 1.559,
-            "median": 1.693
+            "median": 1.69
           },
           "jozita": {
             "min": 1.58,
             "median": 1.65
+          },
+          "orlen": {
+            "min": 1.599,
+            "median": 1.6440000000000001
           },
           "baltic-petroleum": {
             "min": 1.599,
@@ -8026,7 +8454,7 @@
       },
       "D": {
         "min": 1.65,
-        "median": 1.77,
+        "median": 1.769,
         "max": 1.899,
         "minStationId": "osm:way:238166779",
         "byBrand": {
@@ -8041,6 +8469,10 @@
           "jozita": {
             "min": 1.68,
             "median": 1.7
+          },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.734
           },
           "emsi": {
             "min": 1.7,
@@ -8074,13 +8506,13 @@
       },
       "LPG": {
         "min": 0.669,
-        "median": 0.789,
+        "median": 0.779,
         "max": 0.959,
         "minStationId": "lea:40134-5-g-kupiškio-kupiškis-panevėžio-r-sav-uab-velseka",
         "byBrand": {
           "independent": {
             "min": 0.669,
-            "median": 0.78
+            "median": 0.7795000000000001
           },
           "jozita": {
             "min": 0.68,
@@ -8096,7 +8528,7 @@
           },
           "orlen": {
             "min": 0.71,
-            "median": 0.71
+            "median": 0.719
           },
           "alausa": {
             "min": 0.719,
@@ -8159,6 +8591,10 @@
             "min": 1.589,
             "median": 1.629
           },
+          "orlen": {
+            "min": 1.599,
+            "median": 1.624
+          },
           "circle-k": {
             "min": 1.599,
             "median": 1.679
@@ -8179,7 +8615,7 @@
       },
       "D": {
         "min": 1.64,
-        "median": 1.732,
+        "median": 1.729,
         "max": 1.899,
         "minStationId": "osm:way:177140270",
         "byBrand": {
@@ -8197,7 +8633,7 @@
           },
           "independent": {
             "min": 1.649,
-            "median": 1.722
+            "median": 1.72
           },
           "stateta": {
             "min": 1.649,
@@ -8210,6 +8646,10 @@
           "neste": {
             "min": 1.674,
             "median": 1.709
+          },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.719
           },
           "emsi": {
             "min": 1.699,
@@ -8227,8 +8667,8 @@
       },
       "LPG": {
         "min": 0.64,
-        "median": 0.779,
-        "max": 0.959,
+        "median": 0.777,
+        "max": 0.951,
         "minStationId": "osm:way:138517469",
         "byBrand": {
           "independent": {
@@ -8245,7 +8685,7 @@
           },
           "orlen": {
             "min": 0.67,
-            "median": 0.67
+            "median": 0.719
           },
           "baltic-petroleum": {
             "min": 0.679,
@@ -8316,6 +8756,10 @@
             "min": 1.589,
             "median": 1.599
           },
+          "orlen": {
+            "min": 1.599,
+            "median": 1.624
+          },
           "viada": {
             "min": 1.619,
             "median": 1.699
@@ -8330,7 +8774,7 @@
         "byBrand": {
           "independent": {
             "min": 1.62,
-            "median": 1.719
+            "median": 1.71
           },
           "circle-k": {
             "min": 1.639,
@@ -8346,7 +8790,7 @@
           },
           "neste": {
             "min": 1.659,
-            "median": 1.684
+            "median": 1.6815
           },
           "stateta": {
             "min": 1.677,
@@ -8356,6 +8800,10 @@
             "min": 1.689,
             "median": 1.699
           },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.719
+          },
           "viada": {
             "min": 1.699,
             "median": 1.779
@@ -8364,7 +8812,7 @@
       },
       "LPG": {
         "min": 0.639,
-        "median": 0.777,
+        "median": 0.769,
         "max": 0.959,
         "minStationId": "osm:way:138517469",
         "byBrand": {
@@ -8374,7 +8822,7 @@
           },
           "orlen": {
             "min": 0.67,
-            "median": 0.67
+            "median": 0.719
           },
           "baltic-petroleum": {
             "min": 0.679,
@@ -8413,7 +8861,7 @@
     "byFuel": {
       "95": {
         "min": 1.54,
-        "median": 1.719,
+        "median": 1.709,
         "max": 1.849,
         "minStationId": "osm:way:201924864",
         "byBrand": {
@@ -8423,7 +8871,7 @@
           },
           "independent": {
             "min": 1.549,
-            "median": 1.669
+            "median": 1.66
           },
           "stateta": {
             "min": 1.577,
@@ -8432,6 +8880,10 @@
           "emsi": {
             "min": 1.59,
             "median": 1.659
+          },
+          "orlen": {
+            "min": 1.599,
+            "median": 1.624
           },
           "baltic-petroleum": {
             "min": 1.599,
@@ -8485,6 +8937,10 @@
             "min": 1.679,
             "median": 1.729
           },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.719
+          },
           "alausa": {
             "min": 1.699,
             "median": 1.779
@@ -8509,7 +8965,7 @@
       },
       "LPG": {
         "min": 0.639,
-        "median": 0.777,
+        "median": 0.769,
         "max": 0.959,
         "minStationId": "osm:way:138517469",
         "byBrand": {
@@ -8525,13 +8981,13 @@
             "min": 0.679,
             "median": 0.75
           },
-          "emsi": {
+          "orlen": {
             "min": 0.69,
             "median": 0.719
           },
-          "orlen": {
+          "emsi": {
             "min": 0.69,
-            "median": 0.69
+            "median": 0.719
           },
           "alausa": {
             "min": 0.699,
@@ -8566,13 +9022,13 @@
     "byFuel": {
       "95": {
         "min": 1.549,
-        "median": 1.689,
+        "median": 1.684,
         "max": 1.899,
         "minStationId": "lea:40134-5-g-kupiškio-kupiškis-panevėžio-r-sav-uab-velseka",
         "byBrand": {
           "independent": {
             "min": 1.549,
-            "median": 1.6595
+            "median": 1.659
           },
           "alausa": {
             "min": 1.554,
@@ -8585,6 +9041,10 @@
           "stateta": {
             "min": 1.559,
             "median": 1.559
+          },
+          "orlen": {
+            "min": 1.569,
+            "median": 1.5939999999999999
           },
           "emsi": {
             "min": 1.57,
@@ -8614,7 +9074,7 @@
       },
       "D": {
         "min": 1.649,
-        "median": 1.769,
+        "median": 1.765,
         "max": 1.899,
         "minStationId": "lea:40134-5-g-kupiškio-kupiškis-panevėžio-r-sav-uab-velseka",
         "byBrand": {
@@ -8634,6 +9094,10 @@
             "min": 1.659,
             "median": 1.659
           },
+          "orlen": {
+            "min": 1.669,
+            "median": 1.694
+          },
           "emsi": {
             "min": 1.68,
             "median": 1.699
@@ -8648,7 +9112,7 @@
           },
           "neste": {
             "min": 1.729,
-            "median": 1.769
+            "median": 1.767
           },
           "circle-k": {
             "min": 1.744,
@@ -8674,21 +9138,21 @@
             "min": 0.659,
             "median": 0.659
           },
+          "orlen": {
+            "min": 0.669,
+            "median": 0.709
+          },
           "jozita": {
             "min": 0.67,
             "median": 0.67
           },
           "baltic-petroleum": {
             "min": 0.679,
-            "median": 0.75
+            "median": 0.7495
           },
           "emsi": {
             "min": 0.69,
             "median": 0.7
-          },
-          "orlen": {
-            "min": 0.69,
-            "median": 0.69
           },
           "circle-k": {
             "min": 0.719,
@@ -8734,6 +9198,10 @@
           "kvistija": {
             "min": 1.579,
             "median": 1.689
+          },
+          "orlen": {
+            "min": 1.589,
+            "median": 1.619
           },
           "baltic-petroleum": {
             "min": 1.589,
@@ -8791,6 +9259,10 @@
             "min": 1.68,
             "median": 1.68
           },
+          "orlen": {
+            "min": 1.689,
+            "median": 1.719
+          },
           "alausa": {
             "min": 1.689,
             "median": 1.739
@@ -8815,13 +9287,13 @@
       },
       "LPG": {
         "min": 0.629,
-        "median": 0.759,
+        "median": 0.75,
         "max": 0.9,
         "minStationId": "osm:way:138517469",
         "byBrand": {
           "independent": {
             "min": 0.629,
-            "median": 0.74
+            "median": 0.749
           },
           "baltic-petroleum": {
             "min": 0.669,
@@ -8841,7 +9313,7 @@
           },
           "orlen": {
             "min": 0.69,
-            "median": 0.69
+            "median": 0.719
           },
           "circle-k": {
             "min": 0.72,
@@ -8872,13 +9344,13 @@
     "byFuel": {
       "95": {
         "min": 1.539,
-        "median": 1.66,
+        "median": 1.659,
         "max": 1.819,
         "minStationId": "lea:127-90107-eu-g-jovaišiškės-k-plungės-r-sav-telšių-uab-verslas",
         "byBrand": {
           "independent": {
             "min": 1.539,
-            "median": 1.669
+            "median": 1.6644999999999999
           },
           "jozita": {
             "min": 1.55,
@@ -8899,6 +9371,10 @@
           "emsi": {
             "min": 1.58,
             "median": 1.609
+          },
+          "orlen": {
+            "min": 1.599,
+            "median": 1.619
           },
           "neste": {
             "min": 1.599,
@@ -8952,6 +9428,10 @@
             "min": 1.68,
             "median": 1.699
           },
+          "orlen": {
+            "min": 1.689,
+            "median": 1.719
+          },
           "neste": {
             "min": 1.689,
             "median": 1.719
@@ -8968,7 +9448,7 @@
       },
       "LPG": {
         "min": 0.629,
-        "median": 0.759,
+        "median": 0.75,
         "max": 0.951,
         "minStationId": "osm:way:138517469",
         "byBrand": {
@@ -8986,11 +9466,11 @@
           },
           "baltic-petroleum": {
             "min": 0.669,
-            "median": 0.73
+            "median": 0.7295
           },
           "orlen": {
             "min": 0.67,
-            "median": 0.67
+            "median": 0.719
           },
           "emsi": {
             "min": 0.679,
@@ -9025,7 +9505,7 @@
     "byFuel": {
       "95": {
         "min": 1.529,
-        "median": 1.649,
+        "median": 1.644,
         "max": 1.839,
         "minStationId": "osm:way:208064914",
         "byBrand": {
@@ -9056,6 +9536,10 @@
           "viada": {
             "min": 1.599,
             "median": 1.699
+          },
+          "orlen": {
+            "min": 1.619,
+            "median": 1.639
           },
           "circle-k": {
             "min": 1.619,
@@ -9105,6 +9589,10 @@
             "min": 1.679,
             "median": 1.6995
           },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.719
+          },
           "circle-k": {
             "min": 1.699,
             "median": 1.759
@@ -9121,13 +9609,13 @@
       },
       "LPG": {
         "min": 0.629,
-        "median": 0.749,
+        "median": 0.74,
         "max": 0.951,
         "minStationId": "osm:way:138517469",
         "byBrand": {
           "independent": {
             "min": 0.629,
-            "median": 0.739
+            "median": 0.737
           },
           "jozita": {
             "min": 0.65,
@@ -9143,7 +9631,7 @@
           },
           "orlen": {
             "min": 0.67,
-            "median": 0.67
+            "median": 0.719
           },
           "baltic-petroleum": {
             "min": 0.679,
@@ -9178,7 +9666,7 @@
     "byFuel": {
       "95": {
         "min": 1.559,
-        "median": 1.759,
+        "median": 1.749,
         "max": 1.859,
         "minStationId": "lea:40134-5-g-kupiškio-kupiškis-panevėžio-r-sav-uab-velseka",
         "byBrand": {
@@ -9190,9 +9678,13 @@
             "min": 1.564,
             "median": 1.569
           },
+          "orlen": {
+            "min": 1.569,
+            "median": 1.609
+          },
           "baltic-petroleum": {
             "min": 1.569,
-            "median": 1.759
+            "median": 1.7389999999999999
           },
           "emsi": {
             "min": 1.569,
@@ -9226,7 +9718,7 @@
       },
       "D": {
         "min": 1.649,
-        "median": 1.819,
+        "median": 1.799,
         "max": 1.899,
         "minStationId": "lea:40134-5-g-kupiškio-kupiškis-panevėžio-r-sav-uab-velseka",
         "byBrand": {
@@ -9238,9 +9730,13 @@
             "min": 1.664,
             "median": 1.669
           },
+          "orlen": {
+            "min": 1.669,
+            "median": 1.699
+          },
           "baltic-petroleum": {
             "min": 1.669,
-            "median": 1.809
+            "median": 1.8039999999999998
           },
           "emsi": {
             "min": 1.669,
@@ -9274,7 +9770,7 @@
       },
       "LPG": {
         "min": 0.629,
-        "median": 0.759,
+        "median": 0.749,
         "max": 0.951,
         "minStationId": "osm:way:138517469",
         "byBrand": {
@@ -9290,6 +9786,10 @@
             "min": 0.654,
             "median": 0.659
           },
+          "orlen": {
+            "min": 0.659,
+            "median": 0.699
+          },
           "baltic-petroleum": {
             "min": 0.659,
             "median": 0.729
@@ -9297,10 +9797,6 @@
           "emsi": {
             "min": 0.66,
             "median": 0.68
-          },
-          "orlen": {
-            "min": 0.67,
-            "median": 0.67
           },
           "neste": {
             "min": 0.7,
@@ -9331,7 +9827,7 @@
     "byFuel": {
       "95": {
         "min": 1.579,
-        "median": 1.7115,
+        "median": 1.709,
         "max": 1.854,
         "minStationId": "lea:40134-5-g-kupiškio-kupiškis-panevėžio-r-sav-uab-velseka",
         "byBrand": {
@@ -9354,6 +9850,10 @@
           "jozita": {
             "min": 1.61,
             "median": 1.67
+          },
+          "orlen": {
+            "min": 1.619,
+            "median": 1.659
           },
           "circle-k": {
             "min": 1.629,
@@ -9407,13 +9907,17 @@
             "min": 1.7,
             "median": 1.709
           },
+          "orlen": {
+            "min": 1.719,
+            "median": 1.759
+          },
           "circle-k": {
             "min": 1.729,
             "median": 1.819
           },
           "neste": {
             "min": 1.759,
-            "median": 1.7965
+            "median": 1.7915
           },
           "stateta": {
             "min": 1.759,
@@ -9427,7 +9931,7 @@
       },
       "LPG": {
         "min": 0.629,
-        "median": 0.75,
+        "median": 0.74,
         "max": 0.951,
         "minStationId": "osm:way:138517469",
         "byBrand": {
@@ -9435,11 +9939,11 @@
             "min": 0.629,
             "median": 0.729
           },
-          "jozita": {
-            "min": 0.67,
-            "median": 0.67
-          },
           "orlen": {
+            "min": 0.67,
+            "median": 0.699
+          },
+          "jozita": {
             "min": 0.67,
             "median": 0.67
           },
@@ -9484,7 +9988,7 @@
     "byFuel": {
       "95": {
         "min": 1.579,
-        "median": 1.689,
+        "median": 1.682,
         "max": 1.849,
         "minStationId": "lea:40134-5-g-kupiškio-kupiškis-panevėžio-r-sav-uab-velseka",
         "byBrand": {
@@ -9516,6 +10020,10 @@
             "min": 1.619,
             "median": 1.679
           },
+          "orlen": {
+            "min": 1.629,
+            "median": 1.674
+          },
           "neste": {
             "min": 1.629,
             "median": 1.669
@@ -9538,7 +10046,7 @@
         "byBrand": {
           "baltic-petroleum": {
             "min": 1.669,
-            "median": 1.769
+            "median": 1.7639999999999998
           },
           "kvistija": {
             "min": 1.679,
@@ -9564,6 +10072,10 @@
             "min": 1.72,
             "median": 1.729
           },
+          "orlen": {
+            "min": 1.749,
+            "median": 1.7839999999999998
+          },
           "neste": {
             "min": 1.749,
             "median": 1.789
@@ -9580,7 +10092,7 @@
       },
       "LPG": {
         "min": 0.64,
-        "median": 0.74,
+        "median": 0.739,
         "max": 0.951,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -9602,7 +10114,7 @@
           },
           "orlen": {
             "min": 0.67,
-            "median": 0.67
+            "median": 0.719
           },
           "emsi": {
             "min": 0.69,
@@ -9677,6 +10189,10 @@
             "min": 1.629,
             "median": 1.639
           },
+          "orlen": {
+            "min": 1.639,
+            "median": 1.674
+          },
           "viada": {
             "min": 1.649,
             "median": 1.699
@@ -9685,7 +10201,7 @@
       },
       "D": {
         "min": 1.669,
-        "median": 1.789,
+        "median": 1.788,
         "max": 1.929,
         "minStationId": "osm:way:460179697",
         "byBrand": {
@@ -9721,6 +10237,10 @@
             "min": 1.729,
             "median": 1.807
           },
+          "orlen": {
+            "min": 1.739,
+            "median": 1.7839999999999998
+          },
           "stateta": {
             "min": 1.739,
             "median": 1.769
@@ -9733,7 +10253,7 @@
       },
       "LPG": {
         "min": 0.64,
-        "median": 0.75,
+        "median": 0.749,
         "max": 0.95,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -9747,7 +10267,7 @@
           },
           "orlen": {
             "min": 0.67,
-            "median": 0.67
+            "median": 0.719
           },
           "baltic-petroleum": {
             "min": 0.679,
@@ -9800,7 +10320,7 @@
           },
           "baltic-petroleum": {
             "min": 1.619,
-            "median": 1.739
+            "median": 1.734
           },
           "independent": {
             "min": 1.62,
@@ -9809,6 +10329,10 @@
           "alausa": {
             "min": 1.629,
             "median": 1.759
+          },
+          "orlen": {
+            "min": 1.639,
+            "median": 1.749
           },
           "stateta": {
             "min": 1.639,
@@ -9834,7 +10358,7 @@
       },
       "D": {
         "min": 1.699,
-        "median": 1.89,
+        "median": 1.884,
         "max": 1.979,
         "minStationId": "osm:way:244466141",
         "byBrand": {
@@ -9844,7 +10368,7 @@
           },
           "baltic-petroleum": {
             "min": 1.719,
-            "median": 1.859
+            "median": 1.854
           },
           "independent": {
             "min": 1.73,
@@ -9853,6 +10377,10 @@
           "alausa": {
             "min": 1.739,
             "median": 1.869
+          },
+          "orlen": {
+            "min": 1.769,
+            "median": 1.859
           },
           "stateta": {
             "min": 1.769,
@@ -9878,13 +10406,13 @@
       },
       "LPG": {
         "min": 0.62,
-        "median": 0.749,
+        "median": 0.74,
         "max": 0.95,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
           "independent": {
             "min": 0.62,
-            "median": 0.7
+            "median": 0.7044999999999999
           },
           "jozita": {
             "min": 0.64,
@@ -9896,7 +10424,7 @@
           },
           "orlen": {
             "min": 0.67,
-            "median": 0.67
+            "median": 0.719
           },
           "baltic-petroleum": {
             "min": 0.679,
@@ -9955,6 +10483,10 @@
             "min": 1.609,
             "median": 1.674
           },
+          "orlen": {
+            "min": 1.619,
+            "median": 1.6840000000000002
+          },
           "stateta": {
             "min": 1.639,
             "median": 1.669
@@ -9979,7 +10511,7 @@
       },
       "D": {
         "min": 1.699,
-        "median": 1.869,
+        "median": 1.859,
         "max": 1.979,
         "minStationId": "osm:node:3713534147",
         "byBrand": {
@@ -10003,6 +10535,10 @@
             "min": 1.729,
             "median": 1.839
           },
+          "orlen": {
+            "min": 1.759,
+            "median": 1.799
+          },
           "stateta": {
             "min": 1.769,
             "median": 1.799
@@ -10013,7 +10549,7 @@
           },
           "neste": {
             "min": 1.799,
-            "median": 1.8515000000000001
+            "median": 1.849
           },
           "viada": {
             "min": 1.829,
@@ -10027,7 +10563,7 @@
       },
       "LPG": {
         "min": 0.62,
-        "median": 0.759,
+        "median": 0.749,
         "max": 0.95,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -10049,7 +10585,7 @@
           },
           "orlen": {
             "min": 0.67,
-            "median": 0.67
+            "median": 0.704
           },
           "jozita": {
             "min": 0.69,
@@ -10084,8 +10620,8 @@
     "byFuel": {
       "95": {
         "min": 1.599,
-        "median": 1.729,
-        "max": 1.879,
+        "median": 1.72,
+        "max": 1.89,
         "minStationId": "lea:31-46401-armoniškių-emsi-g-kaunas-kauno-m-sav-uab",
         "byBrand": {
           "emsi": {
@@ -10102,7 +10638,11 @@
           },
           "independent": {
             "min": 1.64,
-            "median": 1.7245
+            "median": 1.72
+          },
+          "orlen": {
+            "min": 1.659,
+            "median": 1.694
           },
           "circle-k": {
             "min": 1.679,
@@ -10124,7 +10664,7 @@
       },
       "D": {
         "min": 1.729,
-        "median": 1.87,
+        "median": 1.869,
         "max": 1.999,
         "minStationId": "lea:31-46401-armoniškių-emsi-g-kaunas-kauno-m-sav-uab",
         "byBrand": {
@@ -10136,13 +10676,17 @@
             "min": 1.749,
             "median": 1.819
           },
+          "independent": {
+            "min": 1.759,
+            "median": 1.87
+          },
           "stateta": {
             "min": 1.769,
             "median": 1.799
           },
-          "independent": {
-            "min": 1.779,
-            "median": 1.87
+          "orlen": {
+            "min": 1.789,
+            "median": 1.8239999999999998
           },
           "jozita": {
             "min": 1.799,
@@ -10164,7 +10708,7 @@
       },
       "LPG": {
         "min": 0.62,
-        "median": 0.749,
+        "median": 0.74,
         "max": 0.95,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -10178,7 +10722,7 @@
           },
           "orlen": {
             "min": 0.67,
-            "median": 0.67
+            "median": 0.729
           },
           "baltic-petroleum": {
             "min": 0.679,
@@ -10213,13 +10757,13 @@
     "byFuel": {
       "95": {
         "min": 1.589,
-        "median": 1.729,
+        "median": 1.72,
         "max": 1.999,
         "minStationId": "osm:way:225173105",
         "byBrand": {
           "independent": {
             "min": 1.589,
-            "median": 1.739
+            "median": 1.73
           },
           "alausa": {
             "min": 1.599,
@@ -10249,6 +10793,10 @@
             "min": 1.644,
             "median": 1.699
           },
+          "orlen": {
+            "min": 1.669,
+            "median": 1.719
+          },
           "circle-k": {
             "min": 1.674,
             "median": 1.739
@@ -10261,13 +10809,13 @@
       },
       "D": {
         "min": 1.68,
-        "median": 1.88,
+        "median": 1.879,
         "max": 2.039,
         "minStationId": "osm:way:217418223",
         "byBrand": {
           "independent": {
             "min": 1.68,
-            "median": 1.889
+            "median": 1.88
           },
           "jozita": {
             "min": 1.73,
@@ -10293,6 +10841,10 @@
             "min": 1.767,
             "median": 1.799
           },
+          "orlen": {
+            "min": 1.819,
+            "median": 1.849
+          },
           "circle-k": {
             "min": 1.824,
             "median": 1.899
@@ -10309,13 +10861,13 @@
       },
       "LPG": {
         "min": 0.62,
-        "median": 0.7495,
+        "median": 0.739,
         "max": 0.899,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
           "independent": {
             "min": 0.62,
-            "median": 0.721
+            "median": 0.7204999999999999
           },
           "jozita": {
             "min": 0.65,
@@ -10327,7 +10879,7 @@
           },
           "baltic-petroleum": {
             "min": 0.659,
-            "median": 0.69
+            "median": 0.6944999999999999
           },
           "emsi": {
             "min": 0.659,
@@ -10340,6 +10892,10 @@
           "kvistija": {
             "min": 0.71,
             "median": 0.759
+          },
+          "orlen": {
+            "min": 0.719,
+            "median": 0.729
           },
           "neste": {
             "min": 0.72,
@@ -10390,6 +10946,10 @@
             "min": 1.659,
             "median": 1.719
           },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.719
+          },
           "kvistija": {
             "min": 1.699,
             "median": 1.739
@@ -10410,13 +10970,13 @@
       },
       "D": {
         "min": 1.739,
-        "median": 1.889,
+        "median": 1.8895,
         "max": 2.09,
         "minStationId": "lea:3-59370-borusta-g-piliakalnio-prienų-r-sav-stakliškės-uab",
         "byBrand": {
           "independent": {
             "min": 1.739,
-            "median": 1.9
+            "median": 1.8995
           },
           "emsi": {
             "min": 1.75,
@@ -10450,6 +11010,10 @@
             "min": 1.869,
             "median": 1.869
           },
+          "orlen": {
+            "min": 1.879,
+            "median": 1.919
+          },
           "jozita": {
             "min": 1.97,
             "median": 1.97
@@ -10458,13 +11022,13 @@
       },
       "LPG": {
         "min": 0.62,
-        "median": 0.749,
+        "median": 0.739,
         "max": 0.899,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
           "independent": {
             "min": 0.62,
-            "median": 0.721
+            "median": 0.72
           },
           "emsi": {
             "min": 0.65,
@@ -10484,7 +11048,7 @@
           },
           "orlen": {
             "min": 0.7,
-            "median": 0.7
+            "median": 0.729
           },
           "circle-k": {
             "min": 0.71,
@@ -10563,7 +11127,7 @@
       },
       "D": {
         "min": 1.739,
-        "median": 1.999,
+        "median": 1.99,
         "max": 2.099,
         "minStationId": "lea:3-59370-borusta-g-piliakalnio-prienų-r-sav-stakliškės-uab",
         "byBrand": {
@@ -10680,9 +11244,13 @@
             "min": 1.654,
             "median": 1.659
           },
+          "orlen": {
+            "min": 1.659,
+            "median": 1.714
+          },
           "independent": {
             "min": 1.66,
-            "median": 1.799
+            "median": 1.7945
           },
           "kvistija": {
             "min": 1.669,
@@ -10716,13 +11284,13 @@
       },
       "D": {
         "min": 1.739,
-        "median": 1.9795,
+        "median": 1.979,
         "max": 2.069,
         "minStationId": "lea:3-59370-borusta-g-piliakalnio-prienų-r-sav-stakliškės-uab",
         "byBrand": {
           "independent": {
             "min": 1.739,
-            "median": 1.97
+            "median": 1.9695
           },
           "baltic-petroleum": {
             "min": 1.79,
@@ -10735,6 +11303,10 @@
           "kvistija": {
             "min": 1.849,
             "median": 1.949
+          },
+          "orlen": {
+            "min": 1.859,
+            "median": 1.909
           },
           "stateta": {
             "min": 1.869,
@@ -10764,7 +11336,7 @@
       },
       "LPG": {
         "min": 0.62,
-        "median": 0.749,
+        "median": 0.74,
         "max": 0.899,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -10784,13 +11356,13 @@
             "min": 0.68,
             "median": 0.68
           },
+          "orlen": {
+            "min": 0.689,
+            "median": 0.7095
+          },
           "circle-k": {
             "min": 0.699,
             "median": 0.779
-          },
-          "orlen": {
-            "min": 0.7,
-            "median": 0.7
           },
           "kvistija": {
             "min": 0.71,
@@ -10821,7 +11393,7 @@
     "byFuel": {
       "95": {
         "min": 1.659,
-        "median": 1.789,
+        "median": 1.78,
         "max": 1.92,
         "minStationId": "osm:way:225910582",
         "byBrand": {
@@ -10831,11 +11403,15 @@
           },
           "independent": {
             "min": 1.66,
-            "median": 1.7845
+            "median": 1.78
           },
           "emsi": {
             "min": 1.67,
             "median": 1.689
+          },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.734
           },
           "kvistija": {
             "min": 1.699,
@@ -10869,7 +11445,7 @@
       },
       "D": {
         "min": 1.82,
-        "median": 1.97,
+        "median": 1.969,
         "max": 2.072,
         "minStationId": "lea:2-86377-balsio-g-iį-k-kelmės-luokės-r-raimondo-ramučių-sav",
         "byBrand": {
@@ -10901,8 +11477,12 @@
             "min": 1.899,
             "median": 1.959
           },
+          "orlen": {
+            "min": 1.919,
+            "median": 1.939
+          },
           "neste": {
-            "min": 1.924,
+            "min": 1.929,
             "median": 1.959
           },
           "viada": {
@@ -10917,7 +11497,7 @@
       },
       "LPG": {
         "min": 0.62,
-        "median": 0.749,
+        "median": 0.739,
         "max": 0.899,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -10939,7 +11519,7 @@
           },
           "orlen": {
             "min": 0.7,
-            "median": 0.7
+            "median": 0.719
           },
           "kvistija": {
             "min": 0.71,
@@ -10988,7 +11568,7 @@
           },
           "independent": {
             "min": 1.66,
-            "median": 1.78
+            "median": 1.779
           },
           "alausa": {
             "min": 1.669,
@@ -11014,6 +11594,10 @@
             "min": 1.699,
             "median": 1.699
           },
+          "orlen": {
+            "min": 1.719,
+            "median": 1.759
+          },
           "viada": {
             "min": 1.749,
             "median": 1.819
@@ -11022,7 +11606,7 @@
       },
       "D": {
         "min": 1.809,
-        "median": 1.984,
+        "median": 1.98,
         "max": 2.099,
         "minStationId": "lea:11-67170-emsi-janaslavo-k-lazdijų-lazdijų-r-sav-sen-uab",
         "byBrand": {
@@ -11032,7 +11616,7 @@
           },
           "independent": {
             "min": 1.82,
-            "median": 1.97
+            "median": 1.969
           },
           "alausa": {
             "min": 1.869,
@@ -11062,6 +11646,10 @@
             "min": 1.949,
             "median": 2.009
           },
+          "orlen": {
+            "min": 1.959,
+            "median": 1.989
+          },
           "viada": {
             "min": 1.979,
             "median": 2.039
@@ -11070,13 +11658,13 @@
       },
       "LPG": {
         "min": 0.66,
-        "median": 0.749,
+        "median": 0.739,
         "max": 0.899,
         "minStationId": "osm:way:225173105",
         "byBrand": {
           "independent": {
             "min": 0.66,
-            "median": 0.73
+            "median": 0.721
           },
           "jozita": {
             "min": 0.66,
@@ -11096,7 +11684,7 @@
           },
           "orlen": {
             "min": 0.7,
-            "median": 0.7
+            "median": 0.729
           },
           "kvistija": {
             "min": 0.71,
@@ -11167,6 +11755,10 @@
             "min": 1.704,
             "median": 1.749
           },
+          "orlen": {
+            "min": 1.719,
+            "median": 1.759
+          },
           "viada": {
             "min": 1.719,
             "median": 1.799
@@ -11175,7 +11767,7 @@
       },
       "D": {
         "min": 1.82,
-        "median": 1.989,
+        "median": 1.984,
         "max": 2.127,
         "minStationId": "lea:2-86377-balsio-g-iį-k-kelmės-luokės-r-raimondo-ramučių-sav",
         "byBrand": {
@@ -11215,6 +11807,10 @@
             "min": 1.929,
             "median": 2.0145
           },
+          "orlen": {
+            "min": 1.959,
+            "median": 1.989
+          },
           "viada": {
             "min": 1.959,
             "median": 2.019
@@ -11223,7 +11819,7 @@
       },
       "LPG": {
         "min": 0.66,
-        "median": 0.749,
+        "median": 0.7444999999999999,
         "max": 0.909,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -11249,7 +11845,7 @@
           },
           "orlen": {
             "min": 0.7,
-            "median": 0.7
+            "median": 0.739
           },
           "kvistija": {
             "min": 0.71,
@@ -11280,7 +11876,7 @@
     "byFuel": {
       "95": {
         "min": 1.659,
-        "median": 1.879,
+        "median": 1.869,
         "max": 1.95,
         "minStationId": "lea:11-67170-emsi-janaslavo-k-lazdijų-lazdijų-r-sav-sen-uab",
         "byBrand": {
@@ -11299,6 +11895,10 @@
           "independent": {
             "min": 1.69,
             "median": 1.79
+          },
+          "orlen": {
+            "min": 1.719,
+            "median": 1.849
           },
           "kvistija": {
             "min": 1.749,
@@ -11324,7 +11924,7 @@
       },
       "D": {
         "min": 1.82,
-        "median": 2.09,
+        "median": 2.079,
         "max": 2.17,
         "minStationId": "lea:2-86377-balsio-g-iį-k-kelmės-luokės-r-raimondo-ramučių-sav",
         "byBrand": {
@@ -11339,6 +11939,10 @@
           "baltic-petroleum": {
             "min": 1.889,
             "median": 2.049
+          },
+          "orlen": {
+            "min": 1.929,
+            "median": 2.069
           },
           "stateta": {
             "min": 1.939,
@@ -11368,7 +11972,7 @@
       },
       "LPG": {
         "min": 0.66,
-        "median": 0.759,
+        "median": 0.749,
         "max": 0.929,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -11386,7 +11990,7 @@
           },
           "orlen": {
             "min": 0.7,
-            "median": 0.7
+            "median": 0.739
           },
           "alausa": {
             "min": 0.704,
@@ -11421,7 +12025,7 @@
     "byFuel": {
       "95": {
         "min": 1.659,
-        "median": 1.839,
+        "median": 1.829,
         "max": 1.949,
         "minStationId": "lea:11-67170-emsi-janaslavo-k-lazdijų-lazdijų-r-sav-sen-uab",
         "byBrand": {
@@ -11445,9 +12049,13 @@
             "min": 1.694,
             "median": 1.699
           },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.699
+          },
           "independent": {
             "min": 1.699,
-            "median": 1.81
+            "median": 1.8094999999999999
           },
           "kvistija": {
             "min": 1.739,
@@ -11469,13 +12077,13 @@
       },
       "D": {
         "min": 1.82,
-        "median": 2.049,
+        "median": 2.039,
         "max": 2.169,
         "minStationId": "lea:2-86377-balsio-g-iį-k-kelmės-luokės-r-raimondo-ramučių-sav",
         "byBrand": {
           "independent": {
             "min": 1.82,
-            "median": 2.01
+            "median": 2.0095
           },
           "emsi": {
             "min": 1.839,
@@ -11487,7 +12095,7 @@
           },
           "baltic-petroleum": {
             "min": 1.889,
-            "median": 2.009
+            "median": 2.004
           },
           "jozita": {
             "min": 1.89,
@@ -11496,6 +12104,10 @@
           "alausa": {
             "min": 1.894,
             "median": 1.929
+          },
+          "orlen": {
+            "min": 1.899,
+            "median": 1.899
           },
           "kvistija": {
             "min": 1.949,
@@ -11517,7 +12129,7 @@
       },
       "LPG": {
         "min": 0.66,
-        "median": 0.75,
+        "median": 0.74,
         "max": 0.929,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -11543,7 +12155,7 @@
           },
           "orlen": {
             "min": 0.7,
-            "median": 0.7
+            "median": 0.739
           },
           "kvistija": {
             "min": 0.71,
@@ -11574,7 +12186,7 @@
     "byFuel": {
       "95": {
         "min": 1.659,
-        "median": 1.812,
+        "median": 1.81,
         "max": 1.949,
         "minStationId": "lea:11-67170-emsi-janaslavo-k-lazdijų-lazdijų-r-sav-sen-uab",
         "byBrand": {
@@ -11588,7 +12200,7 @@
           },
           "baltic-petroleum": {
             "min": 1.679,
-            "median": 1.789
+            "median": 1.7839999999999998
           },
           "alausa": {
             "min": 1.699,
@@ -11601,6 +12213,10 @@
           "independent": {
             "min": 1.7,
             "median": 1.8
+          },
+          "orlen": {
+            "min": 1.719,
+            "median": 1.7639999999999998
           },
           "kvistija": {
             "min": 1.739,
@@ -11622,7 +12238,7 @@
       },
       "D": {
         "min": 1.82,
-        "median": 2.029,
+        "median": 2.019,
         "max": 2.169,
         "minStationId": "lea:2-86377-balsio-g-iį-k-kelmės-luokės-r-raimondo-ramučių-sav",
         "byBrand": {
@@ -11662,6 +12278,10 @@
             "min": 1.989,
             "median": 2.019
           },
+          "orlen": {
+            "min": 1.999,
+            "median": 2.019
+          },
           "viada": {
             "min": 2.019,
             "median": 2.079
@@ -11670,7 +12290,7 @@
       },
       "LPG": {
         "min": 0.66,
-        "median": 0.75,
+        "median": 0.749,
         "max": 0.929,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -11694,13 +12314,13 @@
             "min": 0.709,
             "median": 0.739
           },
+          "orlen": {
+            "min": 0.71,
+            "median": 0.739
+          },
           "kvistija": {
             "min": 0.71,
             "median": 0.774
-          },
-          "orlen": {
-            "min": 0.71,
-            "median": 0.71
           },
           "neste": {
             "min": 0.72,
@@ -11759,6 +12379,10 @@
             "min": 1.724,
             "median": 1.769
           },
+          "orlen": {
+            "min": 1.749,
+            "median": 1.799
+          },
           "circle-k": {
             "min": 1.749,
             "median": 1.819
@@ -11775,7 +12399,7 @@
       },
       "D": {
         "min": 1.849,
-        "median": 2.029,
+        "median": 2.03,
         "max": 2.169,
         "minStationId": "lea:11-67170-emsi-janaslavo-k-lazdijų-lazdijų-r-sav-sen-uab",
         "byBrand": {
@@ -11815,6 +12439,10 @@
             "min": 1.989,
             "median": 2.069
           },
+          "orlen": {
+            "min": 2.029,
+            "median": 2.059
+          },
           "viada": {
             "min": 2.039,
             "median": 2.099
@@ -11823,7 +12451,7 @@
       },
       "LPG": {
         "min": 0.66,
-        "median": 0.75,
+        "median": 0.749,
         "max": 0.94,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -11847,13 +12475,13 @@
             "min": 0.7,
             "median": 0.709
           },
+          "orlen": {
+            "min": 0.71,
+            "median": 0.739
+          },
           "kvistija": {
             "min": 0.71,
             "median": 0.769
-          },
-          "orlen": {
-            "min": 0.71,
-            "median": 0.71
           },
           "neste": {
             "min": 0.72,
@@ -11906,7 +12534,7 @@
           },
           "neste": {
             "min": 1.689,
-            "median": 1.729
+            "median": 1.724
           },
           "stateta": {
             "min": 1.689,
@@ -11915,6 +12543,10 @@
           "kvistija": {
             "min": 1.729,
             "median": 1.7894999999999999
+          },
+          "orlen": {
+            "min": 1.749,
+            "median": 1.789
           },
           "viada": {
             "min": 1.759,
@@ -11928,7 +12560,7 @@
       },
       "D": {
         "min": 1.869,
-        "median": 2.009,
+        "median": 2.01,
         "max": 2.169,
         "minStationId": "lea:11-67170-emsi-janaslavo-k-lazdijų-lazdijų-r-sav-sen-uab",
         "byBrand": {
@@ -11938,7 +12570,7 @@
           },
           "independent": {
             "min": 1.9,
-            "median": 2.01
+            "median": 2.0095
           },
           "alausa": {
             "min": 1.939,
@@ -11968,6 +12600,10 @@
             "min": 1.999,
             "median": 2.069
           },
+          "orlen": {
+            "min": 2.039,
+            "median": 2.059
+          },
           "jozita": {
             "min": 2.05,
             "median": 2.05
@@ -11976,7 +12612,7 @@
       },
       "LPG": {
         "min": 0.66,
-        "median": 0.759,
+        "median": 0.749,
         "max": 0.94,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -11992,6 +12628,10 @@
             "min": 0.699,
             "median": 0.739
           },
+          "orlen": {
+            "min": 0.71,
+            "median": 0.739
+          },
           "emsi": {
             "min": 0.71,
             "median": 0.729
@@ -12001,10 +12641,6 @@
             "median": 0.769
           },
           "jozita": {
-            "min": 0.71,
-            "median": 0.71
-          },
-          "orlen": {
             "min": 0.71,
             "median": 0.71
           },
@@ -12051,7 +12687,7 @@
           },
           "independent": {
             "min": 1.699,
-            "median": 1.814
+            "median": 1.81
           },
           "emsi": {
             "min": 1.699,
@@ -12064,6 +12700,10 @@
           "kvistija": {
             "min": 1.749,
             "median": 1.7894999999999999
+          },
+          "orlen": {
+            "min": 1.759,
+            "median": 1.799
           },
           "circle-k": {
             "min": 1.819,
@@ -12081,13 +12721,13 @@
       },
       "D": {
         "min": 1.94,
-        "median": 2.0995,
+        "median": 2.099,
         "max": 2.199,
         "minStationId": "osm:way:219798102",
         "byBrand": {
           "independent": {
             "min": 1.94,
-            "median": 2.059
+            "median": 2.05
           },
           "alausa": {
             "min": 1.944,
@@ -12113,13 +12753,17 @@
             "min": 1.99,
             "median": 2.05
           },
+          "orlen": {
+            "min": 1.999,
+            "median": 2.089
+          },
           "circle-k": {
             "min": 2.059,
             "median": 2.154
           },
           "neste": {
             "min": 2.059,
-            "median": 2.119
+            "median": 2.114
           },
           "viada": {
             "min": 2.099,
@@ -12129,7 +12773,7 @@
       },
       "LPG": {
         "min": 0.66,
-        "median": 0.769,
+        "median": 0.759,
         "max": 0.94,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -12145,11 +12789,11 @@
             "min": 0.709,
             "median": 0.739
           },
-          "jozita": {
-            "min": 0.71,
-            "median": 0.71
-          },
           "orlen": {
+            "min": 0.71,
+            "median": 0.739
+          },
+          "jozita": {
             "min": 0.71,
             "median": 0.71
           },
@@ -12186,10 +12830,14 @@
     "byFuel": {
       "95": {
         "min": 1.669,
-        "median": 1.789,
+        "median": 1.78,
         "max": 1.94,
-        "minStationId": "lea:29149-32a-a-alauša-anykščiai-anykščių-g-r-sav-uab-vienuolio",
+        "minStationId": "lea:68100-ab-aleksandravo-baltics-k-marijampolės-orlen-retail-sav",
         "byBrand": {
+          "orlen": {
+            "min": 1.669,
+            "median": 1.669
+          },
           "alausa": {
             "min": 1.669,
             "median": 1.669
@@ -12234,13 +12882,17 @@
       },
       "D": {
         "min": 1.889,
-        "median": 2.029,
+        "median": 2.02,
         "max": 2.199,
         "minStationId": "lea:40134-5-g-kupiškio-kupiškis-panevėžio-r-sav-uab-velseka",
         "byBrand": {
           "independent": {
             "min": 1.889,
             "median": 2.02
+          },
+          "orlen": {
+            "min": 1.899,
+            "median": 1.899
           },
           "alausa": {
             "min": 1.899,
@@ -12282,7 +12934,7 @@
       },
       "LPG": {
         "min": 0.66,
-        "median": 0.759,
+        "median": 0.749,
         "max": 0.94,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -12308,7 +12960,7 @@
           },
           "orlen": {
             "min": 0.71,
-            "median": 0.71
+            "median": 0.739
           },
           "kvistija": {
             "min": 0.72,
@@ -12345,7 +12997,7 @@
         "byBrand": {
           "independent": {
             "min": 1.65,
-            "median": 1.779
+            "median": 1.77
           },
           "emsi": {
             "min": 1.669,
@@ -12358,6 +13010,10 @@
           "alausa": {
             "min": 1.684,
             "median": 1.739
+          },
+          "orlen": {
+            "min": 1.689,
+            "median": 1.719
           },
           "stateta": {
             "min": 1.689,
@@ -12387,7 +13043,7 @@
       },
       "D": {
         "min": 1.797,
-        "median": 2.009,
+        "median": 1.999,
         "max": 2.17,
         "minStationId": "lea:2a-64283-alauša-alytaus-g-k-r-santaikos-santaikos-sav-uab",
         "byBrand": {
@@ -12398,6 +13054,10 @@
           "independent": {
             "min": 1.85,
             "median": 1.999
+          },
+          "orlen": {
+            "min": 1.899,
+            "median": 1.959
           },
           "baltic-petroleum": {
             "min": 1.929,
@@ -12435,7 +13095,7 @@
       },
       "LPG": {
         "min": 0.66,
-        "median": 0.759,
+        "median": 0.749,
         "max": 0.94,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -12461,7 +13121,7 @@
           },
           "orlen": {
             "min": 0.71,
-            "median": 0.71
+            "median": 0.739
           },
           "emsi": {
             "min": 0.72,
@@ -12492,8 +13152,8 @@
     "byFuel": {
       "95": {
         "min": 1.649,
-        "median": 1.749,
-        "max": 1.88,
+        "median": 1.739,
+        "max": 1.89,
         "minStationId": "osm:way:225173105",
         "byBrand": {
           "independent": {
@@ -12519,6 +13179,10 @@
           "emsi": {
             "min": 1.659,
             "median": 1.689
+          },
+          "orlen": {
+            "min": 1.679,
+            "median": 1.719
           },
           "neste": {
             "min": 1.679,
@@ -12564,6 +13228,10 @@
             "min": 1.899,
             "median": 1.959
           },
+          "orlen": {
+            "min": 1.919,
+            "median": 1.979
+          },
           "emsi": {
             "min": 1.92,
             "median": 1.929
@@ -12588,7 +13256,7 @@
       },
       "LPG": {
         "min": 0.66,
-        "median": 0.75,
+        "median": 0.749,
         "max": 0.94,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -12614,7 +13282,7 @@
           },
           "orlen": {
             "min": 0.71,
-            "median": 0.71
+            "median": 0.739
           },
           "kvistija": {
             "min": 0.72,
@@ -12661,6 +13329,10 @@
             "min": 1.65,
             "median": 1.76
           },
+          "orlen": {
+            "min": 1.659,
+            "median": 1.729
+          },
           "alausa": {
             "min": 1.659,
             "median": 1.699
@@ -12701,13 +13373,17 @@
             "min": 1.879,
             "median": 1.949
           },
+          "orlen": {
+            "min": 1.889,
+            "median": 1.979
+          },
           "independent": {
             "min": 1.889,
             "median": 1.99
           },
           "neste": {
             "min": 1.889,
-            "median": 1.9365
+            "median": 1.934
           },
           "jozita": {
             "min": 1.89,
@@ -12741,7 +13417,7 @@
       },
       "LPG": {
         "min": 0.66,
-        "median": 0.759,
+        "median": 0.75,
         "max": 0.94,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -12761,13 +13437,13 @@
             "min": 0.699,
             "median": 0.7315
           },
+          "orlen": {
+            "min": 0.71,
+            "median": 0.739
+          },
           "emsi": {
             "min": 0.71,
             "median": 0.719
-          },
-          "orlen": {
-            "min": 0.71,
-            "median": 0.71
           },
           "kvistija": {
             "min": 0.72,
@@ -12808,7 +13484,7 @@
           },
           "independent": {
             "min": 1.649,
-            "median": 1.7595
+            "median": 1.759
           },
           "alausa": {
             "min": 1.659,
@@ -12846,7 +13522,7 @@
       },
       "D": {
         "min": 1.85,
-        "median": 2.059,
+        "median": 2.05,
         "max": 2.15,
         "minStationId": "osm:way:365532681",
         "byBrand": {
@@ -12894,13 +13570,13 @@
       },
       "LPG": {
         "min": 0.66,
-        "median": 0.759,
+        "median": 0.75,
         "max": 0.94,
         "minStationId": "osm:way:225173105",
         "byBrand": {
           "independent": {
             "min": 0.66,
-            "median": 0.73
+            "median": 0.739
           },
           "jozita": {
             "min": 0.68,
@@ -12963,6 +13639,10 @@
             "min": 1.65,
             "median": 1.76
           },
+          "orlen": {
+            "min": 1.659,
+            "median": 1.659
+          },
           "alausa": {
             "min": 1.659,
             "median": 1.684
@@ -12995,7 +13675,7 @@
       },
       "D": {
         "min": 1.869,
-        "median": 2.03,
+        "median": 2.029,
         "max": 2.15,
         "minStationId": "osm:way:208064914",
         "byBrand": {
@@ -13019,6 +13699,10 @@
             "min": 1.939,
             "median": 1.959
           },
+          "orlen": {
+            "min": 1.949,
+            "median": 1.949
+          },
           "kvistija": {
             "min": 1.959,
             "median": 1.989
@@ -13039,7 +13723,7 @@
       },
       "LPG": {
         "min": 0.659,
-        "median": 0.759,
+        "median": 0.75,
         "max": 0.94,
         "minStationId": "lea:29149-32a-a-alauša-anykščiai-anykščių-g-r-sav-uab-vienuolio",
         "byBrand": {
@@ -13058,6 +13742,10 @@
           "emsi": {
             "min": 0.68,
             "median": 0.68
+          },
+          "orlen": {
+            "min": 0.719,
+            "median": 0.739
           },
           "kvistija": {
             "min": 0.72,
@@ -13094,7 +13782,7 @@
         "byBrand": {
           "baltic-petroleum": {
             "min": 1.649,
-            "median": 1.739
+            "median": 1.734
           },
           "independent": {
             "min": 1.65,
@@ -13107,6 +13795,10 @@
           "stateta": {
             "min": 1.669,
             "median": 1.669
+          },
+          "orlen": {
+            "min": 1.679,
+            "median": 1.719
           },
           "jozita": {
             "min": 1.689,
@@ -13136,7 +13828,7 @@
       },
       "D": {
         "min": 1.889,
-        "median": 2.009,
+        "median": 1.9995,
         "max": 2.139,
         "minStationId": "osm:way:495156090",
         "byBrand": {
@@ -13168,6 +13860,10 @@
             "min": 1.964,
             "median": 2.039
           },
+          "orlen": {
+            "min": 1.969,
+            "median": 1.989
+          },
           "kvistija": {
             "min": 1.969,
             "median": 1.9895
@@ -13178,13 +13874,13 @@
           },
           "viada": {
             "min": 1.999,
-            "median": 2.069
+            "median": 2.079
           }
         }
       },
       "LPG": {
         "min": 0.66,
-        "median": 0.75,
+        "median": 0.749,
         "max": 0.94,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -13206,7 +13902,7 @@
           },
           "orlen": {
             "min": 0.71,
-            "median": 0.71
+            "median": 0.729
           },
           "kvistija": {
             "min": 0.72,
@@ -13273,6 +13969,10 @@
             "min": 1.669,
             "median": 1.719
           },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.719
+          },
           "circle-k": {
             "min": 1.699,
             "median": 1.7745
@@ -13325,19 +14025,23 @@
             "min": 1.959,
             "median": 1.979
           },
+          "orlen": {
+            "min": 1.989,
+            "median": 2.019
+          },
           "circle-k": {
             "min": 1.989,
             "median": 2.049
           },
           "viada": {
             "min": 1.999,
-            "median": 2.069
+            "median": 2.079
           }
         }
       },
       "LPG": {
         "min": 0.66,
-        "median": 0.759,
+        "median": 0.749,
         "max": 0.94,
         "minStationId": "osm:way:225173105",
         "byBrand": {
@@ -13358,8 +14062,8 @@
             "median": 0.729
           },
           "orlen": {
-            "min": 0.71,
-            "median": 0.71
+            "min": 0.709,
+            "median": 0.729
           },
           "kvistija": {
             "min": 0.72,
@@ -13394,7 +14098,7 @@
     "byFuel": {
       "95": {
         "min": 1.619,
-        "median": 1.73,
+        "median": 1.729,
         "max": 1.869,
         "minStationId": "osm:way:145036838",
         "byBrand": {
@@ -13433,6 +14137,10 @@
           "jozita": {
             "min": 1.69,
             "median": 1.79
+          },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.7240000000000002
           },
           "kvistija": {
             "min": 1.729,
@@ -13485,18 +14193,22 @@
           "jozita": {
             "min": 1.97,
             "median": 1.99
+          },
+          "orlen": {
+            "min": 1.999,
+            "median": 2.029
           }
         }
       },
       "LPG": {
         "min": 0.66,
-        "median": 0.759,
+        "median": 0.75,
         "max": 0.94,
         "minStationId": "osm:way:225173105",
         "byBrand": {
           "independent": {
             "min": 0.66,
-            "median": 0.7395
+            "median": 0.74
           },
           "jozita": {
             "min": 0.68,
@@ -13512,7 +14224,7 @@
           },
           "orlen": {
             "min": 0.71,
-            "median": 0.71
+            "median": 0.729
           },
           "neste": {
             "min": 0.72,
@@ -13547,7 +14259,7 @@
     "byFuel": {
       "95": {
         "min": 1.659,
-        "median": 1.849,
+        "median": 1.839,
         "max": 1.909,
         "minStationId": "lea:29149-32a-a-alauša-anykščiai-anykščių-g-r-sav-uab-vienuolio",
         "byBrand": {
@@ -13562,6 +14274,10 @@
           "independent": {
             "min": 1.68,
             "median": 1.79
+          },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.799
           },
           "stateta": {
             "min": 1.699,
@@ -13591,7 +14307,7 @@
       },
       "D": {
         "min": 1.944,
-        "median": 2.109,
+        "median": 2.099,
         "max": 2.169,
         "minStationId": "lea:1-57109-eniris-k-kėdainių-r-ruoščių-sav-uab",
         "byBrand": {
@@ -13619,6 +14335,10 @@
             "min": 1.99,
             "median": 2.019
           },
+          "orlen": {
+            "min": 1.999,
+            "median": 2.069
+          },
           "circle-k": {
             "min": 2.069,
             "median": 2.149
@@ -13635,13 +14355,13 @@
       },
       "LPG": {
         "min": 0.66,
-        "median": 0.76,
+        "median": 0.759,
         "max": 0.94,
         "minStationId": "lea:10a-90118-g-lentpjūvės-madalva-plungė-plungės-r-sav-uab",
         "byBrand": {
           "independent": {
             "min": 0.66,
-            "median": 0.7344999999999999
+            "median": 0.739
           },
           "baltic-petroleum": {
             "min": 0.69,
@@ -13653,7 +14373,7 @@
           },
           "orlen": {
             "min": 0.71,
-            "median": 0.71
+            "median": 0.719
           },
           "neste": {
             "min": 0.72,
@@ -13706,7 +14426,7 @@
           },
           "independent": {
             "min": 1.689,
-            "median": 1.7894999999999999
+            "median": 1.789
           },
           "emsi": {
             "min": 1.69,
@@ -13784,7 +14504,7 @@
       },
       "LPG": {
         "min": 0.66,
-        "median": 0.759,
+        "median": 0.75,
         "max": 0.94,
         "minStationId": "osm:way:217418223",
         "byBrand": {
@@ -13841,7 +14561,7 @@
     "byFuel": {
       "95": {
         "min": 1.649,
-        "median": 1.779,
+        "median": 1.77,
         "max": 1.899,
         "minStationId": "osm:node:3713536366",
         "byBrand": {
@@ -13864,6 +14584,10 @@
           "emsi": {
             "min": 1.69,
             "median": 1.719
+          },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.729
           },
           "alausa": {
             "min": 1.699,
@@ -13889,7 +14613,7 @@
       },
       "D": {
         "min": 1.949,
-        "median": 2.04,
+        "median": 2.039,
         "max": 2.159,
         "minStationId": "osm:way:77685143",
         "byBrand": {
@@ -13899,7 +14623,7 @@
           },
           "independent": {
             "min": 1.954,
-            "median": 2.05
+            "median": 2.0495
           },
           "jozita": {
             "min": 1.96,
@@ -13912,6 +14636,10 @@
           "emsi": {
             "min": 1.98,
             "median": 1.999
+          },
+          "orlen": {
+            "min": 1.999,
+            "median": 2.019
           },
           "alausa": {
             "min": 1.999,
@@ -13927,7 +14655,7 @@
           },
           "neste": {
             "min": 1.999,
-            "median": 2.0265
+            "median": 2.024
           },
           "viada": {
             "min": 2.039,
@@ -13937,7 +14665,7 @@
       },
       "LPG": {
         "min": 0.67,
-        "median": 0.759,
+        "median": 0.75,
         "max": 0.94,
         "minStationId": "osm:way:159676073",
         "byBrand": {
@@ -13963,7 +14691,7 @@
           },
           "orlen": {
             "min": 0.71,
-            "median": 0.71
+            "median": 0.719
           },
           "circle-k": {
             "min": 0.729,
@@ -14000,7 +14728,7 @@
         "byBrand": {
           "baltic-petroleum": {
             "min": 1.649,
-            "median": 1.749
+            "median": 1.7440000000000002
           },
           "independent": {
             "min": 1.649,
@@ -14024,11 +14752,15 @@
           },
           "neste": {
             "min": 1.679,
-            "median": 1.739
+            "median": 1.734
           },
           "circle-k": {
             "min": 1.699,
             "median": 1.779
+          },
+          "orlen": {
+            "min": 1.719,
+            "median": 1.749
           },
           "viada": {
             "min": 1.719,
@@ -14082,6 +14814,10 @@
             "min": 1.999,
             "median": 2.079
           },
+          "orlen": {
+            "min": 2.029,
+            "median": 2.0540000000000003
+          },
           "viada": {
             "min": 2.029,
             "median": 2.099
@@ -14090,7 +14826,7 @@
       },
       "LPG": {
         "min": 0.654,
-        "median": 0.759,
+        "median": 0.75,
         "max": 0.94,
         "minStationId": "osm:way:1328678479",
         "byBrand": {
@@ -14116,7 +14852,7 @@
           },
           "orlen": {
             "min": 0.71,
-            "median": 0.71
+            "median": 0.719
           },
           "circle-k": {
             "min": 0.724,
@@ -14147,7 +14883,7 @@
     "byFuel": {
       "LPG": {
         "min": 0.67,
-        "median": 0.76,
+        "median": 0.755,
         "max": 0.94,
         "minStationId": "lea:2-73282-g-k-madalva-r-sav-tauragės-uab-žygaičių-žygaičių",
         "byBrand": {
@@ -14169,7 +14905,7 @@
           },
           "orlen": {
             "min": 0.71,
-            "median": 0.71
+            "median": 0.719
           },
           "circle-k": {
             "min": 0.729,
@@ -14220,6 +14956,10 @@
             "min": 1.699,
             "median": 1.737
           },
+          "orlen": {
+            "min": 1.719,
+            "median": 1.809
+          },
           "alausa": {
             "min": 1.739,
             "median": 1.799
@@ -14266,7 +15006,7 @@
           },
           "baltic-petroleum": {
             "min": 1.999,
-            "median": 2.089
+            "median": 2.084
           },
           "kvistija": {
             "min": 1.999,
@@ -14275,6 +15015,10 @@
           "stateta": {
             "min": 1.999,
             "median": 1.999
+          },
+          "orlen": {
+            "min": 2.019,
+            "median": 2.109
           },
           "jozita": {
             "min": 2.02,
@@ -14286,7 +15030,7 @@
           },
           "neste": {
             "min": 2.099,
-            "median": 2.144
+            "median": 2.1414999999999997
           },
           "viada": {
             "min": 2.099,
@@ -14296,7 +15040,7 @@
       },
       "LPG": {
         "min": 0.67,
-        "median": 0.759,
+        "median": 0.75,
         "max": 0.94,
         "minStationId": "osm:way:217418223",
         "byBrand": {
@@ -14319,6 +15063,10 @@
           "alausa": {
             "min": 0.709,
             "median": 0.739
+          },
+          "orlen": {
+            "min": 0.719,
+            "median": 0.719
           },
           "circle-k": {
             "min": 0.729,
@@ -14369,6 +15117,10 @@
             "min": 1.694,
             "median": 1.699
           },
+          "orlen": {
+            "min": 1.699,
+            "median": 1.699
+          },
           "baltic-petroleum": {
             "min": 1.699,
             "median": 1.789
@@ -14393,7 +15145,7 @@
       },
       "D": {
         "min": 1.949,
-        "median": 2.08,
+        "median": 2.079,
         "max": 2.199,
         "minStationId": "osm:way:126448269",
         "byBrand": {
@@ -14403,6 +15155,10 @@
           },
           "alausa": {
             "min": 1.954,
+            "median": 1.959
+          },
+          "orlen": {
+            "min": 1.959,
             "median": 1.959
           },
           "baltic-petroleum": {
@@ -14437,7 +15193,7 @@
       },
       "LPG": {
         "min": 0.669,
-        "median": 0.76,
+        "median": 0.759,
         "max": 0.94,
         "minStationId": "osm:way:53223540",
         "byBrand": {
@@ -14458,8 +15214,8 @@
             "median": 0.699
           },
           "orlen": {
-            "min": 0.71,
-            "median": 0.71
+            "min": 0.699,
+            "median": 0.699
           },
           "neste": {
             "min": 0.72,
@@ -14500,7 +15256,7 @@
           },
           "independent": {
             "min": 1.694,
-            "median": 1.79
+            "median": 1.789
           },
           "neste": {
             "min": 1.694,
@@ -14517,6 +15273,10 @@
           "stateta": {
             "min": 1.699,
             "median": 1.699
+          },
+          "orlen": {
+            "min": 1.719,
+            "median": 1.7440000000000002
           },
           "kvistija": {
             "min": 1.719,
@@ -14538,7 +15298,7 @@
       },
       "D": {
         "min": 1.954,
-        "median": 2.059,
+        "median": 2.049,
         "max": 2.199,
         "minStationId": "lea:34a-62123-alytaus-alytus-g-lietuva-m-neste-santaikos-sav-uab",
         "byBrand": {
@@ -14566,6 +15326,10 @@
             "min": 1.98,
             "median": 2.039
           },
+          "orlen": {
+            "min": 1.999,
+            "median": 2.029
+          },
           "circle-k": {
             "min": 2.009,
             "median": 2.079
@@ -14586,7 +15350,7 @@
       },
       "LPG": {
         "min": 0.669,
-        "median": 0.759,
+        "median": 0.75,
         "max": 0.94,
         "minStationId": "osm:way:138517469",
         "byBrand": {
@@ -14600,7 +15364,7 @@
           },
           "baltic-petroleum": {
             "min": 0.69,
-            "median": 0.73
+            "median": 0.7295
           },
           "emsi": {
             "min": 0.69,
@@ -14609,6 +15373,10 @@
           "alausa": {
             "min": 0.709,
             "median": 0.7364999999999999
+          },
+          "orlen": {
+            "min": 0.719,
+            "median": 0.719
           },
           "neste": {
             "min": 0.72,
@@ -14657,7 +15425,7 @@
           },
           "baltic-petroleum": {
             "min": 1.689,
-            "median": 1.759
+            "median": 1.754
           },
           "independent": {
             "min": 1.689,
@@ -14669,6 +15437,10 @@
           },
           "neste": {
             "min": 1.699,
+            "median": 1.749
+          },
+          "orlen": {
+            "min": 1.719,
             "median": 1.749
           },
           "circle-k": {
@@ -14687,7 +15459,7 @@
       },
       "D": {
         "min": 1.929,
-        "median": 2.049,
+        "median": 2.039,
         "max": 2.199,
         "minStationId": "osm:way:1328678479",
         "byBrand": {
@@ -14713,7 +15485,7 @@
           },
           "independent": {
             "min": 1.959,
-            "median": 2.039
+            "median": 2.03
           },
           "emsi": {
             "min": 1.98,
@@ -14722,6 +15494,10 @@
           "circle-k": {
             "min": 1.989,
             "median": 2.059
+          },
+          "orlen": {
+            "min": 1.999,
+            "median": 2.039
           },
           "viada": {
             "min": 2.029,
@@ -14735,7 +15511,7 @@
       },
       "LPG": {
         "min": 0.669,
-        "median": 0.759,
+        "median": 0.749,
         "max": 0.94,
         "minStationId": "osm:way:138517469",
         "byBrand": {
@@ -14755,13 +15531,13 @@
             "min": 0.689,
             "median": 0.729
           },
+          "orlen": {
+            "min": 0.69,
+            "median": 0.719
+          },
           "emsi": {
             "min": 0.69,
             "median": 0.739
-          },
-          "orlen": {
-            "min": 0.69,
-            "median": 0.69
           },
           "circle-k": {
             "min": 0.709,
@@ -14832,6 +15608,10 @@
             "min": 1.759,
             "median": 1.8239999999999998
           },
+          "orlen": {
+            "min": 1.769,
+            "median": 1.799
+          },
           "jozita": {
             "min": 1.79,
             "median": 1.89
@@ -14883,12 +15663,16 @@
           "viada": {
             "min": 1.999,
             "median": 2.099
+          },
+          "orlen": {
+            "min": 2.029,
+            "median": 2.064
           }
         }
       },
       "LPG": {
         "min": 0.67,
-        "median": 0.759,
+        "median": 0.75,
         "max": 0.94,
         "minStationId": "osm:way:217418223",
         "byBrand": {
@@ -14898,7 +15682,7 @@
           },
           "baltic-petroleum": {
             "min": 0.689,
-            "median": 0.73
+            "median": 0.7295
           },
           "emsi": {
             "min": 0.69,
@@ -14914,7 +15698,7 @@
           },
           "orlen": {
             "min": 0.71,
-            "median": 0.71
+            "median": 0.719
           },
           "neste": {
             "min": 0.72,
@@ -14945,13 +15729,13 @@
     "byFuel": {
       "95": {
         "min": 1.66,
-        "median": 1.849,
+        "median": 1.84,
         "max": 1.949,
         "minStationId": "lea:16-89233-g-mažeikiai-mažeikių-r-sav-sedos-tripletas-uab",
         "byBrand": {
           "independent": {
             "min": 1.66,
-            "median": 1.809
+            "median": 1.8045
           },
           "baltic-petroleum": {
             "min": 1.689,
@@ -14968,6 +15752,10 @@
           "emsi": {
             "min": 1.739,
             "median": 1.799
+          },
+          "orlen": {
+            "min": 1.769,
+            "median": 1.819
           },
           "jozita": {
             "min": 1.79,
@@ -14993,7 +15781,7 @@
       },
       "D": {
         "min": 1.95,
-        "median": 2.099,
+        "median": 2.094,
         "max": 2.239,
         "minStationId": "lea:16-89233-g-mažeikiai-mažeikių-r-sav-sedos-tripletas-uab",
         "byBrand": {
@@ -15025,13 +15813,17 @@
             "min": 1.999,
             "median": 2.044
           },
+          "orlen": {
+            "min": 2.039,
+            "median": 2.074
+          },
           "circle-k": {
             "min": 2.059,
             "median": 2.139
           },
           "neste": {
             "min": 2.059,
-            "median": 2.104
+            "median": 2.1065
           },
           "viada": {
             "min": 2.099,
@@ -15041,13 +15833,13 @@
       },
       "LPG": {
         "min": 0.67,
-        "median": 0.76,
+        "median": 0.759,
         "max": 0.94,
         "minStationId": "osm:way:217418223",
         "byBrand": {
           "independent": {
             "min": 0.67,
-            "median": 0.739
+            "median": 0.7395
           },
           "baltic-petroleum": {
             "min": 0.69,
@@ -15066,8 +15858,8 @@
             "median": 0.7364999999999999
           },
           "orlen": {
-            "min": 0.72,
-            "median": 0.72
+            "min": 0.719,
+            "median": 0.739
           },
           "neste": {
             "min": 0.72,
@@ -15112,7 +15904,7 @@
           },
           "baltic-petroleum": {
             "min": 1.719,
-            "median": 1.809
+            "median": 1.8039999999999998
           },
           "emsi": {
             "min": 1.74,
@@ -15121,6 +15913,10 @@
           "kvistija": {
             "min": 1.749,
             "median": 1.809
+          },
+          "orlen": {
+            "min": 1.759,
+            "median": 1.759
           },
           "stateta": {
             "min": 1.759,
@@ -15147,7 +15943,7 @@
       "D": {
         "min": 1.96,
         "median": 2.079,
-        "max": 2.199,
+        "max": 2.219,
         "minStationId": "osm:node:13663043361",
         "byBrand": {
           "independent": {
@@ -15182,6 +15978,10 @@
             "min": 2.029,
             "median": 2.067
           },
+          "orlen": {
+            "min": 2.059,
+            "median": 2.059
+          },
           "viada": {
             "min": 2.069,
             "median": 2.139
@@ -15194,7 +15994,7 @@
       },
       "LPG": {
         "min": 0.67,
-        "median": 0.759,
+        "median": 0.75,
         "max": 0.94,
         "minStationId": "osm:way:217418223",
         "byBrand": {
@@ -15214,13 +16014,13 @@
             "min": 0.69,
             "median": 0.69
           },
+          "orlen": {
+            "min": 0.699,
+            "median": 0.699
+          },
           "emsi": {
             "min": 0.7,
             "median": 0.709
-          },
-          "orlen": {
-            "min": 0.72,
-            "median": 0.72
           },
           "neste": {
             "min": 0.729,
@@ -15240,7 +16040,7 @@
           },
           "viada": {
             "min": 0.789,
-            "median": 0.839
+            "median": 0.829
           }
         }
       }
@@ -15251,7 +16051,7 @@
     "byFuel": {
       "95": {
         "min": 1.699,
-        "median": 1.829,
+        "median": 1.839,
         "max": 1.959,
         "minStationId": "lea:1-15130-eniris-k-kalnuotės-r-sav-uab-vilniaus",
         "byBrand": {
@@ -15294,6 +16094,10 @@
           "viada": {
             "min": 1.829,
             "median": 1.889
+          },
+          "orlen": {
+            "min": 1.859,
+            "median": 1.879
           }
         }
       },
@@ -15342,6 +16146,10 @@
           "jozita": {
             "min": 2.07,
             "median": 2.15
+          },
+          "orlen": {
+            "min": 2.099,
+            "median": 2.109
           }
         }
       },
@@ -15363,13 +16171,13 @@
             "min": 0.699,
             "median": 0.7364999999999999
           },
+          "orlen": {
+            "min": 0.729,
+            "median": 0.729
+          },
           "neste": {
             "min": 0.729,
             "median": 0.74
-          },
-          "orlen": {
-            "min": 0.73,
-            "median": 0.73
           },
           "stateta": {
             "min": 0.737,
@@ -15393,7 +16201,7 @@
           },
           "viada": {
             "min": 0.799,
-            "median": 0.839
+            "median": 0.829
           }
         }
       }
@@ -15447,6 +16255,10 @@
           "viada": {
             "min": 1.839,
             "median": 1.919
+          },
+          "orlen": {
+            "min": 1.859,
+            "median": 1.879
           }
         }
       },
@@ -15477,7 +16289,7 @@
             "median": 2.124
           },
           "neste": {
-            "min": 2.019,
+            "min": 2.024,
             "median": 2.079
           },
           "kvistija": {
@@ -15495,12 +16307,16 @@
           "emsi": {
             "min": 2.079,
             "median": 2.099
+          },
+          "orlen": {
+            "min": 2.099,
+            "median": 2.119
           }
         }
       },
       "LPG": {
         "min": 0.67,
-        "median": 0.789,
+        "median": 0.779,
         "max": 0.94,
         "minStationId": "osm:way:217418223",
         "byBrand": {
@@ -15526,7 +16342,7 @@
           },
           "orlen": {
             "min": 0.73,
-            "median": 0.73
+            "median": 0.739
           },
           "stateta": {
             "min": 0.737,
@@ -15597,6 +16413,10 @@
             "min": 1.829,
             "median": 1.859
           },
+          "orlen": {
+            "min": 1.859,
+            "median": 1.889
+          },
           "jozita": {
             "min": 1.95,
             "median": 1.95
@@ -15645,6 +16465,10 @@
             "min": 2.059,
             "median": 2.149
           },
+          "orlen": {
+            "min": 2.099,
+            "median": 2.114
+          },
           "jozita": {
             "min": 2.15,
             "median": 2.15
@@ -15653,17 +16477,17 @@
       },
       "LPG": {
         "min": 0.68,
-        "median": 0.779,
+        "median": 0.77,
         "max": 0.949,
         "minStationId": "osm:way:225173105",
         "byBrand": {
           "independent": {
             "min": 0.68,
-            "median": 0.749
+            "median": 0.7495
           },
           "baltic-petroleum": {
             "min": 0.689,
-            "median": 0.73
+            "median": 0.7295
           },
           "alausa": {
             "min": 0.699,
@@ -15675,7 +16499,7 @@
           },
           "orlen": {
             "min": 0.73,
-            "median": 0.73
+            "median": 0.749
           },
           "stateta": {
             "min": 0.737,
@@ -15710,7 +16534,7 @@
     "byFuel": {
       "95": {
         "min": 1.769,
-        "median": 1.969,
+        "median": 1.959,
         "max": 2.039,
         "minStationId": "lea:1-15130-eniris-k-kalnuotės-r-sav-uab-vilniaus",
         "byBrand": {
@@ -15732,7 +16556,7 @@
           },
           "baltic-petroleum": {
             "min": 1.829,
-            "median": 1.989
+            "median": 1.9940000000000002
           },
           "stateta": {
             "min": 1.879,
@@ -15741,6 +16565,10 @@
           "circle-k": {
             "min": 1.896,
             "median": 1.999
+          },
+          "orlen": {
+            "min": 1.899,
+            "median": 1.919
           },
           "neste": {
             "min": 1.929,
@@ -15786,6 +16614,10 @@
             "min": 2.089,
             "median": 2.139
           },
+          "orlen": {
+            "min": 2.139,
+            "median": 2.179
+          },
           "jozita": {
             "min": 2.15,
             "median": 2.15
@@ -15828,7 +16660,7 @@
           },
           "orlen": {
             "min": 0.73,
-            "median": 0.73
+            "median": 0.749
           },
           "kvistija": {
             "min": 0.739,
@@ -15863,7 +16695,7 @@
     "byFuel": {
       "95": {
         "min": 1.799,
-        "median": 1.944,
+        "median": 1.939,
         "max": 2.019,
         "minStationId": "lea:29149-32a-a-alauša-anykščiai-anykščių-g-r-sav-uab-vienuolio",
         "byBrand": {
@@ -15895,6 +16727,10 @@
             "min": 1.879,
             "median": 1.929
           },
+          "orlen": {
+            "min": 1.899,
+            "median": 1.919
+          },
           "circle-k": {
             "min": 1.904,
             "median": 1.969
@@ -15917,11 +16753,11 @@
           },
           "baltic-petroleum": {
             "min": 1.999,
-            "median": 2.229
+            "median": 2.224
           },
           "independent": {
             "min": 2.069,
-            "median": 2.15
+            "median": 2.145
           },
           "stateta": {
             "min": 2.079,
@@ -15943,6 +16779,10 @@
             "min": 2.119,
             "median": 2.209
           },
+          "orlen": {
+            "min": 2.139,
+            "median": 2.179
+          },
           "viada": {
             "min": 2.159,
             "median": 2.239
@@ -15951,7 +16791,7 @@
       },
       "LPG": {
         "min": 0.67,
-        "median": 0.799,
+        "median": 0.79,
         "max": 0.949,
         "minStationId": "osm:way:217418223",
         "byBrand": {
@@ -15967,13 +16807,13 @@
             "min": 0.699,
             "median": 0.789
           },
+          "orlen": {
+            "min": 0.73,
+            "median": 0.749
+          },
           "emsi": {
             "min": 0.73,
             "median": 0.759
-          },
-          "orlen": {
-            "min": 0.73,
-            "median": 0.73
           },
           "kvistija": {
             "min": 0.739,
@@ -16015,6 +16855,10 @@
           "kvistija": {
             "min": 1.829,
             "median": 1.8795000000000002
+          },
+          "orlen": {
+            "min": 1.839,
+            "median": 1.879
           },
           "emsi": {
             "min": 1.839,
@@ -16077,16 +16921,20 @@
             "median": 2.159
           },
           "independent": {
-            "min": 2.084,
+            "min": 2.08,
             "median": 2.15
           },
           "stateta": {
             "min": 2.097,
             "median": 2.139
           },
+          "orlen": {
+            "min": 2.099,
+            "median": 2.119
+          },
           "baltic-petroleum": {
             "min": 2.099,
-            "median": 2.199
+            "median": 2.194
           },
           "jozita": {
             "min": 2.11,
@@ -16100,13 +16948,13 @@
       },
       "LPG": {
         "min": 0.67,
-        "median": 0.799,
+        "median": 0.79,
         "max": 0.949,
         "minStationId": "osm:way:217418223",
         "byBrand": {
           "independent": {
             "min": 0.67,
-            "median": 0.7645
+            "median": 0.76
           },
           "jozita": {
             "min": 0.69,
@@ -16130,7 +16978,7 @@
           },
           "orlen": {
             "min": 0.74,
-            "median": 0.74
+            "median": 0.759
           },
           "circle-k": {
             "min": 0.759,
@@ -16198,7 +17046,7 @@
             "median": 1.935
           },
           "viada": {
-            "min": 1.887,
+            "min": 1.899,
             "median": 1.979
           }
         }
@@ -16253,9 +17101,9 @@
       },
       "LPG": {
         "min": 0.67,
-        "median": 0.799,
+        "median": 0.79,
         "max": 0.949,
-        "minStationId": "osm:node:3450978965",
+        "minStationId": "osm:way:217418223",
         "byBrand": {
           "independent": {
             "min": 0.67,
@@ -16299,7 +17147,168 @@
           },
           "viada": {
             "min": 0.799,
+            "median": 0.844
+          }
+        }
+      }
+    }
+  },
+  {
+    "date": "2026-09-14",
+    "byFuel": {
+      "95": {
+        "min": 1.799,
+        "median": 1.909,
+        "max": 2.019,
+        "minStationId": "osm:way:1526680463",
+        "byBrand": {
+          "alausa": {
+            "min": 1.799,
+            "median": 1.879
+          },
+          "neste": {
+            "min": 1.799,
+            "median": 1.859
+          },
+          "circle-k": {
+            "min": 1.819,
+            "median": 1.919
+          },
+          "independent": {
+            "min": 1.823,
+            "median": 1.9
+          },
+          "kvistija": {
+            "min": 1.829,
+            "median": 1.889
+          },
+          "baltic-petroleum": {
+            "min": 1.839,
+            "median": 1.939
+          },
+          "emsi": {
+            "min": 1.85,
+            "median": 1.879
+          },
+          "orlen": {
+            "min": 1.859,
+            "median": 1.8940000000000001
+          },
+          "stateta": {
+            "min": 1.869,
+            "median": 1.869
+          },
+          "viada": {
+            "min": 1.879,
+            "median": 1.959
+          },
+          "jozita": {
+            "min": 1.94,
+            "median": 1.95
+          }
+        }
+      },
+      "D": {
+        "min": 1.999,
+        "median": 2.179,
+        "max": 2.307,
+        "minStationId": "osm:way:200003793",
+        "byBrand": {
+          "alausa": {
+            "min": 1.999,
+            "median": 2.149
+          },
+          "neste": {
+            "min": 1.999,
+            "median": 2.109
+          },
+          "kvistija": {
+            "min": 2.079,
+            "median": 2.1545
+          },
+          "independent": {
+            "min": 2.084,
+            "median": 2.17
+          },
+          "baltic-petroleum": {
+            "min": 2.089,
+            "median": 2.209
+          },
+          "emsi": {
+            "min": 2.09,
+            "median": 2.149
+          },
+          "circle-k": {
+            "min": 2.092,
+            "median": 2.183
+          },
+          "viada": {
+            "min": 2.099,
+            "median": 2.199
+          },
+          "stateta": {
+            "min": 2.139,
+            "median": 2.159
+          },
+          "orlen": {
+            "min": 2.149,
+            "median": 2.179
+          },
+          "jozita": {
+            "min": 2.15,
+            "median": 2.19
+          }
+        }
+      },
+      "LPG": {
+        "min": 0.67,
+        "median": 0.799,
+        "max": 0.949,
+        "minStationId": "osm:node:3450978965",
+        "byBrand": {
+          "independent": {
+            "min": 0.67,
+            "median": 0.77
+          },
+          "alausa": {
+            "min": 0.719,
+            "median": 0.769
+          },
+          "baltic-petroleum": {
+            "min": 0.729,
+            "median": 0.819
+          },
+          "emsi": {
+            "min": 0.73,
+            "median": 0.77
+          },
+          "kvistija": {
+            "min": 0.739,
+            "median": 0.779
+          },
+          "jozita": {
+            "min": 0.75,
+            "median": 0.75
+          },
+          "circle-k": {
+            "min": 0.759,
             "median": 0.839
+          },
+          "stateta": {
+            "min": 0.759,
+            "median": 0.759
+          },
+          "orlen": {
+            "min": 0.76,
+            "median": 0.779
+          },
+          "neste": {
+            "min": 0.78,
+            "median": 0.78
+          },
+          "viada": {
+            "min": 0.799,
+            "median": 0.849
           }
         }
       }
