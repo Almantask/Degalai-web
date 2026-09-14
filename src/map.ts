@@ -398,7 +398,7 @@ export function flyToStation(map: maplibregl.Map, s: Station): void {
 }
 
 export interface StationPopupExtra {
-  etaLabel?: string;
+  distLabel?: string;
 }
 
 export function stationPopupHtml(
@@ -417,12 +417,12 @@ export function stationPopupHtml(
     })
     .join("");
   const addr = s.address || s.city || t("list.addressMissing");
-  const eta = extra?.etaLabel ? `<p class="popup-eta">${escapeHtml(extra.etaLabel)}</p>` : "";
+  const dist = extra?.distLabel ? `<p class="popup-eta">${escapeHtml(extra.distLabel)}</p>` : "";
   return `<div class="popup">
     <h3>${escapeHtml(s.name)}</h3>
     <p class="popup-brand">${escapeHtml(brandLabel(s.brand))}</p>
     <p class="popup-addr">${escapeHtml(addr)}</p>
-    ${eta}
+    ${dist}
     ${fuels}
   </div>`;
 }

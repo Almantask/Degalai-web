@@ -1,4 +1,4 @@
-import { extraMinutesFromKm, minutesAtMaxSpeed, netBenefit } from "../src/calc.ts";
+import { extraMinutesFromKm, netBenefit } from "../src/calc.ts";
 import { formatDuration } from "../src/format.ts";
 import { haversineKm, inLithuania, roadDistanceKm } from "../src/geo.ts";
 import { pluralCategory, setLocale } from "../src/i18n/index.ts";
@@ -103,11 +103,7 @@ describe("address tokens", () => {
   });
 });
 
-describe("max-speed ETA", () => {
-  it("is 60 minutes for 130 km at the motorway limit", () => {
-    expect(minutesAtMaxSpeed(130)).toBe(60);
-  });
-
+describe("duration format", () => {
   it("formats minutes and hours", () => {
     setLocale("lt");
     expect(formatDuration(0.2)).toBe("< 1 min");

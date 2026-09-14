@@ -117,4 +117,20 @@ describe("stationPopupHtml", () => {
     expect(html).not.toContain("98");
     expect(html).not.toContain("1.999");
   });
+
+  it("shows distance without a max-speed ETA", () => {
+    setLocale("en");
+    const html = stationPopupHtml(
+      station,
+      {
+        date: "2026-09-11",
+        generatedAt: "2026-09-12T19:09:22.245Z",
+        prices: {},
+      },
+      { distLabel: "12 km" },
+    );
+    expect(html).toContain("12 km");
+    expect(html).not.toContain("max speed");
+    expect(html).not.toContain("min");
+  });
 });

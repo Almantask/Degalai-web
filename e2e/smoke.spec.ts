@@ -264,4 +264,11 @@ test("destination draws a route from the current location", async ({ page }) => 
   await expect(page.locator("#map")).toHaveAttribute("data-station-count", String(routeStations));
   expect(viaRoutes).toBeGreaterThan(0);
   expect(viaRoutes).toBeLessThanOrEqual(5);
+  await expect(page.getByText(/max\. greičiu|at max speed/)).toHaveCount(0);
+  const metas = await page.locator(".station-eta").allTextContents();
+  expect(metas.length).toBe(routeStations);
+  for (const text of metas) {
+    expect(text).toContain("km");
+    expect(text).not.toMatch(/max\. greičiu|at max speed|\bmin\b|val\./);
+  }
 });

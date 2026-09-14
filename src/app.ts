@@ -1,11 +1,10 @@
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { extraMinutesFromKm, minutesAtMaxSpeed, netBenefit } from "./calc.ts";
+import { extraMinutesFromKm, netBenefit } from "./calc.ts";
 import { loadAppData, type AppData } from "./data.ts";
 import {
   formatDate,
   formatDateTime,
-  formatDuration,
   formatKm,
   formatMoney,
   formatPrice,
@@ -620,7 +619,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (document.activeElement?.id !== "start") render();
   }
 
-  function originForEta(): LngLat | null {
+  function originForDistance(): LngLat | null {
     const origin = routeOrigin();
     return origin && inLithuania(origin) ? origin : null;
   }
@@ -636,12 +635,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       : null;
   }
 
-  function etaParts(distKm: number): { dist: string; eta: string; label: string } {
-    const dist = formatKm(distKm);
-    const eta = t("list.etaMax", { time: formatDuration(minutesAtMaxSpeed(distKm)) });
-    return { dist, eta, label: `${dist} · ${eta}` };
-  }
-
   function stationAddress(s: Station): string {
     return s.address || s.city || t("list.addressMissing");
   }
@@ -650,7 +643,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const s = data.stations.find((x) => x.id === id);
     if (!s) return;
     const routeRow = routeRows.find((r) => r.station.id === id);
-    const origin = originForEta();
+    const origin = originForDistance();
     let distKm: number | undefined;
     if (endHit) {
       distKm = routeRow?.distFromStartKm;
@@ -666,7 +659,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
           stationPopupHtml(
             s,
             data.prices,
-            distKm != null ? { etaLabel: etaParts(distKm).label } : undefined,
+            distKm != null ? { distLabel: formatKm(distKm) } : undefined,
           ),
           { USE_PROFILES: { html: true } },
         ),
@@ -717,7 +710,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
             r.kind === "detour"
               ? t("route.extra", {
                   km: r.extraKm.toFixed(1),
-                  min: Math.round(r.extraMin),
                   save: formatMoney(r.benefit.netBenefit),
                 })
               : "";
@@ -793,8 +785,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     className = "",
     badges = "",
   ): string {
-    const eta = distKm != null ? etaParts(distKm) : null;
-    const etaLine = [eta?.label, extra].filter(Boolean).join(" ");
+    const dist = distKm != null ? formatKm(distKm) : "";
+    const metaLine = [dist, extra].filter(Boolean).join(" ");
     const cls = ["station-row", className].filter(Boolean).join(" ");
     return `<li><button type="button" class="${cls}" data-act="station" data-id="${escapeHtml(s.id)}">
       <span class="swatch" data-brand="${escapeHtml(s.brand)}"></span>
@@ -802,7 +794,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ${badges ? `<span class="station-badges">${badges}</span>` : ""}
         <strong>${escapeHtml(s.name)}</strong>
         <small class="station-addr">${escapeHtml(stationAddress(s))}</small>
-        ${etaLine ? `<small class="station-eta">${escapeHtml(etaLine)}</small>` : ""}
+        ${metaLine ? `<small class="station-eta">${escapeHtml(metaLine)}</small>` : ""}
       </span>
       <span class="station-price">${escapeHtml(formatPrice(price))}</span>
     </button></li>`;
