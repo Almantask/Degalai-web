@@ -5,8 +5,8 @@ export interface PricedRouteRow {
 }
 
 export const TOP_CHEAP_COUNT = 5;
-/** Stations this far from the trip can still be considered for a cheap via-route. */
-export const CHEAP_VIA_CORRIDOR_KM = 30;
+/** Stations this close to the trip polyline count as on the way. */
+export const ON_ROUTE_KM = 0.5;
 
 export function byPrice<T extends { price: number; station: { id: string } }>(a: T, b: T): number {
   return a.price - b.price || a.station.id.localeCompare(b.station.id);
@@ -17,6 +17,19 @@ export function topCheapStations<T extends { price: number; station: { id: strin
   limit = TOP_CHEAP_COUNT,
 ): T[] {
   return [...rows].sort(byPrice).slice(0, limit);
+}
+
+/** Map pins: five cheapest on the way, plus any station the user picked from the list. */
+export function mapRouteStationIds<T extends { price: number; station: { id: string } }>(
+  rows: T[],
+  extraIds: ReadonlySet<string> = new Set(),
+  limit = TOP_CHEAP_COUNT,
+): Set<string> {
+  const ids = new Set(topCheapStations(rows, limit).map((r) => r.station.id));
+  for (const id of extraIds) {
+    if (rows.some((r) => r.station.id === id)) ids.add(id);
+  }
+  return ids;
 }
 
 /** Pin cheapest-on-route then cheapest-overall, then the rest cheapest-first. */

@@ -1,4 +1,4 @@
-import { orderRouteRows, topCheapStations } from "../src/route-list.ts";
+import { mapRouteStationIds, orderRouteRows, topCheapStations } from "../src/route-list.ts";
 
 function row(id: string, price: number, kind: "on" | "detour") {
   return { station: { id }, price, kind };
@@ -64,5 +64,38 @@ describe("topCheapStations", () => {
 
   it("returns every row when there are fewer than the limit", () => {
     expect(topCheapStations([row("a", 2, "on")]).map((r) => r.station.id)).toEqual(["a"]);
+  });
+});
+
+describe("mapRouteStationIds", () => {
+  it("keeps the five cheapest on the way", () => {
+    const rows = [
+      row("d", 1.5, "on"),
+      row("a", 1.2, "on"),
+      row("c", 1.4, "on"),
+      row("b", 1.25, "on"),
+      row("e", 1.8, "on"),
+      row("f", 1.1, "on"),
+    ];
+    expect([...mapRouteStationIds(rows)].sort()).toEqual(["a", "b", "c", "d", "f"]);
+  });
+
+  it("adds a list-picked station even when it is not in the top five", () => {
+    const rows = [
+      row("a", 1.1, "on"),
+      row("b", 1.2, "on"),
+      row("c", 1.3, "on"),
+      row("d", 1.4, "on"),
+      row("e", 1.5, "on"),
+      row("picked", 1.9, "on"),
+    ];
+    const ids = mapRouteStationIds(rows, new Set(["picked"]));
+    expect(ids.has("picked")).toBe(true);
+    expect(ids.size).toBe(6);
+  });
+
+  it("ignores extra ids that are not on the way", () => {
+    const ids = mapRouteStationIds([row("a", 1.2, "on")], new Set(["off-route"]));
+    expect([...ids]).toEqual(["a"]);
   });
 });

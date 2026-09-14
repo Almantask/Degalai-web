@@ -1,6 +1,6 @@
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { extraMinutesFromKm, netBenefit } from "./calc.ts";
+import { netBenefit } from "./calc.ts";
 import { cheapestHourRanges, filterSeries, formatCheapRanges } from "./cheap-hours.ts";
 import { loadAppData, loadHistory, type AppData } from "./data.ts";
 import {
@@ -41,7 +41,7 @@ import {
   stationsInView,
   routeStationEmphasis,
 } from "./map.ts";
-import { CHEAP_VIA_CORRIDOR_KM, orderRouteRows, topCheapStations } from "./route-list.ts";
+import { mapRouteStationIds, ON_ROUTE_KM, orderRouteRows } from "./route-list.ts";
 import { hrefFor, navigate, parsePath, pathFor, type View } from "./router.ts";
 import { fetchRoute, geocode, reverseGeocode, type GeoHit, type RouteResult } from "./routing.ts";
 import DOMPurify from "dompurify";
@@ -126,6 +126,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let historyLoading = false;
   let historyPlot: { destroy: () => void } | null = null;
   let routeRows: RouteStationRow[] = [];
+  let extraMapStationIds = new Set<string>();
   let routeLine: RouteResult | null = null;
   let startHit: GeoHit | null = null;
   let startQuery = "";
@@ -467,6 +468,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     destStatus = "idle";
     routeLine = null;
     routeRows = [];
+    extraMapStationIds = new Set();
     pickMode = pickMode === "dest-start" ? null : pickMode;
     headerMinimized = false;
     listMinimized = false;
@@ -509,12 +511,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function refreshMap(): void {
-    const routeIds = routeLine ? new Set(routeRows.map((r) => r.station.id)) : null;
+    const routeIds = routeLine ? mapStationIds() : null;
     const stations = stationsForRouteMap(includedStations(), routeIds);
-    const cheapestOnId = routeLine ? orderRouteRows(routeRows).cheapestOn?.station.id : undefined;
+    const shown = routeLine ? routeRows.filter((r) => routeIds?.has(r.station.id)) : [];
+    const cheapestOnId = shown.length ? orderRouteRows(shown).cheapestOn?.station.id : undefined;
     const emphasis = routeLine
       ? Object.fromEntries(
-          routeRows.map((r) => [
+          shown.map((r) => [
             r.station.id,
             routeStationEmphasis(r.kind, r.station.id === cheapestOnId),
           ]),
@@ -522,13 +525,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
       : undefined;
     setStationData(map, stations, data.prices, settings.fuel, settings, emphasis);
     if (routeLine) {
-      const detours = viaGeometries();
-      setRouteData(map, routeLine.geometry, detours);
+      setRouteData(map, routeLine.geometry, viaGeometries());
     }
   }
 
+  function mapStationIds(): Set<string> {
+    return mapRouteStationIds(routeRows, extraMapStationIds);
+  }
+
   function viaGeometries(): LngLat[][] {
+    const ids = mapStationIds();
     return routeRows
+      .filter((r) => ids.has(r.station.id))
       .map((r) => r.viaGeometry)
       .filter((g): g is LngLat[] => Boolean(g && g.length >= 2));
   }
@@ -636,6 +644,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (!res) {
       routeLine = null;
       routeRows = [];
+      extraMapStationIds = new Set();
       destStatus = "not-found";
       setRouteData(map, null);
       setEndpointMarkers(null, null);
@@ -643,6 +652,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       render();
       return;
     }
+    extraMapStationIds = new Set();
     routeLine = res;
     destStatus = "idle";
     setEndpointMarkers(start, end);
@@ -656,64 +666,57 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const end = res.geometry[res.geometry.length - 1];
     if (!start || !end) {
       routeRows = [];
+      extraMapStationIds = new Set();
       return;
     }
     const onWay: RouteStationRow[] = [];
-    const nearby: RouteStationRow[] = [];
     for (const s of includedStations()) {
       const price = data.prices?.prices[s.id]?.[settings.fuel]?.price;
       if (price == null) continue;
       const p = { lat: s.lat, lon: s.lon };
       const d = distanceToPolylineKm(p, res.geometry);
+      if (d > ON_ROUTE_KM) continue;
       const nearest = nearestPointOnPolyline(p, res.geometry);
       const along = distanceAlongLineKm(res.geometry, nearest.index, nearest.point);
-      if (d <= 0.5) {
-        onWay.push({
-          station: s,
-          price,
-          kind: "on",
-          distFromStartKm: along,
-          extraKm: 0,
-          extraMin: 0,
-          benefit: priceBenefit(price, price),
-        });
-      } else if (d <= CHEAP_VIA_CORRIDOR_KM) {
-        nearby.push({
-          station: s,
-          price,
-          kind: "detour",
-          distFromStartKm: along,
-          extraKm: 2 * d * DEFAULT_SETTINGS.roadFactor,
-          extraMin: extraMinutesFromKm(2 * d * DEFAULT_SETTINGS.roadFactor),
-          benefit: priceBenefit(0, price),
-        });
-      }
+      onWay.push({
+        station: s,
+        price,
+        kind: "on",
+        distFromStartKm: along,
+        extraKm: 0,
+        extraMin: 0,
+        benefit: priceBenefit(price, price),
+      });
     }
-    const baselinePrice = onWay.length
-      ? Math.min(...onWay.map((r) => r.price))
-      : nearby.length
-        ? Math.min(...nearby.map((r) => r.price))
-        : undefined;
+    const baselinePrice = onWay.length ? Math.min(...onWay.map((r) => r.price)) : undefined;
     for (const row of onWay) {
       if (baselinePrice == null) continue;
       row.benefit = priceBenefit(baselinePrice, row.price);
     }
-    const topCheap = topCheapStations([...onWay, ...nearby]).filter((r) => r.kind === "detour");
-    await Promise.all(
-      topCheap.map(async (row) => {
-        const via = { lat: row.station.lat, lon: row.station.lon };
-        const viaRoute = await fetchRoute(start, end, settings.routePreference, via);
-        if (viaRoute) {
-          row.extraKm = Math.max(0, viaRoute.distanceKm - res.distanceKm);
-          row.extraMin = Math.max(0, viaRoute.durationMin - res.durationMin);
-          row.viaGeometry = viaRoute.geometry;
-        } else {
-          row.viaGeometry = [start, via, end];
-        }
-        if (baselinePrice != null) row.benefit = priceBenefit(baselinePrice, row.price);
-      }),
+    routeRows = onWay;
+    extraMapStationIds = new Set(
+      [...extraMapStationIds].filter((id) => onWay.some((r) => r.station.id === id)),
     );
-    routeRows = [...onWay, ...topCheap];
+    const mapIds = mapRouteStationIds(onWay, extraMapStationIds);
+    await Promise.all(
+      onWay.filter((row) => mapIds.has(row.station.id)).map((row) => attachViaRoute(row, res)),
+    );
+  }
+
+  async function attachViaRoute(row: RouteStationRow, res: RouteResult): Promise<void> {
+    if (row.viaGeometry && row.viaGeometry.length >= 2) return;
+    const start = res.geometry[0];
+    const end = res.geometry[res.geometry.length - 1];
+    if (!start || !end) return;
+    const via = { lat: row.station.lat, lon: row.station.lon };
+    const viaRoute = await fetchRoute(start, end, settings.routePreference, via);
+    if (viaRoute) {
+      row.extraKm = Math.max(0, viaRoute.distanceKm - res.distanceKm);
+      row.extraMin = Math.max(0, viaRoute.durationMin - res.durationMin);
+      row.viaGeometry = viaRoute.geometry;
+    } else {
+      row.viaGeometry = [start, via, end];
+    }
   }
 
   function handleMapPick(ll: LngLat): void {
@@ -761,9 +764,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function openStation(id: string): void {
+    void revealStation(id);
+  }
+
+  async function revealStation(id: string): Promise<void> {
     const s = data.stations.find((x) => x.id === id);
     if (!s) return;
     const routeRow = routeRows.find((r) => r.station.id === id);
+    if (routeLine && routeRow) {
+      extraMapStationIds.add(id);
+      await attachViaRoute(routeRow, routeLine);
+      refreshMap();
+    }
     const origin = originForDistance();
     let distKm: number | undefined;
     if (endHit) {

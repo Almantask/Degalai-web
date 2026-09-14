@@ -17,8 +17,9 @@ selected.
 ![Map of Lithuanian fuel stations with a cheapest-first list](docs/screenshots/map.png)
 
 Set a start (your location, an address, or a tap on the map) and a destination.
-Only stations on the route stay on the map. Orange pins are on the way, gold is
-the cheapest of those, indigo is a detour.
+Only the five cheapest stations on the way stay on the map, each with a route
+through it. Stations off the corridor are hidden; tap another from the list to
+add it.
 
 ![Route from Vilnius to Kaunas with on-the-way stations](docs/screenshots/route.png)
 

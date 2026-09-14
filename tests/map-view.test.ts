@@ -62,7 +62,7 @@ describe("stationsForRouteMap", () => {
     expect(stationsForRouteMap([a, b, c], null)).toEqual([a, b, c]);
   });
 
-  it("keeps only stations on the route (including cheap vias)", () => {
+  it("keeps only selected route stations", () => {
     expect(stationsForRouteMap([a, b, c], new Set(["a", "c"]))).toEqual([a, c]);
   });
 

@@ -379,12 +379,11 @@ test("destination draws a route from the current location", async ({ page }) => 
   const routeStations = await page.locator(".station-row").count();
   expect(routeStations).toBeGreaterThan(0);
   expect(routeStations).toBeLessThan(allStations);
-  await expect(page.locator(".station-row.is-on-route, .station-row.is-detour")).toHaveCount(
-    routeStations,
-  );
-  await expect(page.locator("#map")).toHaveAttribute("data-station-count", String(routeStations));
-  expect(viaRoutes).toBeGreaterThan(0);
-  expect(viaRoutes).toBeLessThanOrEqual(5);
+  await expect(page.locator(".station-row.is-detour")).toHaveCount(0);
+  await expect(page.locator(".station-row.is-on-route")).toHaveCount(routeStations);
+  const mapCount = Number(await page.locator("#map").getAttribute("data-station-count"));
+  expect(mapCount).toBe(Math.min(5, routeStations));
+  expect(viaRoutes).toBe(mapCount);
   await expect(page.getByText(/max\. greičiu|at max speed/)).toHaveCount(0);
   const metas = await page.locator(".station-eta").allTextContents();
   expect(metas.length).toBe(routeStations);
@@ -394,6 +393,13 @@ test("destination draws a route from the current location", async ({ page }) => 
   }
   await page.getByRole("button", { name: /Išskleisti sąrašą/ }).click();
   await expect(page.locator(".list-body")).toBeVisible();
+  if (routeStations > 5) {
+    await page.locator(".station-row").last().click();
+    await expect.poll(() => viaRoutes).toBe(mapCount + 1);
+    await expect(page.locator("#map")).toHaveAttribute("data-station-count", String(mapCount + 1));
+    await page.getByRole("button", { name: /Išskleisti sąrašą/ }).click();
+    await expect(page.locator(".list-body")).toBeVisible();
+  }
   await page.locator(".station-row").first().click();
   await expect(page.locator("#header")).toHaveClass(/is-min/);
   await expect(page.locator(".sheet")).toHaveClass(/is-min/);
