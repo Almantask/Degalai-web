@@ -6,7 +6,7 @@ test("Lithuanian map shell loads", async ({ page }) => {
   await expect(page.locator("#map")).toBeVisible();
   await expect(page.getByRole("button", { name: /Dyzelinas|Diesel/ })).toBeVisible();
   await expect(page.getByPlaceholder("Kur važiuojate?")).toBeVisible();
-  await expect(page.getByText("Nuo mano vietos")).toBeVisible();
+  await expect(page.getByPlaceholder("Nuo mano vietos")).toBeVisible();
   await expect(page.getByRole("link", { name: "Istorija" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Apie" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Maršrutas" })).toHaveCount(0);
@@ -16,6 +16,7 @@ test("English locale loads without history or about", async ({ page }) => {
   await page.goto("/en/");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByPlaceholder("Where are you going?")).toBeVisible();
+  await expect(page.getByPlaceholder("From my location")).toBeVisible();
   await expect(page.getByRole("link", { name: "Donate" })).toHaveAttribute(
     "href",
     "https://github.com/sponsors/Almantask",
@@ -171,5 +172,78 @@ test("station popup has no navigate or updated text", async ({ page }) => {
   await expect(page.locator(".popup-nav")).toHaveCount(0);
   await expect(page.locator(".popup-meta")).toHaveCount(0);
   await expect(page.locator(".maplibregl-popup")).not.toContainText(/Atnaujinta/);
+  const fuelLabels = await page.locator(".maplibregl-popup .popup-row > span:first-child").allTextContents();
+  expect(fuelLabels).not.toContain("98");
   await expect(page.locator(".list-updated")).toContainText(/Atnaujinta/);
+});
+
+test("destination draws a route from the current location", async ({ page }) => {
+  await page.addInitScript(() => {
+    const pos = {
+      coords: {
+        latitude: 54.687,
+        longitude: 25.28,
+        accuracy: 10,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+      },
+      timestamp: Date.now(),
+    };
+    navigator.geolocation.getCurrentPosition = (ok) => ok(pos as GeolocationPosition);
+  });
+  await page.route("https://photon.komoot.io/**", async (route) => {
+    const url = route.request().url();
+    if (url.includes("/reverse")) {
+      await route.fulfill({
+        json: {
+          features: [
+            {
+              geometry: { coordinates: [25.28, 54.687] },
+              properties: { name: "Vilnius", city: "Vilnius" },
+            },
+          ],
+        },
+      });
+      return;
+    }
+    await route.fulfill({
+      json: {
+        features: [
+          {
+            geometry: { coordinates: [23.9, 54.9] },
+            properties: { name: "Kaunas", city: "Kaunas" },
+          },
+        ],
+      },
+    });
+  });
+  await page.route("https://router.project-osrm.org/**", async (route) => {
+    await route.fulfill({
+      json: {
+        code: "Ok",
+        routes: [
+          {
+            distance: 100000,
+            duration: 5400,
+            geometry: {
+              coordinates: [
+                [25.28, 54.687],
+                [24.6, 54.8],
+                [23.9, 54.9],
+              ],
+            },
+          },
+        ],
+      },
+    });
+  });
+  await page.goto("/");
+  await expect(page.getByPlaceholder("Nuo mano vietos")).toBeVisible();
+  const dest = page.getByPlaceholder("Kur važiuojate?");
+  await dest.fill("Kaunas");
+  await dest.press("Enter");
+  await expect(page.locator(".app")).toHaveClass(/has-route/, { timeout: 15_000 });
+  await expect(page.locator(".maplibregl-marker")).toHaveCount(2);
 });

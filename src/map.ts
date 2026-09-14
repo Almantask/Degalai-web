@@ -297,7 +297,7 @@ export function stationPopupHtml(
   prices: DailyPrices | null,
   extra?: StationPopupExtra,
 ): string {
-  const fuels = (["95", "98", "D", "LPG"] as FuelType[])
+  const fuels = (["95", "D", "LPG"] as FuelType[])
     .map((f) => {
       const e = prices?.prices[s.id]?.[f];
       const price = e ? formatPrice(e.price) : t("popup.noPrice");

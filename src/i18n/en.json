@@ -20,6 +20,7 @@
   "action.apply": "Apply",
   "dest.placeholder": "Where are you going?",
   "dest.from": "From my location",
+  "dest.clearStart": "Clear start",
   "dest.locating": "Finding your location…",
   "dest.denied": "Allow location access or tap the map to set a start.",
   "dest.outside": "Your current location is outside Lithuania. Tap the map to set a starting point.",

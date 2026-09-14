@@ -49,4 +49,24 @@ describe("stationPopupHtml", () => {
     expect(html).not.toContain("Navigate");
     expect(html).not.toContain("openstreetmap.org/directions");
   });
+
+  it("does not show 98 prices", () => {
+    setLocale("en");
+    const html = stationPopupHtml(station, {
+      date: "2026-09-11",
+      generatedAt: "2026-09-12T19:09:22.245Z",
+      prices: {
+        "osm:1": {
+          "95": { price: 1.111, source: "t", observedAt: "2026-09-11T12:00:00Z" },
+          "98": { price: 1.999, source: "t", observedAt: "2026-09-11T12:00:00Z" },
+          D: { price: 1.222, source: "t", observedAt: "2026-09-11T12:00:00Z" },
+        },
+      },
+    });
+    expect(html).toContain("95");
+    expect(html).toContain("1.111");
+    expect(html).toContain("1.222");
+    expect(html).not.toContain("98");
+    expect(html).not.toContain("1.999");
+  });
 });

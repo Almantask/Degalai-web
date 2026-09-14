@@ -20,6 +20,7 @@
   "action.apply": "Taikyti",
   "dest.placeholder": "Kur važiuojate?",
   "dest.from": "Nuo mano vietos",
+  "dest.clearStart": "Išvalyti pradžią",
   "dest.locating": "Nustatoma jūsų vieta…",
   "dest.denied": "Leiskite vietos nustatymą arba bakstelėkite žemėlapį pradžiai.",
   "dest.outside": "Jūsų dabartinė vieta ne Lietuvoje. Bakstelėkite žemėlapį pradžiai.",

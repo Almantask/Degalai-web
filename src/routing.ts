@@ -8,6 +8,35 @@ export interface GeoHit {
   lon: number;
 }
 
+function featureLabel(p: {
+  name?: string;
+  street?: string;
+  housenumber?: string;
+  city?: string;
+}): string {
+  return [p.name, [p.street, p.housenumber].filter(Boolean).join(" "), p.city]
+    .filter(Boolean)
+    .join(", ");
+}
+
+interface PhotonResponse {
+  features?: Array<{
+    geometry: { coordinates: [number, number] };
+    properties: { name?: string; street?: string; housenumber?: string; city?: string };
+  }>;
+}
+
+function parseHits(json: PhotonResponse): GeoHit[] {
+  return (json.features ?? []).map((f) => {
+    const [lon, lat] = f.geometry.coordinates;
+    return {
+      label: featureLabel(f.properties) || `${lat.toFixed(5)}, ${lon.toFixed(5)}`,
+      lat,
+      lon,
+    };
+  });
+}
+
 export async function geocode(query: string, locale: Locale): Promise<GeoHit[]> {
   const q = query.trim();
   if (q.length < 2) return [];
@@ -23,20 +52,21 @@ export async function geocode(query: string, locale: Locale): Promise<GeoHit[]> 
   );
   const res = await fetch(url);
   if (!res.ok) return [];
-  const json = (await res.json()) as {
-    features: Array<{
-      geometry: { coordinates: [number, number] };
-      properties: { name?: string; street?: string; housenumber?: string; city?: string; country?: string };
-    }>;
-  };
-  return (json.features ?? []).map((f) => {
-    const [lon, lat] = f.geometry.coordinates;
-    const p = f.properties;
-    const label = [p.name, [p.street, p.housenumber].filter(Boolean).join(" "), p.city]
-      .filter(Boolean)
-      .join(", ");
-    return { label, lat, lon };
-  });
+  return parseHits((await res.json()) as PhotonResponse);
+}
+
+export async function reverseGeocode(ll: LngLat, locale: Locale): Promise<GeoHit | null> {
+  const url = new URL("https://photon.komoot.io/reverse");
+  url.searchParams.set("lat", String(ll.lat));
+  url.searchParams.set("lon", String(ll.lon));
+  url.searchParams.set("lang", locale === "lt" ? "default" : locale);
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    return parseHits((await res.json()) as PhotonResponse)[0] ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export interface RouteResult {
@@ -62,7 +92,11 @@ export async function fetchRoute(
   return null;
 }
 
-async function osrmRoute(start: LngLat, end: LngLat, via?: LngLat): Promise<Omit<RouteResult, "profile"> | null> {
+async function osrmRoute(
+  start: LngLat,
+  end: LngLat,
+  via?: LngLat,
+): Promise<Omit<RouteResult, "profile"> | null> {
   const parts = [start, via, end].filter(Boolean) as LngLat[];
   const coords = parts.map((p) => `${p.lon},${p.lat}`).join(";");
   const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
@@ -71,7 +105,11 @@ async function osrmRoute(start: LngLat, end: LngLat, via?: LngLat): Promise<Omit
     if (!res.ok) return null;
     const json = (await res.json()) as {
       code?: string;
-      routes?: Array<{ distance: number; duration: number; geometry: { coordinates: [number, number][] } }>;
+      routes?: Array<{
+        distance: number;
+        duration: number;
+        geometry: { coordinates: [number, number][] };
+      }>;
     };
     const r = json.routes?.[0];
     if (!r) return null;

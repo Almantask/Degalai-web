@@ -39,7 +39,7 @@ import {
 } from "./map.ts";
 import { orderRouteRows } from "./route-list.ts";
 import { hrefFor, navigate, parsePath, pathFor, type View } from "./router.ts";
-import { fetchRoute, geocode, type GeoHit, type RouteResult } from "./routing.ts";
+import { fetchRoute, geocode, reverseGeocode, type GeoHit, type RouteResult } from "./routing.ts";
 import DOMPurify from "dompurify";
 import { fuelFromUrl, loadSettings, saveSettings } from "./settings.ts";
 import {
@@ -97,12 +97,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let headerMinimized = false;
   let routeRows: RouteStationRow[] = [];
   let routeLine: RouteResult | null = null;
+  let startHit: GeoHit | null = null;
+  let startQuery = "";
+  let startIsGps = true;
   let endHit: GeoHit | null = null;
   let destQuery = "";
   let destStatus: DestStatus = "idle";
   let pendingDest = false;
   let popup: maplibregl.Popup | null = null;
   let locateStatus: "idle" | "pending" | "denied" | "outside" = "idle";
+  let startMarker: maplibregl.Marker | null = null;
+  let endMarker: maplibregl.Marker | null = null;
 
   root.innerHTML = shellHtml();
   const mapDiv = root.querySelector<HTMLElement>("#map")!;
@@ -252,6 +257,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
         openStation(tEl.dataset.id!);
       } else if (act === "clear-dest") {
         clearDestination();
+      } else if (act === "clear-start") {
+        resetStartToGps();
       } else if (act === "toggle-list") {
         listMinimized = !listMinimized;
         renderList();
@@ -264,7 +271,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     root.addEventListener("input", (e) => {
       const el = e.target as HTMLInputElement;
       if (el.id === "dest") destQuery = el.value;
-      else if (el.id === "set-cons")
+      else if (el.id === "start") {
+        startQuery = el.value;
+        startIsGps = isGpsStartQuery(el.value);
+        if (startIsGps) startHit = null;
+      } else if (el.id === "set-cons")
         settings.consumption = num(el.value, DEFAULT_SETTINGS.consumption);
       else if (el.id === "set-time") settings.timeValue = num(el.value, 0);
     });
@@ -274,13 +285,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
     });
     root.addEventListener("keyup", (e) => {
       const el = e.target as HTMLInputElement;
-      if (el.id === "dest") debounceSuggest(el);
+      if (el.id === "dest" || el.id === "start") debounceSuggest(el);
     });
     root.addEventListener("keydown", (e) => {
       const el = e.target as HTMLInputElement;
       if (el.id === "dest" && e.key === "Enter") {
         e.preventDefault();
         void goDestination(el.value);
+      } else if (el.id === "start" && e.key === "Enter") {
+        e.preventDefault();
+        void goStart(el.value);
       }
     });
   }
@@ -293,7 +307,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   async function suggest(el: HTMLInputElement): Promise<void> {
     const hits = await geocode(el.value, locale);
-    const box = root.querySelector("#dest-sug");
+    const box = root.querySelector(el.id === "start" ? "#start-sug" : "#dest-sug");
     if (!box) return;
     box.innerHTML = hits
       .map(
@@ -304,11 +318,58 @@ export async function startApp(root: HTMLElement): Promise<void> {
       btn.addEventListener("click", () => {
         const hit = hits[i];
         el.value = hit.label;
-        destQuery = hit.label;
         box.innerHTML = "";
-        void selectDestination(hit);
+        if (el.id === "start") void selectStart(hit);
+        else void selectDestination(hit);
       });
     });
+  }
+
+  function isGpsStartQuery(query: string): boolean {
+    const v = query.trim().toLowerCase();
+    if (!v) return true;
+    return v === t("route.myLocation").toLowerCase() || v === t("dest.from").toLowerCase();
+  }
+
+  async function goStart(query: string): Promise<void> {
+    if (isGpsStartQuery(query)) {
+      resetStartToGps();
+      return;
+    }
+    const hits = await geocode(query, locale);
+    if (!hits[0]) {
+      destStatus = "not-found";
+      render();
+      return;
+    }
+    await selectStart(hits[0]);
+  }
+
+  async function selectStart(hit: GeoHit): Promise<void> {
+    startHit = hit;
+    startQuery = hit.label;
+    startIsGps = false;
+    pickMode = null;
+    if (endHit) await runRoute();
+    else render();
+  }
+
+  function resetStartToGps(): void {
+    startHit = null;
+    startIsGps = true;
+    startQuery = userLocation ? t("route.myLocation") : "";
+    pickMode = null;
+    if (userLocation) void fillGpsStartLabel(userLocation);
+    else requestLocation(true);
+    if (endHit) void runRoute();
+    else render();
+  }
+
+  async function fillGpsStartLabel(ll: LngLat): Promise<void> {
+    const hit = await reverseGeocode(ll, locale);
+    if (!startIsGps) return;
+    startQuery = hit?.label || t("route.myLocation");
+    if (document.activeElement?.id !== "start") render();
   }
 
   async function goDestination(query: string): Promise<void> {
@@ -326,10 +387,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
     destQuery = hit.label;
     settingsOpen = false;
     pendingDest = true;
-    if (!userLocation) {
+    if (!routeOrigin()) {
       destStatus = locateStatus === "denied" ? "denied" : "locating";
-      pickMode = locateStatus === "denied" ? "dest-start" : pickMode;
-      requestLocation(true);
+      pickMode = locateStatus === "denied" || locateStatus === "outside" ? "dest-start" : pickMode;
+      if (startIsGps) requestLocation(true);
       render();
       return;
     }
@@ -345,8 +406,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     routeRows = [];
     pickMode = pickMode === "dest-start" ? null : pickMode;
     setRouteData(map, null);
+    setEndpointMarkers(null, null);
     refreshMap();
     render();
+  }
+
+  function routeOrigin(): LngLat | null {
+    if (!startIsGps && startHit) return { lat: startHit.lat, lon: startHit.lon };
+    return userLocation && inLithuania(userLocation) ? userLocation : null;
   }
 
   function persistFuel(): void {
@@ -403,6 +470,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
         }
         userLocation = ll;
         locateStatus = "idle";
+        if (startIsGps) {
+          if (!startQuery) startQuery = t("route.myLocation");
+          void fillGpsStartLabel(ll);
+        }
         if (pendingDest && endHit) void runRoute();
         else render();
       },
@@ -419,7 +490,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   async function runRoute(): Promise<void> {
-    const start = userLocation;
+    const start = routeOrigin();
     const end = endHit ? { lat: endHit.lat, lon: endHit.lon } : null;
     if (!end) {
       destStatus = "idle";
@@ -442,12 +513,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
       routeRows = [];
       destStatus = "not-found";
       setRouteData(map, null);
+      setEndpointMarkers(null, null);
       refreshMap();
       render();
       return;
     }
     routeLine = res;
     destStatus = "idle";
+    setEndpointMarkers(start, end);
     await evaluateRouteStations(res);
     refreshMap();
     render();
@@ -512,18 +585,43 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function handleMapPick(ll: LngLat): void {
-    if (pickMode === "dest-start" || (pendingDest && !userLocation)) {
+    if (pickMode === "dest-start" || (pendingDest && !routeOrigin())) {
       if (!inLithuania(ll)) return;
       userLocation = ll;
       pickMode = null;
       locateStatus = "idle";
+      startHit = { label: t("route.myLocation"), lat: ll.lat, lon: ll.lon };
+      startQuery = t("route.myLocation");
+      startIsGps = false;
+      void fillMapStartLabel(ll);
       if (endHit) void runRoute();
       else render();
     }
   }
 
+  async function fillMapStartLabel(ll: LngLat): Promise<void> {
+    const hit = await reverseGeocode(ll, locale);
+    if (!startHit || startIsGps) return;
+    if (Math.abs(startHit.lat - ll.lat) > 1e-6 || Math.abs(startHit.lon - ll.lon) > 1e-6) return;
+    startHit = { label: hit?.label || t("route.myLocation"), lat: ll.lat, lon: ll.lon };
+    startQuery = startHit.label;
+    if (document.activeElement?.id !== "start") render();
+  }
+
   function originForEta(): LngLat | null {
-    return userLocation && inLithuania(userLocation) ? userLocation : null;
+    const origin = routeOrigin();
+    return origin && inLithuania(origin) ? origin : null;
+  }
+
+  function setEndpointMarkers(start: LngLat | null, end: LngLat | null): void {
+    startMarker?.remove();
+    endMarker?.remove();
+    startMarker = start
+      ? new maplibregl.Marker({ color: "#0f8a4b" }).setLngLat([start.lon, start.lat]).addTo(map)
+      : null;
+    endMarker = end
+      ? new maplibregl.Marker({ color: "#b91c1c" }).setLngLat([end.lon, end.lat]).addTo(map)
+      : null;
   }
 
   function etaParts(distKm: number): { dist: string; eta: string; label: string } {
@@ -576,6 +674,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     renderList();
     const banner = root.querySelector("#banner")!;
     banner.innerHTML = statusHtml();
+    root.querySelector(".app")?.classList.toggle("has-route", Boolean(routeLine));
     syncMapControls();
   }
 
@@ -719,7 +818,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function headerHtml(): string {
     const g = fuelGroupOf(settings.fuel);
     const destVal = destQuery || endHit?.label || "";
-    const minLabel = destVal || t("app.name");
+    const startVal = startQuery;
+    const startPlaceholder =
+      startIsGps && locateStatus === "pending" ? t("dest.locating") : t("dest.from");
+    const minLabel = destVal || startVal || t("app.name");
     return `
       <div class="header-body">
         <div class="topbar">
@@ -744,12 +846,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
             .join("")}
         </div>
         <div class="dest">
-          <div class="dest-from">
-            <span class="dest-pin" aria-hidden="true"></span>
-            <span>${escapeHtml(t("dest.from"))}</span>
+          <div class="dest-field">
+            <span class="dest-pin dest-pin-start" aria-hidden="true"></span>
+            <input id="start" class="search" type="search" autocomplete="off" aria-label="${escapeHtml(t("dest.from"))}" placeholder="${escapeHtml(startPlaceholder)}" value="${escapeHtml(startVal)}" />
+            ${!startIsGps ? `<button type="button" class="dest-clear" data-act="clear-start" aria-label="${escapeHtml(t("dest.clearStart"))}">×</button>` : ""}
+            <div id="start-sug" class="sug-box"></div>
           </div>
           <div class="dest-field">
-            <input id="dest" class="search" type="search" autocomplete="off" placeholder="${escapeHtml(t("dest.placeholder"))}" value="${escapeHtml(destVal)}" />
+            <span class="dest-pin dest-pin-end" aria-hidden="true"></span>
+            <input id="dest" class="search" type="search" autocomplete="off" aria-label="${escapeHtml(t("dest.placeholder"))}" placeholder="${escapeHtml(t("dest.placeholder"))}" value="${escapeHtml(destVal)}" />
             ${endHit ? `<button type="button" class="dest-clear" data-act="clear-dest" aria-label="${escapeHtml(t("dest.clear"))}">×</button>` : ""}
             <div id="dest-sug" class="sug-box"></div>
           </div>
