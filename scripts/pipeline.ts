@@ -1,9 +1,10 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { DailyPrices, DataMeta, Observation, Station } from "../src/types.ts";
+import { HISTORY_KEEP_DAYS } from "../src/types.ts";
 import { fetchLeaWorkbook } from "./adapters/lea.ts";
 import { geocodePhoton, loadGeocodeCache, saveGeocodeCache, sleep } from "./geocode.ts";
-import { recomputeHistory } from "./history.ts";
+import { datesWithinDays, isHistoryFile, prunePriceFiles, recomputeHistory } from "./history.ts";
 import { loadOverrides, matchByAddress, matchObservations } from "./match.ts";
 import { chooseOsmStations, fetchOsmStations } from "./osm.ts";
 import { applyStale, observationsToDaily } from "./validate.ts";
@@ -187,8 +188,13 @@ async function main(): Promise<void> {
   writeJson(join(PRICES, `${date}.json`), daily);
   writeJson(join(REPORTS, "validation.json"), log);
 
-  const history = recomputeHistory(PRICES, stations);
-  writeJson(join(DATA, "history.json"), history);
+  const removed = prunePriceFiles(PRICES, date);
+  if (removed.length)
+    console.log(`Pruned ${removed.length} price files older than ${HISTORY_KEEP_DAYS} days`);
+
+  const storedHistory = readJson<unknown>(join(DATA, "history.json"), null);
+  const previousHistory = isHistoryFile(storedHistory) ? storedHistory : null;
+  writeJson(join(DATA, "history.json"), recomputeHistory(PRICES, stations, previousHistory));
   writeJson(join(DATA, "stations.json"), stations);
 
   const priced = Object.keys(daily.prices).length;
@@ -205,9 +211,11 @@ async function main(): Promise<void> {
   );
 
   const otherDates = leaDates.filter((d) => d !== date);
-  if (otherDates.length && Object.keys(matched.sourceToStation).length) {
+  const backfill = args.has("--backfill");
+  if (backfill && otherDates.length && Object.keys(matched.sourceToStation).length) {
+    const recent = datesWithinDays(otherDates, date);
     let prev: DailyPrices | null = null;
-    for (const d of otherDates) {
+    for (const d of recent) {
       const rows = (byDate.get(d) ?? [])
         .map((o) => {
           const sid = matched.sourceToStation[o.sourceStationId];
@@ -219,7 +227,8 @@ async function main(): Promise<void> {
       prev = snap.daily;
       console.log(`Backfilled ${d}: ${Object.keys(snap.daily.prices).length} stations`);
     }
-    writeJson(join(DATA, "history.json"), recomputeHistory(PRICES, stations));
+    prunePriceFiles(PRICES, date);
+    writeJson(join(DATA, "history.json"), recomputeHistory(PRICES, stations, previousHistory));
   }
 }
 

@@ -1,6 +1,8 @@
 export const FUEL_TYPES = ["95", "98", "D", "LPG"] as const;
 export type FuelType = (typeof FUEL_TYPES)[number];
 
+export const HISTORY_KEEP_DAYS = 7;
+
 export const FUEL_GROUPS = ["diesel", "petrol", "gas"] as const;
 export type FuelGroup = (typeof FUEL_GROUPS)[number];
 
@@ -30,22 +32,22 @@ export interface DailyPrices {
   prices: Record<string, Partial<Record<FuelType, PriceEntry>>>;
 }
 
-export interface HistoryBrandStats {
-  min: number;
-  median: number;
+export interface HistorySample {
+  at: string;
+  hour: number;
+  byFuel: Partial<Record<FuelType, Record<string, number>>>;
 }
 
-export interface HistoryFuelStats {
-  min: number;
-  median: number;
-  max: number;
-  minStationId: string;
-  byBrand: Record<string, HistoryBrandStats>;
+export interface HistoryHourSeries {
+  hours: number[];
+  brands: Record<string, Array<number | null>>;
 }
 
-export interface HistoryPoint {
-  date: string;
-  byFuel: Partial<Record<FuelType, HistoryFuelStats>>;
+export interface HistoryFile {
+  generatedAt: string;
+  keepDays: number;
+  samples?: HistorySample[];
+  byFuel: Partial<Record<FuelType, HistoryHourSeries>>;
 }
 
 export interface DataMeta {

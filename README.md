@@ -2,7 +2,7 @@
 
 A free static website (PWA) with current fuel prices at every fuel station in Lithuania.
 Users can browse stations on a map, check whether a nearby detour is worth it, plan a
-route, and view a historical chart of the cheapest daily prices.
+route, and view historical provider averages by time of day.
 
 Lithuanian is the default locale (`/`). English lives under `/en/`.
 
@@ -25,13 +25,16 @@ npm run test:e2e
 ## Data
 
 Git is the database. The GitHub Actions workflow (hourly) runs
-`npm run pipeline`, commits `data/` if it changed, and deploys the static site.
+`npm run pipeline`, keeps at most 7 days of price snapshots, commits `data/` if it
+changed, and deploys the static site. The map loads only the latest daily snapshot;
+provider hour-of-day averages live in `history.json` and are fetched when the
+history page opens.
 
 | Path                           | What                               |
 | ------------------------------ | ---------------------------------- |
 | `data/stations.json`           | OSM stations + unmatched LEA sites |
-| `data/prices/YYYY-MM-DD.json`  | Daily snapshot                     |
-| `data/history.json`            | Aggregated min/median/max          |
+| `data/prices/YYYY-MM-DD.json`  | Daily snapshot (kept 7 days)       |
+| `data/history.json`            | Provider averages by hour of day   |
 | `data/overrides/stations.json` | Manual OSM ↔ source matches        |
 | `reports/unmatched.json`       | Source rows that still need a home |
 

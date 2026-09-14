@@ -25,15 +25,24 @@ test("English locale loads without about", async ({ page }) => {
   await expect(page.getByRole("link", { name: "About" })).toHaveCount(0);
 });
 
-test("history button opens historical prices", async ({ page }) => {
+test("history button opens provider averages by hour", async ({ page }) => {
+  const historyUrls: string[] = [];
+  const priceUrls: string[] = [];
+  page.on("request", (req) => {
+    if (req.url().includes("history.json")) historyUrls.push(req.url());
+    if (/prices\/\d{4}-\d{2}-\d{2}\.json/.test(req.url())) priceUrls.push(req.url());
+  });
   await page.goto("/");
+  await expect(page.locator(".station-row").first()).toBeVisible({ timeout: 15_000 });
+  expect(historyUrls).toEqual([]);
+  expect(priceUrls).toHaveLength(1);
   await page.getByRole("link", { name: "Istorija" }).click();
   await expect(page).toHaveURL(/istorija/);
   await expect(page.getByRole("heading", { name: "Istorinės kainos" })).toBeVisible();
+  await expect(page.locator(".history-caption")).toContainText(/Tiekėjų vidutinės kainos/);
+  await expect.poll(() => historyUrls.length).toBe(1);
   await expect(page.locator("#history-chart .uplot")).toBeVisible();
-  await expect(page.locator(".history-caption")).toContainText(/Pigiausia/);
-  await page.getByRole("button", { name: "1 mėn." }).click();
-  await expect(page.getByRole("button", { name: "1 mėn." })).toHaveClass(/on/);
+  expect(priceUrls).toHaveLength(1);
 });
 
 test("station list is cheapest-first with a badge on top", async ({ page }) => {

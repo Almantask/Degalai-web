@@ -36,7 +36,7 @@ jobs:
       - run: npm ci --ignore-scripts
       - name: Run data pipeline
         if: github.event_name != 'push'
-        run: npm run pipeline -- --backfill
+        run: npm run pipeline
       - name: Commit data if changed
         if: github.event_name != 'push'
         run: |

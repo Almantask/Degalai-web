@@ -1,7 +1,7 @@
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { extraMinutesFromKm, netBenefit } from "./calc.ts";
-import { loadAppData, type AppData } from "./data.ts";
+import { loadAppData, loadHistory, type AppData } from "./data.ts";
 import {
   formatDate,
   formatDateTime,
@@ -40,13 +40,6 @@ import {
   routeStationEmphasis,
 } from "./map.ts";
 import { CHEAP_VIA_CORRIDOR_KM, orderRouteRows, topCheapStations } from "./route-list.ts";
-import {
-  filterHistory,
-  HISTORY_RANGES,
-  latestHistoryPoint,
-  mountHistoryChart,
-  type HistoryRange,
-} from "./history-view.ts";
 import { hrefFor, navigate, parsePath, pathFor, type View } from "./router.ts";
 import { fetchRoute, geocode, reverseGeocode, type GeoHit, type RouteResult } from "./routing.ts";
 import DOMPurify from "dompurify";
@@ -58,7 +51,7 @@ import {
   sheetFromDrag,
   type MinimizeSign,
 } from "./sheet-gesture.ts";
-import type { Station } from "./types.ts";
+import type { HistoryFile, Station } from "./types.ts";
 import { DEFAULT_SETTINGS } from "./types.ts";
 
 const DONATE_URL = "https://github.com/sponsors/Almantask";
@@ -104,8 +97,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let settingsOpen = false;
   let listMinimized = false;
   let headerMinimized = false;
-  let historyRange: HistoryRange = "3m";
-  let historyPlot: ReturnType<typeof mountHistoryChart> = null;
+  let historyFile: HistoryFile | null = null;
+  let historyLoading = false;
+  let historyPlot: { destroy: () => void } | null = null;
   let routeRows: RouteStationRow[] = [];
   let routeLine: RouteResult | null = null;
   let startHit: GeoHit | null = null;
@@ -249,12 +243,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
         }
         navigate(view, locale, settings.fuel);
         render();
-      } else if (act === "history-range") {
-        const next = tEl.dataset.range;
-        if (next === "1m" || next === "3m" || next === "1y" || next === "all") {
-          historyRange = next;
-          render();
-        }
       } else if (act === "locale") {
         const loc = tEl.dataset.locale as Locale;
         locale = loc;
@@ -747,47 +735,52 @@ export async function startApp(root: HTMLElement): Promise<void> {
     banner.innerHTML = statusHtml();
     root.querySelector(".app")?.classList.toggle("has-route", Boolean(routeLine));
     root.querySelector(".app")?.classList.toggle("is-history", view === "history");
+    if (view === "history" && !historyFile && !historyLoading) void ensureHistory();
     const history = root.querySelector("#history")!;
     history.innerHTML = view === "history" ? historyHtml() : "";
-    paintHistoryChart();
+    void paintHistoryChart();
     syncMapControls();
   }
 
+  async function ensureHistory(): Promise<void> {
+    if (historyFile || historyLoading) {
+      if (historyFile && view === "history") void paintHistoryChart();
+      return;
+    }
+    historyLoading = true;
+    historyFile = await loadHistory();
+    historyLoading = false;
+    if (view === "history") render();
+  }
+
   function historyHtml(): string {
-    const filtered = filterHistory(data.history, historyRange);
-    const ranges = HISTORY_RANGES.map(
-      (r) =>
-        `<button type="button" class="${historyRange === r ? "on" : ""}" data-act="history-range" data-range="${r}">${escapeHtml(t(`history.range.${r}` as MessageKey))}</button>`,
-    ).join("");
-    const latest = latestHistoryPoint(filtered, settings.fuel);
-    const stats = latest?.byFuel[settings.fuel];
-    const cheapestStation = stats
-      ? data.stations.find((s) => s.id === stats.minStationId)
-      : undefined;
-    const caption =
-      latest && stats
-        ? t("history.cheapestOn", {
-            date: formatDate(latest.date),
-            station: cheapestStation?.name || stats.minStationId,
-            price: formatPrice(stats.min),
-          })
-        : t("history.empty");
+    if (historyLoading && !historyFile) {
+      return `<section class="history-panel" aria-label="${escapeHtml(t("history.title"))}">
+        <header><h2>${escapeHtml(t("history.title"))}</h2></header>
+        <p class="history-caption">${escapeHtml(t("history.loading"))}</p>
+      </section>`;
+    }
+    const series = historyFile?.byFuel[settings.fuel];
+    const hasPoints = Boolean(
+      series && Object.values(series.brands).some((row) => row.some((v) => v != null)),
+    );
+    const caption = hasPoints ? t("history.byHour") : t("history.empty");
     return `<section class="history-panel" aria-label="${escapeHtml(t("history.title"))}">
       <header><h2>${escapeHtml(t("history.title"))}</h2></header>
-      <div class="history-ranges" role="group" aria-label="${escapeHtml(t("history.title"))}">${ranges}</div>
       <div id="history-chart"></div>
       <p class="history-caption">${escapeHtml(caption)}</p>
     </section>`;
   }
 
-  function paintHistoryChart(): void {
+  async function paintHistoryChart(): Promise<void> {
     historyPlot?.destroy();
     historyPlot = null;
     if (view !== "history") return;
     const el = root.querySelector<HTMLElement>("#history-chart");
-    if (!el) return;
-    const filtered = filterHistory(data.history, historyRange);
-    historyPlot = mountHistoryChart(el, filtered, settings.fuel);
+    if (!el || !historyFile) return;
+    const { mountHistoryChart } = await import("./history-view.ts");
+    if (view !== "history") return;
+    historyPlot = mountHistoryChart(el, historyFile.byFuel[settings.fuel]);
   }
 
   function renderList(): void {
