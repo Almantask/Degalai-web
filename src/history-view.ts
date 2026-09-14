@@ -47,7 +47,7 @@ export function mountHistoryChart(
   el: HTMLElement,
   series: HistoryHourSeries | undefined,
   cheapRanges: CheapHourRange[] = [],
-): uPlot | null {
+): { destroy: () => void } | null {
   if (!series) return null;
   const brands = Object.entries(series.brands)
     .map(([id, values]) => ({ id, values }))
@@ -56,23 +56,25 @@ export function mountHistoryChart(
   if (brands.length === 0) return null;
   const hours = series.hours;
   const data: uPlot.AlignedData = [hours, ...brands.map((b) => b.values)];
-  const width = Math.max(280, Math.floor(el.clientWidth) || 320);
-  const height = Math.max(220, Math.min(380, Math.floor(el.clientHeight) || 300));
-  return new uPlot(
+  const size = chartSize(el);
+  const plot = new uPlot(
     {
-      width,
-      height,
-      cursor: { focus: { prox: 24 } },
-      legend: { live: true },
+      width: size.width,
+      height: size.height,
+      padding: [8, 8, 0, 0],
+      cursor: { focus: { prox: 24 }, show: size.width >= 480 },
+      legend: { live: size.width >= 640 },
       scales: { x: { time: false, range: [0, 23] } },
       axes: [
         {
           stroke: "#5c6f64",
+          size: 28,
           grid: { stroke: "rgb(16 32 24 / 8%)" },
           values: (_u, vals) => vals.map((v) => (v == null ? "" : hourTickLabel(Number(v)))),
         },
         {
           stroke: "#5c6f64",
+          size: 40,
           grid: { stroke: "rgb(16 32 24 / 8%)" },
           values: (_u, vals) => vals.map((v) => (v == null ? "" : Number(v).toFixed(2))),
         },
@@ -110,6 +112,24 @@ export function mountHistoryChart(
     data,
     el,
   );
+  const ro = new ResizeObserver(() => {
+    const next = chartSize(el);
+    plot.setSize({ width: next.width, height: next.height });
+  });
+  ro.observe(el);
+  return {
+    destroy() {
+      ro.disconnect();
+      plot.destroy();
+    },
+  };
+}
+
+function chartSize(el: HTMLElement): { width: number; height: number } {
+  const width = Math.max(160, Math.floor(el.clientWidth) || 280);
+  const minH = width < 520 ? 140 : 180;
+  const height = Math.max(minH, Math.min(360, Math.floor(el.clientHeight) || minH + 40));
+  return { width, height };
 }
 
 function hourBands(range: CheapHourRange): Array<[number, number]> {

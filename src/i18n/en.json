@@ -88,6 +88,8 @@
   "history.loading": "Loading history…",
   "history.cheapest": "Cheapest {range}",
   "history.cheapestAvg": "avg. {price}",
+  "history.collapse": "Minimise history",
+  "history.expand": "Expand history",
   "list.cheapestHour": "Cheapest {range}",
   "plural.stations.one": "{n} station",
   "plural.stations.few": "{n} stations",

@@ -88,6 +88,8 @@
   "history.loading": "Įkeliama istorija…",
   "history.cheapest": "Pigiausia {range}",
   "history.cheapestAvg": "vid. {price}",
+  "history.collapse": "Sutraukti istoriją",
+  "history.expand": "Išskleisti istoriją",
   "list.cheapestHour": "Pigiausia {range}",
   "plural.stations.one": "{n} degalinė",
   "plural.stations.few": "{n} degalinės",

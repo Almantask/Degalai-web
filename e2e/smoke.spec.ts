@@ -45,6 +45,11 @@ test("history button opens provider averages by hour", async ({ page }) => {
   await expect.poll(() => historyUrls.length).toBe(1);
   await expect(page.locator("#history-chart .uplot")).toBeVisible();
   expect(priceUrls).toHaveLength(1);
+  await page.getByRole("button", { name: "Sutraukti istoriją" }).click();
+  await expect(page.locator(".history-panel")).toHaveClass(/is-min/);
+  await expect(page.locator("#history-chart")).toBeHidden();
+  await page.getByRole("button", { name: "Išskleisti istoriją" }).click();
+  await expect(page.locator("#history-chart .uplot")).toBeVisible();
 });
 
 test("station list is cheapest-first with a badge on top", async ({ page }) => {
@@ -120,6 +125,19 @@ test("mobile sheets use a grabber and minimise by dragging", async ({ page }) =>
   await dragVertically(page, headerBox!, -90);
   await expect(page.locator("#header")).toHaveClass(/is-min/);
   await expect(page.getByPlaceholder("Kur važiuojate?")).toBeHidden();
+
+  await page.getByRole("button", { name: /Išskleisti paiešką/ }).click();
+  await page.getByRole("link", { name: "Istorija" }).click();
+  await expect(page.locator(".history-panel")).toBeVisible();
+  await expect(page.locator(".history-handle")).toBeVisible();
+  await expect(page.locator(".history-chevron")).toBeHidden();
+  await expect(page.locator("#history-chart .uplot")).toBeVisible();
+  const historyHead = page.locator(".history-head");
+  const historyBox = await historyHead.boundingBox();
+  expect(historyBox).toBeTruthy();
+  await dragVertically(page, historyBox!, 90);
+  await expect(page.locator(".history-panel")).toHaveClass(/is-min/);
+  await expect(page.locator(".history-body")).toBeHidden();
 });
 
 test("header has no Around me button", async ({ page }) => {

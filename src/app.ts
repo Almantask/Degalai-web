@@ -117,6 +117,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let settingsOpen = false;
   let listMinimized = false;
   let headerMinimized = false;
+  let historyMinimized = false;
   let historyFile: HistoryFile | null = null;
   let historyLoading = false;
   let historyPlot: { destroy: () => void } | null = null;
@@ -184,15 +185,23 @@ export async function startApp(root: HTMLElement): Promise<void> {
       const target = e.target as HTMLElement;
       const headerHandle = target.closest<HTMLElement>(".header-toggle");
       const listHandle = target.closest<HTMLElement>(".list-head");
+      const historyHandle = target.closest<HTMLElement>(".history-head");
       if (headerHandle) startSheetDrag(e, "header", headerHandle);
       else if (listHandle) startSheetDrag(e, "list", listHandle);
+      else if (historyHandle) startSheetDrag(e, "history", historyHandle);
     });
 
-    function startSheetDrag(e: PointerEvent, kind: "header" | "list", handle: HTMLElement): void {
+    function startSheetDrag(
+      e: PointerEvent,
+      kind: "header" | "list" | "history",
+      handle: HTMLElement,
+    ): void {
       const el =
         kind === "header"
           ? root.querySelector<HTMLElement>("#header")
-          : root.querySelector<HTMLElement>("#list");
+          : kind === "list"
+            ? root.querySelector<HTMLElement>("#list")
+            : root.querySelector<HTMLElement>(".history-panel");
       if (!el) return;
       try {
         handle.setPointerCapture(e.pointerId);
@@ -201,7 +210,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       }
       const startY = e.clientY;
       const startX = e.clientX;
-      const wasMin = kind === "header" ? headerMinimized : listMinimized;
+      const wasMin =
+        kind === "header" ? headerMinimized : kind === "list" ? listMinimized : historyMinimized;
       const sign: MinimizeSign = kind === "header" ? -1 : 1;
       let dragging = false;
       const onMove = (ev: PointerEvent) => {
@@ -239,9 +249,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
         if (kind === "header") {
           headerMinimized = next;
           applyHeaderMinimized();
-        } else if (next !== listMinimized) {
-          listMinimized = next;
-          renderList();
+        } else if (kind === "list") {
+          if (next !== listMinimized) {
+            listMinimized = next;
+            renderList();
+          }
+        } else if (next !== historyMinimized) {
+          historyMinimized = next;
+          applyHistoryMinimized();
         }
       };
       const onUp = (ev: PointerEvent) => finish(ev, true);
@@ -260,6 +275,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         if (view === "history") {
           headerMinimized = false;
           settingsOpen = false;
+          historyMinimized = false;
         }
         navigate(view, locale, settings.fuel);
         render();
@@ -297,6 +313,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       } else if (act === "toggle-header") {
         headerMinimized = !headerMinimized;
         applyHeaderMinimized();
+      } else if (act === "toggle-history") {
+        historyMinimized = !historyMinimized;
+        applyHistoryMinimized();
       }
     });
 
@@ -800,15 +819,29 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function historyHtml(): string {
-    if (historyLoading && !historyFile) {
-      return `<section class="history-panel" aria-label="${escapeHtml(t("history.title"))}">
-        <header><h2>${escapeHtml(t("history.title"))}</h2></header>
-        <p class="history-caption">${escapeHtml(t("history.loading"))}</p>
-      </section>`;
-    }
-    const series = historyFile?.byFuel[settings.fuel];
-    const filtered = series ? filterSeries(series, settings.excludedBrands) : undefined;
+    const cheapSeries = historyFile?.byFuel[settings.fuel];
+    const filtered = cheapSeries ? filterSeries(cheapSeries, settings.excludedBrands) : undefined;
     const cheap = filtered ? cheapestHourRanges(filtered) : [];
+    const cheapLine =
+      cheap.length > 0
+        ? `<p class="history-head-meta">${escapeHtml(t("list.cheapestHour", { range: formatCheapRanges(cheap) }))}</p>`
+        : "";
+    const toggle = `<button type="button" class="history-head" data-act="toggle-history" aria-expanded="${historyMinimized ? "false" : "true"}" aria-label="${escapeHtml(historyMinimized ? t("history.expand") : t("history.collapse"))}">
+        <span class="history-handle" aria-hidden="true"></span>
+        <span class="history-head-copy">
+          <h2>${escapeHtml(t("history.title"))}</h2>
+          ${cheapLine}
+        </span>
+        <span class="history-chevron" aria-hidden="true">${historyMinimized ? "▴" : "▾"}</span>
+      </button>`;
+    if (historyLoading && !historyFile) {
+      return `<section class="history-panel${historyMinimized ? " is-min" : ""}" aria-label="${escapeHtml(t("history.title"))}">
+      ${toggle}
+      <div class="history-body">
+        <p class="history-caption">${escapeHtml(t("history.loading"))}</p>
+      </div>
+    </section>`;
+    }
     const hasPoints = Boolean(
       filtered && Object.values(filtered.brands).some((row) => row.some((v) => v != null)),
     );
@@ -825,26 +858,50 @@ export async function startApp(root: HTMLElement): Promise<void> {
             )}</span>
           </p>`
         : "";
-    return `<section class="history-panel" aria-label="${escapeHtml(t("history.title"))}">
-      <header><h2>${escapeHtml(t("history.title"))}</h2></header>
-      ${cheapHtml}
-      <div id="history-chart"></div>
-      <p class="history-caption">${escapeHtml(caption)}</p>
+    return `<section class="history-panel${historyMinimized ? " is-min" : ""}" aria-label="${escapeHtml(t("history.title"))}">
+      ${toggle}
+      <div class="history-body">
+        ${cheapHtml}
+        <div id="history-chart"></div>
+        <p class="history-caption">${escapeHtml(caption)}</p>
+      </div>
     </section>`;
   }
 
   async function paintHistoryChart(): Promise<void> {
     historyPlot?.destroy();
     historyPlot = null;
-    if (view !== "history") return;
+    if (view !== "history" || historyMinimized) return;
     const el = root.querySelector<HTMLElement>("#history-chart");
     if (!el || !historyFile) return;
     const series = historyFile.byFuel[settings.fuel];
     const filtered = series ? filterSeries(series, settings.excludedBrands) : undefined;
     const cheap = filtered ? cheapestHourRanges(filtered) : [];
     const { mountHistoryChart } = await import("./history-view.ts");
-    if (view !== "history") return;
+    if (view !== "history" || historyMinimized) return;
     historyPlot = mountHistoryChart(el, filtered, cheap);
+  }
+
+  function applyHistoryMinimized(): void {
+    const panel = root.querySelector(".history-panel");
+    if (!panel) return;
+    panel.classList.toggle("is-min", historyMinimized);
+    const btn = panel.querySelector<HTMLButtonElement>("[data-act='toggle-history']");
+    if (btn) {
+      btn.setAttribute("aria-expanded", historyMinimized ? "false" : "true");
+      btn.setAttribute(
+        "aria-label",
+        historyMinimized ? t("history.expand") : t("history.collapse"),
+      );
+      const chev = btn.querySelector(".history-chevron");
+      if (chev) chev.textContent = historyMinimized ? "▴" : "▾";
+    }
+    if (historyMinimized) {
+      historyPlot?.destroy();
+      historyPlot = null;
+    } else {
+      void paintHistoryChart();
+    }
   }
 
   function renderList(): void {
