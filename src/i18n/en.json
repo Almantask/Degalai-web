@@ -86,6 +86,9 @@
   "history.byHour": "Provider average prices by time of day (last 7 days).",
   "history.empty": "No historical prices yet.",
   "history.loading": "Loading history…",
+  "history.cheapest": "Cheapest {range}",
+  "history.cheapestAvg": "avg. {price}",
+  "list.cheapestHour": "Cheapest {range}",
   "plural.stations.one": "{n} station",
   "plural.stations.few": "{n} stations",
   "plural.stations.other": "{n} stations"

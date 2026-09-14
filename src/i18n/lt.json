@@ -86,6 +86,9 @@
   "history.byHour": "Tiekėjų vidutinės kainos pagal paros laiką (paskutinės 7 dienos).",
   "history.empty": "Istorinių kainų dar nėra.",
   "history.loading": "Įkeliama istorija…",
+  "history.cheapest": "Pigiausia {range}",
+  "history.cheapestAvg": "vid. {price}",
+  "list.cheapestHour": "Pigiausia {range}",
   "plural.stations.one": "{n} degalinė",
   "plural.stations.few": "{n} degalinės",
   "plural.stations.other": "{n} degalinių"

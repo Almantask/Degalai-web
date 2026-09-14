@@ -5,5 +5,33 @@
   "pricedStationCount": 745,
   "sources": [
     "lea"
-  ]
+  ],
+  "cheapestHours": {
+    "95": [
+      {
+        "start": 7,
+        "end": 7,
+        "price": 1.906
+      },
+      {
+        "start": 11,
+        "end": 11,
+        "price": 1.907
+      }
+    ],
+    "D": [
+      {
+        "start": 7,
+        "end": 7,
+        "price": 2.148
+      }
+    ],
+    "LPG": [
+      {
+        "start": 7,
+        "end": 7,
+        "price": 0.779
+      }
+    ]
+  }
 }

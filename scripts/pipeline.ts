@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { join } from "node:path";
 import type { DailyPrices, DataMeta, Observation, Station } from "../src/types.ts";
 import { HISTORY_KEEP_DAYS } from "../src/types.ts";
+import { cheapestHoursByFuel } from "../src/cheap-hours.ts";
 import { fetchLeaWorkbook } from "./adapters/lea.ts";
 import { geocodePhoton, loadGeocodeCache, saveGeocodeCache, sleep } from "./geocode.ts";
 import { datesWithinDays, isHistoryFile, prunePriceFiles, recomputeHistory } from "./history.ts";
@@ -194,7 +195,8 @@ async function main(): Promise<void> {
 
   const storedHistory = readJson<unknown>(join(DATA, "history.json"), null);
   const previousHistory = isHistoryFile(storedHistory) ? storedHistory : null;
-  writeJson(join(DATA, "history.json"), recomputeHistory(PRICES, stations, previousHistory));
+  let history = recomputeHistory(PRICES, stations, previousHistory);
+  writeJson(join(DATA, "history.json"), history);
   writeJson(join(DATA, "stations.json"), stations);
 
   const priced = Object.keys(daily.prices).length;
@@ -204,6 +206,7 @@ async function main(): Promise<void> {
     stationCount: stations.length,
     pricedStationCount: priced,
     sources: adapterNames,
+    cheapestHours: cheapestHoursByFuel(history),
   };
   writeJson(join(DATA, "meta.json"), meta);
   console.log(
@@ -228,7 +231,10 @@ async function main(): Promise<void> {
       console.log(`Backfilled ${d}: ${Object.keys(snap.daily.prices).length} stations`);
     }
     prunePriceFiles(PRICES, date);
-    writeJson(join(DATA, "history.json"), recomputeHistory(PRICES, stations, previousHistory));
+    history = recomputeHistory(PRICES, stations, previousHistory);
+    writeJson(join(DATA, "history.json"), history);
+    meta.cheapestHours = cheapestHoursByFuel(history);
+    writeJson(join(DATA, "meta.json"), meta);
   }
 }
 

@@ -1,6 +1,7 @@
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { extraMinutesFromKm, netBenefit } from "./calc.ts";
+import { cheapestHourRanges, filterSeries, formatCheapRanges } from "./cheap-hours.ts";
 import { loadAppData, loadHistory, type AppData } from "./data.ts";
 import {
   formatDate,
@@ -806,12 +807,27 @@ export async function startApp(root: HTMLElement): Promise<void> {
       </section>`;
     }
     const series = historyFile?.byFuel[settings.fuel];
+    const filtered = series ? filterSeries(series, settings.excludedBrands) : undefined;
+    const cheap = filtered ? cheapestHourRanges(filtered) : [];
     const hasPoints = Boolean(
-      series && Object.values(series.brands).some((row) => row.some((v) => v != null)),
+      filtered && Object.values(filtered.brands).some((row) => row.some((v) => v != null)),
     );
     const caption = hasPoints ? t("history.byHour") : t("history.empty");
+    const cheapHtml =
+      cheap.length > 0
+        ? `<p class="history-cheap" role="status" aria-label="${escapeHtml(t("history.cheapest", { range: formatCheapRanges(cheap) }))}">
+            <span class="badge">${escapeHtml(t("list.cheapest"))}</span>
+            <strong>${escapeHtml(formatCheapRanges(cheap))}</strong>
+            <span class="history-cheap-avg">${escapeHtml(
+              t("history.cheapestAvg", {
+                price: formatPrice(Math.min(...cheap.map((r) => r.price))),
+              }),
+            )}</span>
+          </p>`
+        : "";
     return `<section class="history-panel" aria-label="${escapeHtml(t("history.title"))}">
       <header><h2>${escapeHtml(t("history.title"))}</h2></header>
+      ${cheapHtml}
       <div id="history-chart"></div>
       <p class="history-caption">${escapeHtml(caption)}</p>
     </section>`;
@@ -823,9 +839,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (view !== "history") return;
     const el = root.querySelector<HTMLElement>("#history-chart");
     if (!el || !historyFile) return;
+    const series = historyFile.byFuel[settings.fuel];
+    const filtered = series ? filterSeries(series, settings.excludedBrands) : undefined;
+    const cheap = filtered ? cheapestHourRanges(filtered) : [];
     const { mountHistoryChart } = await import("./history-view.ts");
     if (view !== "history") return;
-    historyPlot = mountHistoryChart(el, historyFile.byFuel[settings.fuel]);
+    historyPlot = mountHistoryChart(el, filtered, cheap);
   }
 
   function renderList(): void {
@@ -906,6 +925,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const updated = updatedAt
       ? `<p class="list-updated">${escapeHtml(t("list.updated", { time: formatDateTime(updatedAt) }))}</p>`
       : "";
+    const cheapMeta = data.meta?.cheapestHours?.[settings.fuel] ?? [];
+    const cheapHour =
+      cheapMeta.length > 0
+        ? `<p class="list-cheap-hour">${escapeHtml(t("list.cheapestHour", { range: formatCheapRanges(cheapMeta) }))}</p>`
+        : "";
     const body = empty
       ? `<p class="empty">${escapeHtml(empty)}</p>`
       : `<ul class="station-list">${items.join("")}</ul>`;
@@ -915,6 +939,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         <span class="list-head-copy">
           <h2>${escapeHtml(title)}</h2>
           ${updated}
+          ${cheapHour}
         </span>
         <span class="list-chevron" aria-hidden="true">${listMinimized ? "▴" : "▾"}</span>
       </button>

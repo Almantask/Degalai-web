@@ -1,6 +1,6 @@
 import uPlot from "uplot";
 import "uplot/dist/uPlot.min.css";
-import type { FuelType, HistoryFile, HistoryHourSeries } from "./types.ts";
+import type { CheapHourRange, FuelType, HistoryFile, HistoryHourSeries } from "./types.ts";
 import { formatPrice } from "./format.ts";
 import { brandLabel, t } from "./i18n/index.ts";
 
@@ -46,6 +46,7 @@ export function hourTickLabel(hour: number): string {
 export function mountHistoryChart(
   el: HTMLElement,
   series: HistoryHourSeries | undefined,
+  cheapRanges: CheapHourRange[] = [],
 ): uPlot | null {
   if (!series) return null;
   const brands = Object.entries(series.brands)
@@ -86,8 +87,35 @@ export function mountHistoryChart(
           value: (_u: uPlot, v: number | null) => (v == null ? "—" : formatPrice(v)),
         })),
       ],
+      hooks: {
+        draw: [
+          (u) => {
+            if (cheapRanges.length === 0) return;
+            const { ctx } = u;
+            ctx.save();
+            ctx.fillStyle = "rgb(15 138 75 / 12%)";
+            for (const range of cheapRanges) {
+              for (const [from, to] of hourBands(range)) {
+                const x0 = u.valToPos(from, "x", true);
+                const x1 = u.valToPos(to, "x", true);
+                const top = u.bbox.top;
+                ctx.fillRect(x0, top, Math.max(1, x1 - x0), u.bbox.height);
+              }
+            }
+            ctx.restore();
+          },
+        ],
+      },
     },
     data,
     el,
   );
+}
+
+function hourBands(range: CheapHourRange): Array<[number, number]> {
+  if (range.start <= range.end) return [[range.start - 0.45, range.end + 0.45]];
+  return [
+    [range.start - 0.45, 23.45],
+    [-0.45, range.end + 0.45],
+  ];
 }

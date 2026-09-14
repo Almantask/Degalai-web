@@ -595,6 +595,37 @@ body,
   font-size: 0.85rem;
 }
 
+.history-cheap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgb(15 138 75 / 10%);
+  border: 1px solid rgb(15 138 75 / 18%);
+  font-size: 0.95rem;
+}
+
+.history-cheap strong {
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+}
+
+.history-cheap-avg {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.list-cheap-hour {
+  margin: 0;
+  color: var(--green-dark);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
 .uplot {
   font-family: var(--font);
 }

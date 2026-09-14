@@ -43,6 +43,13 @@ export interface HistoryHourSeries {
   brands: Record<string, Array<number | null>>;
 }
 
+export interface CheapHourRange {
+  /** Inclusive hour 0–23. May be greater than `end` when the range wraps midnight. */
+  start: number;
+  end: number;
+  price: number;
+}
+
 export interface HistoryFile {
   generatedAt: string;
   keepDays: number;
@@ -56,6 +63,7 @@ export interface DataMeta {
   stationCount: number;
   pricedStationCount: number;
   sources: string[];
+  cheapestHours?: Partial<Record<FuelType, CheapHourRange[]>>;
 }
 
 export interface Observation {

@@ -40,6 +40,8 @@ test("history button opens provider averages by hour", async ({ page }) => {
   await expect(page).toHaveURL(/istorija/);
   await expect(page.getByRole("heading", { name: "Istorinės kainos" })).toBeVisible();
   await expect(page.locator(".history-caption")).toContainText(/Tiekėjų vidutinės kainos/);
+  await expect(page.locator(".history-cheap")).toContainText(/Pigiausia/);
+  await expect(page.locator(".history-cheap")).toContainText(/\d{2}:\d{2}/);
   await expect.poll(() => historyUrls.length).toBe(1);
   await expect(page.locator("#history-chart .uplot")).toBeVisible();
   expect(priceUrls).toHaveLength(1);
@@ -168,6 +170,8 @@ test("station list shows last updated time", async ({ page }) => {
   await expect(page.locator(".list-updated")).toBeVisible({ timeout: 15_000 });
   await expect(page.locator(".list-updated")).toContainText(/Atnaujinta/);
   await expect(page.locator(".list-updated")).toContainText(/\d{1,2}:\d{2}/);
+  await expect(page.locator(".list-cheap-hour")).toContainText(/Pigiausia/);
+  await expect(page.locator(".list-cheap-hour")).toContainText(/\d{2}:\d{2}/);
 });
 
 test("settings include consumption, time value, and provider checkboxes", async ({ page }) => {
