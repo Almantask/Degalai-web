@@ -1,4 +1,4 @@
-import { orderRouteRows } from "../src/route-list.ts";
+import { orderRouteRows, topCheapStations } from "../src/route-list.ts";
 
 function row(id: string, price: number, kind: "on" | "detour") {
   return { station: { id }, price, kind };
@@ -46,5 +46,23 @@ describe("orderRouteRows", () => {
     expect(cheapestOn).toBeUndefined();
     expect(cheapestOverall?.station.id).toBe("b");
     expect(ordered.map((r) => r.station.id)).toEqual(["b", "a"]);
+  });
+});
+
+describe("topCheapStations", () => {
+  it("returns the five cheapest by price then id", () => {
+    const rows = [
+      row("d", 1.5, "detour"),
+      row("a", 1.2, "on"),
+      row("c", 1.4, "detour"),
+      row("b", 1.2, "detour"),
+      row("e", 1.8, "on"),
+      row("f", 1.1, "detour"),
+    ];
+    expect(topCheapStations(rows).map((r) => r.station.id)).toEqual(["f", "a", "b", "c", "d"]);
+  });
+
+  it("returns every row when there are fewer than the limit", () => {
+    expect(topCheapStations([row("a", 2, "on")]).map((r) => r.station.id)).toEqual(["a"]);
   });
 });

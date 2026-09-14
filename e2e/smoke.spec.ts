@@ -219,7 +219,11 @@ test("destination draws a route from the current location", async ({ page }) => 
       },
     });
   });
+  let viaRoutes = 0;
   await page.route("https://router.project-osrm.org/**", async (route) => {
+    const url = route.request().url();
+    const coords = url.split("/driving/")[1]?.split("?")[0] ?? "";
+    if (coords.split(";").filter(Boolean).length >= 3) viaRoutes += 1;
     await route.fulfill({
       json: {
         code: "Ok",
@@ -246,4 +250,6 @@ test("destination draws a route from the current location", async ({ page }) => 
   await dest.press("Enter");
   await expect(page.locator(".app")).toHaveClass(/has-route/, { timeout: 15_000 });
   await expect(page.locator(".maplibregl-marker")).toHaveCount(2);
+  expect(viaRoutes).toBeGreaterThan(0);
+  expect(viaRoutes).toBeLessThanOrEqual(5);
 });

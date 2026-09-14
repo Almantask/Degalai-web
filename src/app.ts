@@ -37,7 +37,7 @@ import {
   stationsInView,
   type Emphasis,
 } from "./map.ts";
-import { orderRouteRows } from "./route-list.ts";
+import { CHEAP_VIA_CORRIDOR_KM, orderRouteRows, topCheapStations } from "./route-list.ts";
 import { hrefFor, navigate, parsePath, pathFor, type View } from "./router.ts";
 import { fetchRoute, geocode, reverseGeocode, type GeoHit, type RouteResult } from "./routing.ts";
 import DOMPurify from "dompurify";
@@ -75,7 +75,7 @@ interface RouteStationRow {
   extraKm: number;
   extraMin: number;
   benefit: ReturnType<typeof netBenefit>;
-  connector?: [LngLat, LngLat];
+  viaGeometry?: LngLat[];
 }
 
 type DestStatus = "idle" | "locating" | "routing" | "denied" | "not-found";
@@ -439,7 +439,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       : undefined;
     setStationData(map, data.stations, data.prices, settings.fuel, settings, emphasis);
     if (routeLine) {
-      const detours = routeRows.filter((r) => r.connector).map((r) => r.connector!);
+      const detours = routeRows
+        .map((r) => r.viaGeometry)
+        .filter((g): g is LngLat[] => Boolean(g && g.length >= 2));
       setRouteData(map, routeLine.geometry, detours);
     }
   }
@@ -527,8 +529,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   async function evaluateRouteStations(res: RouteResult): Promise<void> {
+    const start = res.geometry[0];
+    const end = res.geometry[res.geometry.length - 1];
+    if (!start || !end) {
+      routeRows = [];
+      return;
+    }
     const onWay: RouteStationRow[] = [];
-    const detours: RouteStationRow[] = [];
+    const nearby: RouteStationRow[] = [];
     for (const s of data.stations) {
       const price = data.prices?.prices[s.id]?.[settings.fuel]?.price;
       if (price == null) continue;
@@ -546,8 +554,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
           extraMin: 0,
           benefit: priceBenefit(price, price),
         });
-      } else if (d <= DEFAULT_SETTINGS.routeDetourKm) {
-        detours.push({
+      } else if (d <= CHEAP_VIA_CORRIDOR_KM) {
+        nearby.push({
           station: s,
           price,
           kind: "detour",
@@ -555,33 +563,34 @@ export async function startApp(root: HTMLElement): Promise<void> {
           extraKm: 2 * d * DEFAULT_SETTINGS.roadFactor,
           extraMin: extraMinutesFromKm(2 * d * DEFAULT_SETTINGS.roadFactor),
           benefit: priceBenefit(0, price),
-          connector: [p, nearest.point],
         });
       }
     }
-    onWay.sort((a, b) => a.distFromStartKm - b.distFromStartKm);
-    const baselinePrice = onWay.length ? Math.min(...onWay.map((r) => r.price)) : undefined;
+    const baselinePrice = onWay.length
+      ? Math.min(...onWay.map((r) => r.price))
+      : nearby.length
+        ? Math.min(...nearby.map((r) => r.price))
+        : undefined;
     for (const row of onWay) {
       if (baselinePrice == null) continue;
       row.benefit = priceBenefit(baselinePrice, row.price);
     }
-    detours.sort((a, b) => a.price - b.price);
-    const top = detours.slice(0, 15);
-    for (const row of top) {
-      if (baselinePrice == null) continue;
-      const via = { lat: row.station.lat, lon: row.station.lon };
-      const start = res.geometry[0];
-      const end = res.geometry[res.geometry.length - 1];
-      const viaRoute = await fetchRoute(start, end, settings.routePreference, via);
-      if (viaRoute) {
-        row.extraKm = Math.max(0, viaRoute.distanceKm - res.distanceKm);
-        row.extraMin = Math.max(0, viaRoute.durationMin - res.durationMin);
-      }
-      row.benefit = priceBenefit(baselinePrice, row.price);
-    }
-    routeRows = [...onWay, ...top.filter((r) => r.benefit.netBenefit > -5)].sort(
-      (a, b) => a.distFromStartKm - b.distFromStartKm,
+    const topCheap = topCheapStations([...onWay, ...nearby]).filter((r) => r.kind === "detour");
+    await Promise.all(
+      topCheap.map(async (row) => {
+        const via = { lat: row.station.lat, lon: row.station.lon };
+        const viaRoute = await fetchRoute(start, end, settings.routePreference, via);
+        if (viaRoute) {
+          row.extraKm = Math.max(0, viaRoute.distanceKm - res.distanceKm);
+          row.extraMin = Math.max(0, viaRoute.durationMin - res.durationMin);
+          row.viaGeometry = viaRoute.geometry;
+        } else {
+          row.viaGeometry = [start, via, end];
+        }
+        if (baselinePrice != null) row.benefit = priceBenefit(baselinePrice, row.price);
+      }),
     );
+    routeRows = [...onWay, ...topCheap];
   }
 
   function handleMapPick(ll: LngLat): void {

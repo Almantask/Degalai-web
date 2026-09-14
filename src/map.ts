@@ -70,7 +70,7 @@ export function createMap(container: HTMLElement, handlers: MapHandlers): maplib
       source: DETOUR_SRC,
       paint: {
         "line-color": "#6b7280",
-        "line-width": 2,
+        "line-width": 3,
         "line-dasharray": [2, 2],
         "line-opacity": 0.8,
       },
@@ -227,7 +227,7 @@ export function setStationData(
 export function setRouteData(
   map: maplibregl.Map,
   line: LngLat[] | null,
-  detours: Array<[LngLat, LngLat]> = [],
+  detours: LngLat[][] = [],
 ): void {
   const routeSrc = map.getSource(ROUTE_SRC) as maplibregl.GeoJSONSource | undefined;
   const detourSrc = map.getSource(DETOUR_SRC) as maplibregl.GeoJSONSource | undefined;
@@ -250,24 +250,29 @@ export function setRouteData(
   if (detourSrc) {
     detourSrc.setData({
       type: "FeatureCollection",
-      features: detours.map(([a, b]) => ({
-        type: "Feature",
-        properties: {},
-        geometry: {
-          type: "LineString",
-          coordinates: [
-            [a.lon, a.lat],
-            [b.lon, b.lat],
-          ],
-        },
-      })),
+      features: detours
+        .filter((pts) => pts.length >= 2)
+        .map((pts) => ({
+          type: "Feature" as const,
+          properties: {},
+          geometry: {
+            type: "LineString" as const,
+            coordinates: pts.map((p) => [p.lon, p.lat] as [number, number]),
+          },
+        })),
     });
   }
-  if (line && line.length) {
-    const bounds = new maplibregl.LngLatBounds();
-    for (const p of line) bounds.extend([p.lon, p.lat]);
-    map.fitBounds(bounds, { padding: 64, maxZoom: 12 });
-  }
+  const bounds = new maplibregl.LngLatBounds();
+  let hasPoint = false;
+  const extend = (pts: LngLat[]) => {
+    for (const p of pts) {
+      bounds.extend([p.lon, p.lat]);
+      hasPoint = true;
+    }
+  };
+  if (line?.length) extend(line);
+  for (const pts of detours) extend(pts);
+  if (hasPoint) map.fitBounds(bounds, { padding: 64, maxZoom: 12 });
 }
 
 /** Stations whose coordinates fall inside the current map viewport. */

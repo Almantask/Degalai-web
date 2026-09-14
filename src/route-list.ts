@@ -4,8 +4,19 @@ export interface PricedRouteRow {
   station: { id: string };
 }
 
+export const TOP_CHEAP_COUNT = 5;
+/** Stations this far from the trip can still be considered for a cheap via-route. */
+export const CHEAP_VIA_CORRIDOR_KM = 30;
+
 export function byPrice<T extends { price: number; station: { id: string } }>(a: T, b: T): number {
   return a.price - b.price || a.station.id.localeCompare(b.station.id);
+}
+
+export function topCheapStations<T extends { price: number; station: { id: string } }>(
+  rows: T[],
+  limit = TOP_CHEAP_COUNT,
+): T[] {
+  return [...rows].sort(byPrice).slice(0, limit);
 }
 
 /** Pin cheapest-on-route then cheapest-overall, then the rest cheapest-first. */
