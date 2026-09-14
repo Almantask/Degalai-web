@@ -277,4 +277,11 @@ test("destination draws a route from the current location", async ({ page }) => 
     expect(text).toContain("km");
     expect(text).not.toMatch(/max\. greičiu|at max speed|\bmin\b|val\./);
   }
+  await page.getByRole("button", { name: /Išskleisti sąrašą/ }).click();
+  await expect(page.locator(".list-body")).toBeVisible();
+  await page.locator(".station-row").first().click();
+  await expect(page.locator("#header")).toHaveClass(/is-min/);
+  await expect(page.locator(".sheet")).toHaveClass(/is-min/);
+  await expect(page.locator(".list-body")).toBeHidden();
+  await expect(page.locator(".maplibregl-popup")).toBeVisible();
 });

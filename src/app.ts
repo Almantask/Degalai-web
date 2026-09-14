@@ -478,6 +478,20 @@ export async function startApp(root: HTMLElement): Promise<void> {
     fitRoute(map, routeLine.geometry, viaGeometries(), chromePadding());
   }
 
+  function focusStationOnMap(s: Station, row: RouteStationRow | undefined): void {
+    collapseForMapFocus();
+    const padding = chromePadding();
+    if (row?.viaGeometry) {
+      fitRoute(map, row.viaGeometry, [], padding);
+      return;
+    }
+    if (routeLine) {
+      fitRoute(map, routeLine.geometry, viaGeometries(), padding);
+      return;
+    }
+    flyToStation(map, s, padding);
+  }
+
   function requestLocation(force: boolean): void {
     if (!navigator.geolocation) {
       locateStatus = "denied";
@@ -682,7 +696,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       }
     }
     popup?.remove();
-    collapseForMapFocus();
+    focusStationOnMap(s, routeRow);
     popup = new maplibregl.Popup({ offset: 16, maxWidth: "300px" })
       .setLngLat([s.lon, s.lat])
       .setHTML(
@@ -696,7 +710,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ),
       )
       .addTo(map);
-    flyToStation(map, s, chromePadding());
   }
 
   function render(): void {
