@@ -2,6 +2,7 @@
   "app.name": "Kur degalai",
   "app.tagline": "Cheapest fuel in Lithuania",
   "nav.map": "Map",
+  "nav.stations": "Stations",
   "nav.history": "History",
   "fuel.diesel": "Diesel",
   "fuel.petrol": "Petrol",

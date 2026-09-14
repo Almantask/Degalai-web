@@ -276,11 +276,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       if (act === "view" || act === "locale") e.preventDefault();
       if (act === "view") {
         view = tEl.dataset.view === "history" ? "history" : "map";
-        if (view === "history") {
-          headerMinimized = false;
-          settingsOpen = false;
-          historyMinimized = false;
-        }
+        headerMinimized = false;
+        settingsOpen = false;
+        if (view === "history") historyMinimized = false;
         navigate(view, locale, settings.fuel);
         render();
       } else if (act === "locale") {
@@ -866,7 +864,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ${toggle}
       <div class="history-body">
         ${cheapHtml}
-        <div id="history-chart"></div>
+        <div class="history-chart-stack">
+          <div id="history-chart"></div>
+          <div id="history-legend"></div>
+        </div>
         <p class="history-caption">${escapeHtml(caption)}</p>
       </div>
     </section>`;
@@ -877,13 +878,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     historyPlot = null;
     if (view !== "history" || historyMinimized) return;
     const el = root.querySelector<HTMLElement>("#history-chart");
+    const legendEl = root.querySelector<HTMLElement>("#history-legend");
     if (!el || !historyFile) return;
     const series = historyFile.byFuel[settings.fuel];
     const filtered = series ? filterSeries(series, settings.excludedBrands) : undefined;
     const cheap = filtered ? cheapestHourRanges(filtered) : [];
     const { mountHistoryChart } = await import("./history-view.ts");
     if (view !== "history" || historyMinimized) return;
-    historyPlot = mountHistoryChart(el, filtered, cheap);
+    historyPlot = mountHistoryChart(el, filtered, cheap, legendEl ?? undefined);
   }
 
   function applyHistoryMinimized(): void {
@@ -1065,7 +1067,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
               <a data-act="locale" data-locale="lt" href="${escapeHtml(hrefFor(view, "lt", settings.fuel))}" hreflang="lt" class="${locale === "lt" ? "on" : ""}">LT</a>
               <a data-act="locale" data-locale="en" href="${escapeHtml(hrefFor(view, "en", settings.fuel))}" hreflang="en" class="${locale === "en" ? "on" : ""}">EN</a>
             </div>
-            <a class="icon-btn ${view === "history" ? "on" : ""}" data-act="view" data-view="history" href="${escapeHtml(hrefFor("history", locale, settings.fuel))}">${escapeHtml(t("nav.history"))}</a>
+            <nav class="nav-views">
+              <a class="icon-btn ${view === "map" ? "on" : ""}" data-act="view" data-view="map" href="${escapeHtml(hrefFor("map", locale, settings.fuel))}">${escapeHtml(t("nav.stations"))}</a>
+              <a class="icon-btn ${view === "history" ? "on" : ""}" data-act="view" data-view="history" href="${escapeHtml(hrefFor("history", locale, settings.fuel))}">${escapeHtml(t("nav.history"))}</a>
+            </nav>
             <a class="icon-btn donate-btn" href="${DONATE_URL}" target="_blank" rel="noopener noreferrer">
               ${DONATE_HEART}
               ${escapeHtml(t("action.donate"))}

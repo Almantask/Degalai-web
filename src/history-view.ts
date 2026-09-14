@@ -47,6 +47,7 @@ export function mountHistoryChart(
   el: HTMLElement,
   series: HistoryHourSeries | undefined,
   cheapRanges: CheapHourRange[] = [],
+  legendEl?: HTMLElement,
 ): { destroy: () => void } | null {
   if (!series) return null;
   const brands = Object.entries(series.brands)
@@ -61,20 +62,27 @@ export function mountHistoryChart(
     {
       width: size.width,
       height: size.height,
-      padding: [8, 8, 0, 0],
+      padding: [4, 6, 0, 0],
       cursor: { focus: { prox: 24 }, show: size.width >= 480 },
-      legend: { live: size.width >= 640 },
+      legend: {
+        live: size.width >= 640,
+        mount: legendEl
+          ? (_u, legend) => {
+              legendEl.replaceChildren(legend);
+            }
+          : undefined,
+      },
       scales: { x: { time: false, range: [0, 23] } },
       axes: [
         {
           stroke: "#5c6f64",
-          size: 28,
+          size: 26,
           grid: { stroke: "rgb(16 32 24 / 8%)" },
           values: (_u, vals) => vals.map((v) => (v == null ? "" : hourTickLabel(Number(v)))),
         },
         {
           stroke: "#5c6f64",
-          size: 40,
+          size: 36,
           grid: { stroke: "rgb(16 32 24 / 8%)" },
           values: (_u, vals) => vals.map((v) => (v == null ? "" : Number(v).toFixed(2))),
         },
@@ -114,21 +122,30 @@ export function mountHistoryChart(
   );
   const ro = new ResizeObserver(() => {
     const next = chartSize(el);
+    if (next.width === plot.width && next.height === plot.height) return;
     plot.setSize({ width: next.width, height: next.height });
   });
   ro.observe(el);
+  const raf = requestAnimationFrame(() => {
+    const next = chartSize(el);
+    if (next.width !== plot.width || next.height !== plot.height) {
+      plot.setSize({ width: next.width, height: next.height });
+    }
+  });
   return {
     destroy() {
+      cancelAnimationFrame(raf);
       ro.disconnect();
       plot.destroy();
+      legendEl?.replaceChildren();
     },
   };
 }
 
 function chartSize(el: HTMLElement): { width: number; height: number } {
-  const width = Math.max(160, Math.floor(el.clientWidth) || 280);
-  const minH = width < 520 ? 140 : 180;
-  const height = Math.max(minH, Math.min(360, Math.floor(el.clientHeight) || minH + 40));
+  const width = Math.max(120, Math.floor(el.clientWidth) || 280);
+  const available = Math.floor(el.clientHeight);
+  const height = Math.max(72, available || (width < 520 ? 140 : 180));
   return { width, height };
 }
 

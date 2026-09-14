@@ -7,6 +7,7 @@ test("Lithuanian map shell loads", async ({ page }) => {
   await expect(page.getByRole("button", { name: /Dyzelinas|Diesel/ })).toBeVisible();
   await expect(page.getByPlaceholder("Kur važiuojate?")).toBeVisible();
   await expect(page.getByPlaceholder("Nuo mano vietos")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Degalinės" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Istorija" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Apie" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Maršrutas" })).toHaveCount(0);
@@ -21,6 +22,7 @@ test("English locale loads without about", async ({ page }) => {
     "href",
     "https://github.com/sponsors/Almantask",
   );
+  await expect(page.getByRole("link", { name: "Stations" })).toBeVisible();
   await expect(page.getByRole("link", { name: "History" })).toBeVisible();
   await expect(page.getByRole("link", { name: "About" })).toHaveCount(0);
 });
@@ -45,11 +47,25 @@ test("history button opens provider averages by hour", async ({ page }) => {
   await expect.poll(() => historyUrls.length).toBe(1);
   await expect(page.locator("#history-chart .uplot")).toBeVisible();
   expect(priceUrls).toHaveLength(1);
+  await expectHistoryFitsScreen(page);
   await page.getByRole("button", { name: "Sutraukti istoriją" }).click();
   await expect(page.locator(".history-panel")).toHaveClass(/is-min/);
   await expect(page.locator("#history-chart")).toBeHidden();
   await page.getByRole("button", { name: "Išskleisti istoriją" }).click();
   await expect(page.locator("#history-chart .uplot")).toBeVisible();
+  await page.getByRole("link", { name: "Degalinės" }).click();
+  await expect(page).not.toHaveURL(/istorija/);
+  await expect(page.getByPlaceholder("Kur važiuojate?")).toBeVisible();
+  await expect(page.locator(".station-row").first()).toBeVisible();
+  await expect(page.locator(".history-panel")).toHaveCount(0);
+});
+
+test("history prices stay inside the panel on a phone", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 667 });
+  await page.goto("/istorija");
+  await expect(page.locator("#history-chart .uplot")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("link", { name: "Degalinės" })).toBeVisible();
+  await expectHistoryFitsScreen(page);
 });
 
 test("station list is cheapest-first with a badge on top", async ({ page }) => {
@@ -89,6 +105,43 @@ test("search header can be minimised for a full map", async ({ page }) => {
   await page.getByRole("button", { name: /Išskleisti paiešką|Expand search/ }).click();
   await expect(page.getByPlaceholder("Kur važiuojate?")).toBeVisible();
 });
+
+async function expectHistoryFitsScreen(page: Page): Promise<void> {
+  const panel = page.locator(".history-panel");
+  await expect(panel).toBeVisible();
+  await expect(page.locator("#history-legend .u-legend")).toBeVisible();
+  await expect
+    .poll(async () => {
+      return panel.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const inside = (node: Element) => {
+          const b = node.getBoundingClientRect();
+          if (b.width < 1 || b.height < 1) return true;
+          return (
+            b.left >= r.left - 2 &&
+            b.right <= r.right + 2 &&
+            b.top >= r.top - 2 &&
+            b.bottom <= r.bottom + 2
+          );
+        };
+        const chart = el.querySelector("#history-chart");
+        const legend = el.querySelector("#history-legend");
+        const caption = el.querySelector(".history-caption");
+        return (
+          r.top >= -1 &&
+          r.left >= -1 &&
+          r.right <= vw + 1 &&
+          r.bottom <= vh + 1 &&
+          (!chart || inside(chart)) &&
+          (!legend || inside(legend)) &&
+          (!caption || inside(caption))
+        );
+      });
+    })
+    .toBe(true);
+}
 
 async function dragVertically(
   page: Page,
@@ -132,6 +185,7 @@ test("mobile sheets use a grabber and minimise by dragging", async ({ page }) =>
   await expect(page.locator(".history-handle")).toBeVisible();
   await expect(page.locator(".history-chevron")).toBeHidden();
   await expect(page.locator("#history-chart .uplot")).toBeVisible();
+  await expectHistoryFitsScreen(page);
   const historyHead = page.locator(".history-head");
   const historyBox = await historyHead.boundingBox();
   expect(historyBox).toBeTruthy();
