@@ -7,12 +7,12 @@ test("Lithuanian map shell loads", async ({ page }) => {
   await expect(page.getByRole("button", { name: /Dyzelinas|Diesel/ })).toBeVisible();
   await expect(page.getByPlaceholder("Kur važiuojate?")).toBeVisible();
   await expect(page.getByPlaceholder("Nuo mano vietos")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Istorija" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Istorija" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Apie" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Maršrutas" })).toHaveCount(0);
 });
 
-test("English locale loads without history or about", async ({ page }) => {
+test("English locale loads without about", async ({ page }) => {
   await page.goto("/en/");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByPlaceholder("Where are you going?")).toBeVisible();
@@ -21,8 +21,19 @@ test("English locale loads without history or about", async ({ page }) => {
     "href",
     "https://github.com/sponsors/Almantask",
   );
+  await expect(page.getByRole("link", { name: "History" })).toBeVisible();
   await expect(page.getByRole("link", { name: "About" })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "History" })).toHaveCount(0);
+});
+
+test("history button opens historical prices", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: "Istorija" }).click();
+  await expect(page).toHaveURL(/istorija/);
+  await expect(page.getByRole("heading", { name: "Istorinės kainos" })).toBeVisible();
+  await expect(page.locator("#history-chart .uplot")).toBeVisible();
+  await expect(page.locator(".history-caption")).toContainText(/Pigiausia/);
+  await page.getByRole("button", { name: "1 mėn." }).click();
+  await expect(page.getByRole("button", { name: "1 mėn." })).toHaveClass(/on/);
 });
 
 test("station list is cheapest-first with a badge on top", async ({ page }) => {

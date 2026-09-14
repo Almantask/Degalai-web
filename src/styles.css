@@ -536,6 +536,86 @@ body,
   flex: 0 0 10px;
 }
 
+.app.is-history .dest,
+.app.is-history .list {
+  display: none;
+}
+
+.history-panel {
+  position: absolute;
+  z-index: 5;
+  top: calc(var(--header-h, 186px) + 10px);
+  left: 12px;
+  right: 12px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  background: var(--card);
+  backdrop-filter: blur(18px) saturate(1.4);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid rgb(255 255 255 / 70%);
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.history-panel header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-panel h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+}
+
+.history-ranges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.history-ranges button {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.history-ranges button.on {
+  background: var(--green-dark);
+  border-color: var(--green-dark);
+  color: #fff;
+}
+
+#history-chart {
+  flex: 1;
+  min-height: 220px;
+  width: 100%;
+}
+
+.history-caption {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.uplot {
+  font-family: var(--font);
+}
+
+.u-legend {
+  font-size: 0.8rem;
+}
+
 .panel {
   position: absolute;
   z-index: 5;
@@ -828,6 +908,12 @@ body,
   .panel {
     top: calc(var(--header-h, 196px) + 10px);
     left: 16px;
+  }
+
+  .history-panel {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
   }
 
   #banner {

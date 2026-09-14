@@ -2,7 +2,7 @@ import type { FuelType } from "./types.ts";
 import { persistLocale } from "./settings.ts";
 import { getLocale, setLocale, type Locale } from "./i18n/index.ts";
 
-export type View = "map";
+export type View = "map" | "history";
 
 export interface RouteState {
   view: View;
@@ -12,11 +12,20 @@ export interface RouteState {
 
 const LT_PATHS: Record<View, string> = {
   map: "/",
+  history: "/istorija",
 };
 
 const EN_PATHS: Record<View, string> = {
   map: "/en/",
+  history: "/en/history",
 };
+
+export function viewFromPath(pathname: string): { view: View; locale: Locale } {
+  const path = pathname.replace(/\/+$/, "") || "/";
+  const locale: Locale = path === "/en" || path.startsWith("/en/") ? "en" : "lt";
+  const view: View = path === "/istorija" || path === "/en/history" ? "history" : "map";
+  return { view, locale };
+}
 
 export function basePath(): string {
   const b = import.meta.env.BASE_URL || "/";
@@ -30,10 +39,9 @@ export function stripBase(pathname: string): string {
 }
 
 export function parsePath(pathname = window.location.pathname): RouteState {
-  const path = stripBase(pathname).replace(/\/+$/, "") || "/";
-  const locale: Locale = path === "/en" || path.startsWith("/en/") ? "en" : "lt";
+  const { view, locale } = viewFromPath(stripBase(pathname));
   const fuelQuery = new URLSearchParams(window.location.search).get("fuel");
-  return { view: "map", locale, fuelQuery };
+  return { view, locale, fuelQuery };
 }
 
 export function pathFor(view: View, locale: Locale = getLocale()): string {

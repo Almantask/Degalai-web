@@ -24,16 +24,16 @@ npm run test:e2e
 
 ## Data
 
-Git is the database. The GitHub Actions workflow (06:00 and 14:45 Lithuania time) runs
+Git is the database. The GitHub Actions workflow (hourly) runs
 `npm run pipeline`, commits `data/` if it changed, and deploys the static site.
 
-| Path | What |
-|---|---|
-| `data/stations.json` | OSM stations + unmatched LEA sites |
-| `data/prices/YYYY-MM-DD.json` | Daily snapshot |
-| `data/history.json` | Aggregated min/median/max |
-| `data/overrides/stations.json` | Manual OSM ↔ source matches |
-| `reports/unmatched.json` | Source rows that still need a home |
+| Path                           | What                               |
+| ------------------------------ | ---------------------------------- |
+| `data/stations.json`           | OSM stations + unmatched LEA sites |
+| `data/prices/YYYY-MM-DD.json`  | Daily snapshot                     |
+| `data/history.json`            | Aggregated min/median/max          |
+| `data/overrides/stations.json` | Manual OSM ↔ source matches        |
+| `reports/unmatched.json`       | Source rows that still need a home |
 
 Prices come from the Lithuanian Energy Agency (LEA) public dataset. Station
 coordinates come from OpenStreetMap. Always attribute both, plus the original
