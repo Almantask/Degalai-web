@@ -82,6 +82,8 @@ export interface UserSettings {
   aroundReturn: boolean;
   routeDetourKm: number;
   hideUnpriced: boolean;
+  /** Brand ids the user turned off. Empty means every provider is included. */
+  excludedBrands: string[];
   locale?: "lt" | "en";
 }
 
@@ -96,6 +98,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   aroundReturn: true,
   routeDetourKm: 5,
   hideUnpriced: true,
+  excludedBrands: [],
 };
 
 export const LT_BOUNDS = {

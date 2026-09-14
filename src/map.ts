@@ -289,6 +289,7 @@ export function setStationData(
   const priced = stations
     .map((s) => ({ s, price: prices?.prices[s.id]?.[fuel]?.price }))
     .filter(({ s, price }) => {
+      if (settings.excludedBrands.includes(s.brand)) return false;
       if (price == null && settings.hideUnpriced) return false;
       if (price == null && !s.fuels.includes(fuel)) return false;
       return true;

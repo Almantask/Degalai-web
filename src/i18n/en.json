@@ -55,6 +55,7 @@
   "settings.title": "Settings",
   "settings.consumption": "Consumption (l/100 km)",
   "settings.timeValue": "Value of time (€/h)",
+  "settings.providers": "Providers",
   "status.offline": "Offline — showing last known prices ({date})",
   "status.noData": "No price data yet. Run the data pipeline.",
   "geo.prompt": "Allow location access or tap a start on the map.",

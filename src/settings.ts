@@ -1,4 +1,10 @@
-import { DEFAULT_SETTINGS, FUEL_TYPES, type FuelType, type UserSettings } from "./types.ts";
+import {
+  DEFAULT_SETTINGS,
+  FUEL_TYPES,
+  type FuelType,
+  type Station,
+  type UserSettings,
+} from "./types.ts";
 import type { Locale } from "./i18n/index.ts";
 
 const KEY = "kur-degalai-settings";
@@ -47,17 +53,45 @@ export function sanitizeSettings(raw: unknown): UserSettings {
     aroundReturn: asBoolean(parsed.aroundReturn, DEFAULT_SETTINGS.aroundReturn),
     routeDetourKm: clampNumber(parsed.routeDetourKm, DEFAULT_SETTINGS.routeDetourKm, 1, 15),
     hideUnpriced: asBoolean(parsed.hideUnpriced, DEFAULT_SETTINGS.hideUnpriced),
+    excludedBrands: sanitizeExcludedBrands(parsed.excludedBrands),
     ...(locale ? { locale } : {}),
   };
+}
+
+const BRAND_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+function sanitizeExcludedBrands(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const item of value) {
+    if (typeof item !== "string" || !BRAND_ID.test(item) || seen.has(item)) continue;
+    seen.add(item);
+    out.push(item);
+    if (out.length >= 40) break;
+  }
+  return out.sort();
+}
+
+export function isBrandIncluded(brand: string, excluded: readonly string[]): boolean {
+  return !excluded.includes(brand);
+}
+
+export function uniqueBrands(stations: Station[]): string[] {
+  return [...new Set(stations.map((s) => s.brand || "independent"))];
+}
+
+function copyDefaults(): UserSettings {
+  return { ...DEFAULT_SETTINGS, excludedBrands: [] };
 }
 
 export function loadSettings(): UserSettings {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return { ...DEFAULT_SETTINGS };
+    if (!raw) return copyDefaults();
     return sanitizeSettings(JSON.parse(raw) as unknown);
   } catch {
-    return { ...DEFAULT_SETTINGS };
+    return copyDefaults();
   }
 }
 

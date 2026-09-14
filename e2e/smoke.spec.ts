@@ -170,17 +170,35 @@ test("station list shows last updated time", async ({ page }) => {
   await expect(page.locator(".list-updated")).toContainText(/\d{1,2}:\d{2}/);
 });
 
-test("settings keep only consumption and time value", async ({ page }) => {
+test("settings include consumption, time value, and provider checkboxes", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Nustatymai" }).click();
   await expect(page.getByRole("heading", { name: "Nustatymai" })).toBeVisible();
   await expect(page.getByText("Sąnaudos (l/100 km)")).toBeVisible();
   await expect(page.getByText("Laiko vertė (€/h)")).toBeVisible();
+  await expect(page.getByRole("group", { name: "Tiekėjai" })).toBeVisible();
+  const boxes = page.locator(".brand-filter input[type=checkbox]");
+  await expect(boxes.first()).toBeChecked();
+  expect(await boxes.count()).toBeGreaterThan(3);
   await expect(page.getByText("Planuojama pripilti")).toHaveCount(0);
   await expect(page.getByText("Kelio koeficientas")).toHaveCount(0);
   await expect(page.getByText("Grįžtu į tą pačią vietą")).toHaveCount(0);
   await expect(page.getByText("Slėpti degalines")).toHaveCount(0);
   await expect(page.getByText("Užsukimo")).toHaveCount(0);
+});
+
+test("provider checkboxes hide those stations from the list", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".station-row").first()).toBeVisible({ timeout: 15_000 });
+  const before = await page.locator(".station-row").count();
+  expect(before).toBeGreaterThan(1);
+  await page.getByRole("button", { name: "Nustatymai" }).click();
+  const boxes = page.locator(".brand-filter input[type=checkbox]");
+  const n = await boxes.count();
+  for (let i = 0; i < n; i++) await boxes.nth(i).uncheck();
+  await expect(page.locator(".station-row")).toHaveCount(0);
+  await boxes.first().check();
+  await expect(page.locator(".station-row").first()).toBeVisible();
 });
 
 test("station popup has no navigate or updated text", async ({ page }) => {

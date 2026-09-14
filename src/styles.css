@@ -258,6 +258,17 @@ body,
   color: #fff;
 }
 
+.icon-settings {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 8px;
+}
+
+.icon-settings svg {
+  display: block;
+}
+
 .dest {
   display: flex;
   flex-direction: column;
@@ -598,6 +609,8 @@ body,
   top: calc(var(--header-h, 186px) + 10px);
   left: 12px;
   width: min(360px, calc(100% - 24px));
+  max-height: min(72vh, calc(100% - var(--header-h, 186px) - 24px));
+  overflow: auto;
   background: var(--card);
   backdrop-filter: blur(18px);
   border-radius: var(--radius);
@@ -637,6 +650,36 @@ body,
   font: inherit;
 }
 
+.brand-filter {
+  border: 0;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.brand-filter legend {
+  padding: 0;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.panel label.check {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.panel input[type="checkbox"] {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--green-dark);
+  flex: 0 0 auto;
+}
+
 .panel button.primary {
   background: var(--green);
   color: #fff;
@@ -645,12 +688,6 @@ body,
   padding: 10px;
   font: inherit;
   cursor: pointer;
-}
-
-.check {
-  flex-direction: row !important;
-  align-items: center;
-  gap: 8px !important;
 }
 
 #banner {

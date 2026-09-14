@@ -55,6 +55,7 @@
   "settings.title": "Nustatymai",
   "settings.consumption": "Sąnaudos (l/100 km)",
   "settings.timeValue": "Laiko vertė (€/h)",
+  "settings.providers": "Tiekėjai",
   "status.offline": "Neprisijungus – rodomos paskutinės žinomos kainos ({date})",
   "status.noData": "Kainų duomenų dar nėra. Paleiskite duomenų vamzdyną.",
   "geo.prompt": "Leiskite vietos nustatymą arba bakstelėkite pradžią žemėlapyje.",

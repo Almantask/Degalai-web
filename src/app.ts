@@ -19,8 +19,9 @@ import {
   type LngLat,
 } from "./geo.ts";
 import {
-  fuelGroupOf,
+  brandLabel,
   FUEL_BY_GROUP,
+  fuelGroupOf,
   setLocale,
   t,
   tPlural,
@@ -43,7 +44,13 @@ import { CHEAP_VIA_CORRIDOR_KM, orderRouteRows, topCheapStations } from "./route
 import { hrefFor, navigate, parsePath, pathFor, type View } from "./router.ts";
 import { fetchRoute, geocode, reverseGeocode, type GeoHit, type RouteResult } from "./routing.ts";
 import DOMPurify from "dompurify";
-import { fuelFromUrl, loadSettings, saveSettings } from "./settings.ts";
+import {
+  fuelFromUrl,
+  isBrandIncluded,
+  loadSettings,
+  saveSettings,
+  uniqueBrands,
+} from "./settings.ts";
 import {
   SHEET_COMPACT_MQ,
   isSheetDrag,
@@ -55,6 +62,18 @@ import type { HistoryFile, Station } from "./types.ts";
 import { DEFAULT_SETTINGS } from "./types.ts";
 
 const DONATE_URL = "https://github.com/sponsors/Almantask";
+
+const SETTINGS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M4 21v-7"/>
+  <path d="M4 10V3"/>
+  <path d="M12 21v-9"/>
+  <path d="M12 8V3"/>
+  <path d="M20 21v-5"/>
+  <path d="M20 12V3"/>
+  <path d="M1 14h6"/>
+  <path d="M9 8h6"/>
+  <path d="M17 16h6"/>
+</svg>`;
 
 /** Price-delta savings only — user consumption and time value stay out of ranking. */
 function priceBenefit(baselinePrice: number, stationPrice: number): ReturnType<typeof netBenefit> {
@@ -293,6 +312,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
     });
     root.addEventListener("change", (e) => {
       const el = e.target as HTMLInputElement;
+      if (el.id.startsWith("set-brand-") && el.dataset.brand) {
+        const brand = el.dataset.brand;
+        const next = new Set(settings.excludedBrands);
+        if (el.checked) next.delete(brand);
+        else next.add(brand);
+        settings.excludedBrands = [...next].sort();
+        saveSettings(settings);
+        applyBrandFilter();
+        return;
+      }
       if (el.id.startsWith("set-")) saveSettings(settings);
     });
     root.addEventListener("keyup", (e) => {
@@ -435,6 +464,22 @@ export async function startApp(root: HTMLElement): Promise<void> {
     navigate(view, locale, settings.fuel, true);
   }
 
+  function includedStations(): Station[] {
+    return data.stations.filter((s) => isBrandIncluded(s.brand, settings.excludedBrands));
+  }
+
+  function applyBrandFilter(): void {
+    if (routeLine) {
+      void evaluateRouteStations(routeLine).then(() => {
+        refreshMap();
+        renderList();
+      });
+      return;
+    }
+    refreshMap();
+    renderList();
+  }
+
   function onFuelChange(): void {
     if (routeLine) void evaluateRouteStations(routeLine);
     refreshMap();
@@ -443,7 +488,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function refreshMap(): void {
     const routeIds = routeLine ? new Set(routeRows.map((r) => r.station.id)) : null;
-    const stations = stationsForRouteMap(data.stations, routeIds);
+    const stations = stationsForRouteMap(includedStations(), routeIds);
     const cheapestOnId = routeLine ? orderRouteRows(routeRows).cheapestOn?.station.id : undefined;
     const emphasis = routeLine
       ? Object.fromEntries(
@@ -593,7 +638,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     const onWay: RouteStationRow[] = [];
     const nearby: RouteStationRow[] = [];
-    for (const s of data.stations) {
+    for (const s of includedStations()) {
       const price = data.prices?.prices[s.id]?.[settings.fuel]?.price;
       if (price == null) continue;
       const p = { lat: s.lat, lon: s.lon };
@@ -829,7 +874,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       list.innerHTML = listWrap([], t("route.noStations"));
       return;
     }
-    const priced = stationsInView(map, data.stations)
+    const priced = stationsInView(map, includedStations())
       .map((s) => ({
         s,
         price: data.prices?.prices[s.id]?.[settings.fuel]?.price,
@@ -938,7 +983,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
             <a class="icon-btn donate-btn" href="${DONATE_URL}" target="_blank" rel="noopener noreferrer">
               ${escapeHtml(t("action.donate"))}
             </a>
-            <button type="button" class="icon-btn ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">⚙</button>
+            <button type="button" class="icon-btn icon-settings ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">${SETTINGS_ICON}</button>
           </div>
         </div>
         <div class="fuel-filter" role="group" aria-label="${escapeHtml(t("fuel.filter"))}">
@@ -973,10 +1018,26 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function settingsHtml(): string {
+    const brands = uniqueBrands(data.stations).sort((a, b) => {
+      if (a === "independent") return 1;
+      if (b === "independent") return -1;
+      return brandLabel(a).localeCompare(brandLabel(b), locale === "lt" ? "lt" : "en");
+    });
+    const checks = brands
+      .map((brand) => {
+        const id = `set-brand-${brand}`;
+        const on = isBrandIncluded(brand, settings.excludedBrands);
+        return `<label class="check"><input id="${escapeHtml(id)}" data-brand="${escapeHtml(brand)}" type="checkbox"${on ? " checked" : ""} />${escapeHtml(brandLabel(brand))}</label>`;
+      })
+      .join("");
     return `<section class="panel" aria-label="${escapeHtml(t("settings.title"))}">
       <header><h2>${escapeHtml(t("settings.title"))}</h2><button type="button" data-act="close-panel">${escapeHtml(t("action.close"))}</button></header>
       <label>${escapeHtml(t("settings.consumption"))}<input id="set-cons" type="number" min="3" max="20" step="0.1" value="${escapeHtml(String(settings.consumption))}" /></label>
       <label>${escapeHtml(t("settings.timeValue"))}<input id="set-time" type="number" min="0" max="50" step="1" value="${escapeHtml(String(settings.timeValue))}" /></label>
+      <fieldset class="brand-filter">
+        <legend>${escapeHtml(t("settings.providers"))}</legend>
+        ${checks}
+      </fieldset>
     </section>`;
   }
 

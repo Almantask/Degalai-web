@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_SETTINGS } from "../src/types.ts";
-import { fuelFromUrl, sanitizeSettings } from "../src/settings.ts";
+import { fuelFromUrl, isBrandIncluded, sanitizeSettings, uniqueBrands } from "../src/settings.ts";
 
 describe("sanitizeSettings", () => {
   it("returns defaults for missing or invalid input", () => {
@@ -22,6 +22,7 @@ describe("sanitizeSettings", () => {
         aroundReturn: false,
         routeDetourKm: 8,
         hideUnpriced: false,
+        excludedBrands: ["viada"],
         locale: "en",
       }),
     ).toEqual({
@@ -35,6 +36,7 @@ describe("sanitizeSettings", () => {
       aroundReturn: false,
       routeDetourKm: 8,
       hideUnpriced: false,
+      excludedBrands: ["viada"],
       locale: "en",
     });
   });
@@ -56,10 +58,41 @@ describe("sanitizeSettings", () => {
     expect(sanitized).not.toHaveProperty("extra");
   });
 
+  it("treats missing providers as all included", () => {
+    expect(sanitizeSettings({}).excludedBrands).toEqual([]);
+    expect(
+      sanitizeSettings({ excludedBrands: ["neste", "neste", "<b>", ""] }).excludedBrands,
+    ).toEqual(["neste"]);
+  });
+
   it("clamps numbers to the settings form range", () => {
     expect(sanitizeSettings({ consumption: 100, litres: 1, timeValue: -4 }).consumption).toBe(20);
     expect(sanitizeSettings({ litres: 1 }).litres).toBe(5);
     expect(sanitizeSettings({ timeValue: -4 }).timeValue).toBe(0);
+  });
+});
+
+describe("isBrandIncluded", () => {
+  it("includes every brand when nothing is excluded", () => {
+    expect(isBrandIncluded("neste", [])).toBe(true);
+    expect(isBrandIncluded("independent", [])).toBe(true);
+  });
+
+  it("hides only the excluded providers", () => {
+    expect(isBrandIncluded("viada", ["viada"])).toBe(false);
+    expect(isBrandIncluded("neste", ["viada"])).toBe(true);
+  });
+});
+
+describe("uniqueBrands", () => {
+  it("lists each provider once", () => {
+    expect(
+      uniqueBrands([
+        { id: "a", name: "A", brand: "neste", lat: 1, lon: 1, fuels: ["D"], sourceIds: {} },
+        { id: "b", name: "B", brand: "neste", lat: 1, lon: 1, fuels: ["D"], sourceIds: {} },
+        { id: "c", name: "C", brand: "viada", lat: 1, lon: 1, fuels: ["D"], sourceIds: {} },
+      ]),
+    ).toEqual(["neste", "viada"]);
   });
 });
 
