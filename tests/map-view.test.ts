@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { setLocale } from "../src/i18n/index.ts";
-import { stationPopupHtml, stationsInView } from "../src/map.ts";
+import { stationPopupHtml, stationsForRouteMap, stationsInView } from "../src/map.ts";
 import type { Station } from "../src/types.ts";
 
 const station: Station = {
@@ -33,6 +33,24 @@ describe("stationsInView", () => {
     };
     const stations = [{ lat: 54.6, lon: 25.2 }];
     expect(stationsInView(map as never, stations)).toEqual(stations);
+  });
+});
+
+describe("stationsForRouteMap", () => {
+  const a = { id: "a" };
+  const b = { id: "b" };
+  const c = { id: "c" };
+
+  it("shows every station when no route is active", () => {
+    expect(stationsForRouteMap([a, b, c], null)).toEqual([a, b, c]);
+  });
+
+  it("keeps only stations on the route (including cheap vias)", () => {
+    expect(stationsForRouteMap([a, b, c], new Set(["a", "c"]))).toEqual([a, c]);
+  });
+
+  it("hides every station when the route has none", () => {
+    expect(stationsForRouteMap([a, b, c], new Set())).toEqual([]);
   });
 });
 

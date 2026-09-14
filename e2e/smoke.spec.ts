@@ -245,11 +245,18 @@ test("destination draws a route from the current location", async ({ page }) => 
   });
   await page.goto("/");
   await expect(page.getByPlaceholder("Nuo mano vietos")).toBeVisible();
+  await expect(page.locator(".station-row").first()).toBeVisible({ timeout: 15_000 });
+  const allStations = await page.locator(".station-row").count();
+  expect(allStations).toBeGreaterThan(10);
   const dest = page.getByPlaceholder("Kur važiuojate?");
   await dest.fill("Kaunas");
   await dest.press("Enter");
   await expect(page.locator(".app")).toHaveClass(/has-route/, { timeout: 15_000 });
   await expect(page.locator(".maplibregl-marker")).toHaveCount(2);
+  const routeStations = await page.locator(".station-row").count();
+  expect(routeStations).toBeGreaterThan(0);
+  expect(routeStations).toBeLessThan(allStations);
+  await expect(page.locator("#map")).toHaveAttribute("data-station-count", String(routeStations));
   expect(viaRoutes).toBeGreaterThan(0);
   expect(viaRoutes).toBeLessThanOrEqual(5);
 });

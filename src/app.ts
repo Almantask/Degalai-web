@@ -34,6 +34,7 @@ import {
   setRouteData,
   setStationData,
   stationPopupHtml,
+  stationsForRouteMap,
   stationsInView,
   type Emphasis,
 } from "./map.ts";
@@ -428,16 +429,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function refreshMap(): void {
+    const routeIds = routeLine ? new Set(routeRows.map((r) => r.station.id)) : null;
+    const stations = stationsForRouteMap(data.stations, routeIds);
     const emphasis: Record<string, Emphasis> | undefined = routeLine
       ? Object.fromEntries(
-          data.stations.map((s) => {
-            const row = routeRows.find((r) => r.station.id === s.id);
-            if (!row) return [s.id, "dim" as Emphasis];
-            return [s.id, row.kind === "on" ? ("high" as Emphasis) : ("low" as Emphasis)];
-          }),
+          routeRows.map((r) => [
+            r.station.id,
+            r.kind === "on" ? ("high" as Emphasis) : ("low" as Emphasis),
+          ]),
         )
       : undefined;
-    setStationData(map, data.stations, data.prices, settings.fuel, settings, emphasis);
+    setStationData(map, stations, data.prices, settings.fuel, settings, emphasis);
     if (routeLine) {
       const detours = routeRows
         .map((r) => r.viaGeometry)

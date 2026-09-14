@@ -222,6 +222,7 @@ export function setStationData(
     };
   });
   src.setData({ type: "FeatureCollection", features });
+  map.getContainer().dataset.stationCount = String(features.length);
 }
 
 export function setRouteData(
@@ -273,6 +274,15 @@ export function setRouteData(
   if (line?.length) extend(line);
   for (const pts of detours) extend(pts);
   if (hasPoint) map.fitBounds(bounds, { padding: 64, maxZoom: 12 });
+}
+
+/** When a route is active, only those stations appear on the map. */
+export function stationsForRouteMap<T extends { id: string }>(
+  stations: T[],
+  routeStationIds: ReadonlySet<string> | null,
+): T[] {
+  if (!routeStationIds) return stations;
+  return stations.filter((s) => routeStationIds.has(s.id));
 }
 
 /** Stations whose coordinates fall inside the current map viewport. */
