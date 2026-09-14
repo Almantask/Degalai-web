@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { setLocale } from "../src/i18n/index.ts";
 import {
+  overlayPadding,
   stationPopupHtml,
   stationsForRouteMap,
   stationsInView,
@@ -18,6 +19,16 @@ const station: Station = {
   fuels: ["D"],
   sourceIds: {},
 };
+
+describe("overlayPadding", () => {
+  it("clears the collapsed header and list grabbers", () => {
+    expect(overlayPadding(40, 56)).toEqual({ top: 52, bottom: 68, left: 24, right: 24 });
+  });
+
+  it("keeps a minimum edge when chrome is missing", () => {
+    expect(overlayPadding(0, 0)).toEqual({ top: 24, bottom: 24, left: 24, right: 24 });
+  });
+});
 
 describe("stationsInView", () => {
   it("keeps stations whose coordinates are inside the map bounds", () => {

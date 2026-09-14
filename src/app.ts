@@ -29,7 +29,9 @@ import {
 } from "./i18n/index.ts";
 import {
   createMap,
+  fitRoute,
   flyToStation,
+  overlayPadding,
   setRouteData,
   setStationData,
   stationPopupHtml,
@@ -405,6 +407,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     routeLine = null;
     routeRows = [];
     pickMode = pickMode === "dest-start" ? null : pickMode;
+    headerMinimized = false;
+    listMinimized = false;
     setRouteData(map, null);
     setEndpointMarkers(null, null);
     refreshMap();
@@ -441,11 +445,37 @@ export async function startApp(root: HTMLElement): Promise<void> {
       : undefined;
     setStationData(map, stations, data.prices, settings.fuel, settings, emphasis);
     if (routeLine) {
-      const detours = routeRows
-        .map((r) => r.viaGeometry)
-        .filter((g): g is LngLat[] => Boolean(g && g.length >= 2));
+      const detours = viaGeometries();
       setRouteData(map, routeLine.geometry, detours);
     }
+  }
+
+  function viaGeometries(): LngLat[][] {
+    return routeRows
+      .map((r) => r.viaGeometry)
+      .filter((g): g is LngLat[] => Boolean(g && g.length >= 2));
+  }
+
+  function collapseForMapFocus(): void {
+    headerMinimized = true;
+    listMinimized = true;
+    settingsOpen = false;
+    render();
+  }
+
+  function chromePadding(): maplibregl.PaddingOptions {
+    const header = root.querySelector<HTMLElement>("#header");
+    const list = root.querySelector<HTMLElement>("#list");
+    return overlayPadding(
+      header?.getBoundingClientRect().height ?? 0,
+      list?.getBoundingClientRect().height ?? 0,
+    );
+  }
+
+  function focusRoute(): void {
+    if (!routeLine) return;
+    collapseForMapFocus();
+    fitRoute(map, routeLine.geometry, viaGeometries(), chromePadding());
   }
 
   function requestLocation(force: boolean): void {
@@ -527,7 +557,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     setEndpointMarkers(start, end);
     await evaluateRouteStations(res);
     refreshMap();
-    render();
+    focusRoute();
   }
 
   async function evaluateRouteStations(res: RouteResult): Promise<void> {
@@ -652,6 +682,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       }
     }
     popup?.remove();
+    collapseForMapFocus();
     popup = new maplibregl.Popup({ offset: 16, maxWidth: "300px" })
       .setLngLat([s.lon, s.lat])
       .setHTML(
@@ -665,7 +696,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ),
       )
       .addTo(map);
-    flyToStation(map, s);
+    flyToStation(map, s, chromePadding());
   }
 
   function render(): void {

@@ -167,6 +167,8 @@ test("station popup has no navigate or updated text", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".station-row").first()).toBeVisible({ timeout: 15_000 });
   await page.locator(".station-row").first().click();
+  await expect(page.locator("#header")).toHaveClass(/is-min/);
+  await expect(page.locator(".sheet")).toHaveClass(/is-min/);
   await expect(page.locator(".maplibregl-popup")).toBeVisible();
   await expect(page.getByRole("link", { name: "Naviguoti" })).toHaveCount(0);
   await expect(page.locator(".popup-nav")).toHaveCount(0);
@@ -254,6 +256,10 @@ test("destination draws a route from the current location", async ({ page }) => 
   await dest.fill("Kaunas");
   await dest.press("Enter");
   await expect(page.locator(".app")).toHaveClass(/has-route/, { timeout: 15_000 });
+  await expect(page.locator("#header")).toHaveClass(/is-min/);
+  await expect(page.locator(".sheet")).toHaveClass(/is-min/);
+  await expect(page.getByPlaceholder("Kur važiuojate?")).toBeHidden();
+  await expect(page.locator(".list-body")).toBeHidden();
   await expect(page.locator(".maplibregl-marker")).toHaveCount(2);
   const routeStations = await page.locator(".station-row").count();
   expect(routeStations).toBeGreaterThan(0);

@@ -357,6 +357,12 @@ export function setRouteData(
         })),
     });
   }
+}
+
+function routeBounds(
+  line: LngLat[] | null,
+  detours: LngLat[][] = [],
+): maplibregl.LngLatBounds | null {
   const bounds = new maplibregl.LngLatBounds();
   let hasPoint = false;
   const extend = (pts: LngLat[]) => {
@@ -367,7 +373,32 @@ export function setRouteData(
   };
   if (line?.length) extend(line);
   for (const pts of detours) extend(pts);
-  if (hasPoint) map.fitBounds(bounds, { padding: 64, maxZoom: 12 });
+  return hasPoint ? bounds : null;
+}
+
+/** Padding so a fit leaves the collapsed header and list grabbers clear. */
+export function overlayPadding(
+  headerH: number,
+  listH: number,
+  gap = 12,
+): maplibregl.PaddingOptions {
+  const edge = 24;
+  return {
+    top: Math.max(edge, Math.round(headerH) + gap),
+    bottom: Math.max(edge, Math.round(listH) + gap),
+    left: edge,
+    right: edge,
+  };
+}
+
+export function fitRoute(
+  map: maplibregl.Map,
+  line: LngLat[] | null,
+  detours: LngLat[][] = [],
+  padding: maplibregl.PaddingOptions = overlayPadding(64, 64),
+): void {
+  const bounds = routeBounds(line, detours);
+  if (bounds) map.fitBounds(bounds, { padding, maxZoom: 12 });
 }
 
 /** When a route is active, only those stations appear on the map. */
@@ -393,8 +424,13 @@ export function stationsInView<T extends { lat: number; lon: number }>(
   return stations.filter((s) => bounds.contains([s.lon, s.lat]));
 }
 
-export function flyToStation(map: maplibregl.Map, s: Station): void {
-  map.easeTo({ center: [s.lon, s.lat], zoom: Math.max(map.getZoom(), 13) });
+export function flyToStation(
+  map: maplibregl.Map,
+  s: Station,
+  padding: maplibregl.PaddingOptions = overlayPadding(64, 64),
+): void {
+  const bounds = new maplibregl.LngLatBounds([s.lon, s.lat], [s.lon, s.lat]);
+  map.fitBounds(bounds, { padding, maxZoom: 14 });
 }
 
 export interface StationPopupExtra {
