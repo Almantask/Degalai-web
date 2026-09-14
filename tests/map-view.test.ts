@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { setLocale } from "../src/i18n/index.ts";
-import { stationPopupHtml, stationsForRouteMap, stationsInView } from "../src/map.ts";
+import {
+  stationPopupHtml,
+  stationsForRouteMap,
+  stationsInView,
+  routeStationEmphasis,
+  ROUTE_MARKER,
+} from "../src/map.ts";
 import type { Station } from "../src/types.ts";
 
 const station: Station = {
@@ -51,6 +57,30 @@ describe("stationsForRouteMap", () => {
 
   it("hides every station when the route has none", () => {
     expect(stationsForRouteMap([a, b, c], new Set())).toEqual([]);
+  });
+});
+
+describe("routeStationEmphasis", () => {
+  it("marks the cheapest on-route station as pick", () => {
+    expect(routeStationEmphasis("on", true)).toBe("pick");
+  });
+
+  it("marks other on-route stations as high", () => {
+    expect(routeStationEmphasis("on", false)).toBe("high");
+  });
+
+  it("marks detours as low even if they are cheapest overall", () => {
+    expect(routeStationEmphasis("detour", true)).toBe("low");
+    expect(routeStationEmphasis("detour", false)).toBe("low");
+  });
+});
+
+describe("ROUTE_MARKER", () => {
+  it("uses distinct colors for on-route, cheapest, and detour stations", () => {
+    const colors = [ROUTE_MARKER.pick, ROUTE_MARKER.on, ROUTE_MARKER.detour];
+    expect(new Set(colors).size).toBe(3);
+    expect(ROUTE_MARKER.on).not.toBe("#15803d");
+    expect(ROUTE_MARKER.on).not.toBe("#1b6b3a");
   });
 });
 

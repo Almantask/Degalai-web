@@ -2,6 +2,12 @@
   --green: #0f8a4b;
   --green-dark: #0b5c34;
   --green-soft: #e7f6ee;
+  --route-on: #ea580c;
+  --route-on-soft: #fff7ed;
+  --route-pick: #ca8a04;
+  --route-pick-soft: #fef9c3;
+  --route-detour: #4f46e5;
+  --route-detour-soft: #eef2ff;
   --ink: #102018;
   --muted: #5c6f64;
   --bg: #e8eee9;
@@ -432,6 +438,41 @@ body,
 .station-row.is-pick {
   background: var(--green-soft);
   border-color: rgb(15 138 75 / 28%);
+}
+
+.station-row.is-on-route {
+  background: var(--route-on-soft);
+  border-color: rgb(234 88 12 / 38%);
+}
+
+.station-row.is-on-route .swatch {
+  background: var(--route-on);
+  box-shadow: 0 0 0 3px rgb(234 88 12 / 22%);
+}
+
+.station-row.is-on-route.is-pick {
+  background: var(--route-pick-soft);
+  border-color: rgb(202 138 4 / 50%);
+  box-shadow: 0 0 0 2px rgb(250 204 21 / 40%);
+}
+
+.station-row.is-on-route.is-pick .swatch {
+  background: #facc15;
+  box-shadow: 0 0 0 4px rgb(250 204 21 / 40%);
+}
+
+.station-row.is-detour {
+  background: var(--route-detour-soft);
+  border-color: rgb(79 70 229 / 30%);
+}
+
+.station-row.is-detour .swatch {
+  background: var(--route-detour);
+  box-shadow: 0 0 0 3px rgb(79 70 229 / 22%);
+}
+
+.station-row.is-detour.is-pick {
+  box-shadow: 0 0 0 2px rgb(79 70 229 / 28%);
 }
 
 .station-badges {

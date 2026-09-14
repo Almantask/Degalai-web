@@ -8,12 +8,31 @@ import { brandLabel, t } from "./i18n/index.ts";
 const SOURCE = "stations";
 const CLUSTER = "stations-clusters";
 const CLUSTER_COUNT = "stations-cluster-count";
+const HALO = "stations-halo";
 const POINTS = "stations-points";
 const LABELS = "stations-labels";
+const ROUTE_LABELS = "stations-route-labels";
 const ROUTE = "route-line";
 const ROUTE_SRC = "route";
 const DETOUR_SRC = "detours";
 const DETOUR = "detours-line";
+
+/** Marker colors for stations on an active route — contrast with the green path. */
+export const ROUTE_MARKER = {
+  pick: "#facc15",
+  pickHalo: "#fde047",
+  on: "#ea580c",
+  onHalo: "#fdba74",
+  detour: "#4f46e5",
+  detourHalo: "#a5b4fc",
+} as const;
+
+export type Emphasis = "high" | "normal" | "low" | "dim" | "pick";
+
+export function routeStationEmphasis(kind: "on" | "detour", isCheapestOn: boolean): Emphasis {
+  if (kind === "on" && isCheapestOn) return "pick";
+  return kind === "on" ? "high" : "low";
+}
 
 export interface MapHandlers {
   onStationClick: (id: string) => void;
@@ -69,10 +88,10 @@ export function createMap(container: HTMLElement, handlers: MapHandlers): maplib
       type: "line",
       source: DETOUR_SRC,
       paint: {
-        "line-color": "#6b7280",
+        "line-color": ROUTE_MARKER.detour,
         "line-width": 3,
         "line-dasharray": [2, 2],
-        "line-opacity": 0.8,
+        "line-opacity": 0.85,
       },
     });
     map.addLayer({
@@ -101,6 +120,36 @@ export function createMap(container: HTMLElement, handlers: MapHandlers): maplib
       paint: { "text-color": "#fff" },
     });
     map.addLayer({
+      id: HALO,
+      type: "circle",
+      source: SOURCE,
+      filter: [
+        "all",
+        ["!", ["has", "point_count"]],
+        ["in", ["get", "emphasis"], ["literal", ["pick", "high", "low"]]],
+      ],
+      paint: {
+        "circle-radius": [
+          "case",
+          ["==", ["get", "emphasis"], "pick"],
+          18,
+          ["==", ["get", "emphasis"], "high"],
+          15,
+          12,
+        ],
+        "circle-color": [
+          "case",
+          ["==", ["get", "emphasis"], "pick"],
+          ROUTE_MARKER.pickHalo,
+          ["==", ["get", "emphasis"], "high"],
+          ROUTE_MARKER.onHalo,
+          ROUTE_MARKER.detourHalo,
+        ],
+        "circle-opacity": 0.45,
+        "circle-blur": 0.15,
+      },
+    });
+    map.addLayer({
       id: POINTS,
       type: "circle",
       source: SOURCE,
@@ -108,19 +157,36 @@ export function createMap(container: HTMLElement, handlers: MapHandlers): maplib
       paint: {
         "circle-radius": [
           "case",
+          ["==", ["get", "emphasis"], "pick"],
+          12,
           ["==", ["get", "emphasis"], "high"],
-          9,
+          10,
           ["==", ["get", "emphasis"], "low"],
-          5,
+          8,
           7,
         ],
         "circle-color": [
           "case",
           ["==", ["get", "hasPrice"], 0],
           "#9ca3af",
+          ["==", ["get", "emphasis"], "pick"],
+          ROUTE_MARKER.pick,
+          ["==", ["get", "emphasis"], "high"],
+          ROUTE_MARKER.on,
+          ["==", ["get", "emphasis"], "low"],
+          ROUTE_MARKER.detour,
           ["interpolate", ["linear"], ["get", "pct"], 0, "#15803d", 0.5, "#ca8a04", 1, "#b91c1c"],
         ],
-        "circle-stroke-width": 1.5,
+        "circle-stroke-width": [
+          "case",
+          ["==", ["get", "emphasis"], "pick"],
+          3,
+          ["==", ["get", "emphasis"], "high"],
+          2.5,
+          ["==", ["get", "emphasis"], "low"],
+          2,
+          1.5,
+        ],
         "circle-stroke-color": "#fff",
         "circle-opacity": ["case", ["==", ["get", "emphasis"], "dim"], 0.15, 0.95],
       },
@@ -134,7 +200,7 @@ export function createMap(container: HTMLElement, handlers: MapHandlers): maplib
         "all",
         ["!", ["has", "point_count"]],
         ["==", ["get", "hasPrice"], 1],
-        ["in", ["get", "emphasis"], ["literal", ["high", "normal"]]],
+        ["==", ["get", "emphasis"], "normal"],
       ],
       layout: {
         "text-field": ["get", "priceLabel"],
@@ -147,6 +213,36 @@ export function createMap(container: HTMLElement, handlers: MapHandlers): maplib
         "text-color": "#111827",
         "text-halo-color": "#fff",
         "text-halo-width": 1.2,
+      },
+    });
+    map.addLayer({
+      id: ROUTE_LABELS,
+      type: "symbol",
+      source: SOURCE,
+      filter: [
+        "all",
+        ["!", ["has", "point_count"]],
+        ["==", ["get", "hasPrice"], 1],
+        ["in", ["get", "emphasis"], ["literal", ["pick", "high", "low"]]],
+      ],
+      layout: {
+        "text-field": ["get", "priceLabel"],
+        "text-size": ["case", ["==", ["get", "emphasis"], "pick"], 13, 12],
+        "text-offset": [0, 1.35],
+        "text-font": ["Noto Sans Regular"],
+        "text-optional": true,
+      },
+      paint: {
+        "text-color": [
+          "case",
+          ["==", ["get", "emphasis"], "pick"],
+          "#854d0e",
+          ["==", ["get", "emphasis"], "high"],
+          "#9a3412",
+          "#3730a3",
+        ],
+        "text-halo-color": "#fff",
+        "text-halo-width": 1.6,
       },
     });
   });
@@ -167,7 +263,7 @@ export function createMap(container: HTMLElement, handlers: MapHandlers): maplib
     });
   });
   map.on("click", (e) => {
-    if (map.queryRenderedFeatures(e.point, { layers: [POINTS, CLUSTER] }).length) return;
+    if (map.queryRenderedFeatures(e.point, { layers: [POINTS, HALO, CLUSTER] }).length) return;
     handlers.onMapClick({ lon: e.lngLat.lng, lat: e.lngLat.lat });
   });
   map.on("mouseenter", POINTS, () => {
@@ -179,8 +275,6 @@ export function createMap(container: HTMLElement, handlers: MapHandlers): maplib
 
   return map;
 }
-
-export type Emphasis = "high" | "normal" | "low" | "dim";
 
 export function setStationData(
   map: maplibregl.Map,

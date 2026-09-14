@@ -36,7 +36,7 @@ import {
   stationPopupHtml,
   stationsForRouteMap,
   stationsInView,
-  type Emphasis,
+  routeStationEmphasis,
 } from "./map.ts";
 import { CHEAP_VIA_CORRIDOR_KM, orderRouteRows, topCheapStations } from "./route-list.ts";
 import { hrefFor, navigate, parsePath, pathFor, type View } from "./router.ts";
@@ -431,11 +431,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function refreshMap(): void {
     const routeIds = routeLine ? new Set(routeRows.map((r) => r.station.id)) : null;
     const stations = stationsForRouteMap(data.stations, routeIds);
-    const emphasis: Record<string, Emphasis> | undefined = routeLine
+    const cheapestOnId = routeLine ? orderRouteRows(routeRows).cheapestOn?.station.id : undefined;
+    const emphasis = routeLine
       ? Object.fromEntries(
           routeRows.map((r) => [
             r.station.id,
-            r.kind === "on" ? ("high" as Emphasis) : ("low" as Emphasis),
+            routeStationEmphasis(r.kind, r.station.id === cheapestOnId),
           ]),
         )
       : undefined;
@@ -721,14 +722,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
                 })
               : "";
           const pinned = isCheapestOn || isCheapestOverall;
-          return stationRow(
-            r.station,
-            r.price,
-            r.distFromStartKm,
-            extra,
+          const rowClass = [
             pinned && i < 2 ? "is-pick" : "",
-            badges,
-          );
+            r.kind === "on" ? "is-on-route" : "is-detour",
+          ]
+            .filter(Boolean)
+            .join(" ");
+          return stationRow(r.station, r.price, r.distFromStartKm, extra, rowClass, badges);
         }),
       );
       return;

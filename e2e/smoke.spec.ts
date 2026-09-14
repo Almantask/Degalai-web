@@ -172,7 +172,9 @@ test("station popup has no navigate or updated text", async ({ page }) => {
   await expect(page.locator(".popup-nav")).toHaveCount(0);
   await expect(page.locator(".popup-meta")).toHaveCount(0);
   await expect(page.locator(".maplibregl-popup")).not.toContainText(/Atnaujinta/);
-  const fuelLabels = await page.locator(".maplibregl-popup .popup-row > span:first-child").allTextContents();
+  const fuelLabels = await page
+    .locator(".maplibregl-popup .popup-row > span:first-child")
+    .allTextContents();
   expect(fuelLabels).not.toContain("98");
   await expect(page.locator(".list-updated")).toContainText(/Atnaujinta/);
 });
@@ -256,6 +258,9 @@ test("destination draws a route from the current location", async ({ page }) => 
   const routeStations = await page.locator(".station-row").count();
   expect(routeStations).toBeGreaterThan(0);
   expect(routeStations).toBeLessThan(allStations);
+  await expect(page.locator(".station-row.is-on-route, .station-row.is-detour")).toHaveCount(
+    routeStations,
+  );
   await expect(page.locator("#map")).toHaveAttribute("data-station-count", String(routeStations));
   expect(viaRoutes).toBeGreaterThan(0);
   expect(viaRoutes).toBeLessThanOrEqual(5);
