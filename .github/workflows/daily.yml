@@ -2,8 +2,8 @@ name: Hourly data + deploy
 
 on:
   schedule:
-    # Every hour (UTC)
-    - cron: "0 * * * *"
+    # Every hour, off the :00 stampede so GitHub is less likely to drop the run.
+    - cron: "17 * * * *"
   workflow_dispatch:
   push:
     branches: [main]
