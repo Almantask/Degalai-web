@@ -1108,27 +1108,33 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const title = count ? `${t("list.title")} · ${tPlural("stations", count)}` : t("list.title");
     const updatedAt = data.prices?.generatedAt ?? data.meta?.generatedAt;
     const cheapMeta = data.meta?.cheapestHours?.[settings.fuel] ?? [];
-    const metaBits: Array<{ className: string; text: string }> = [];
+    const primary: Array<{ className: string; text: string }> = [];
     if (updatedAt) {
-      metaBits.push({
+      primary.push({
         className: "list-updated",
         text: t("list.updated", { time: formatDateTime(updatedAt) }),
       });
     }
     if (cheapMeta.length > 0) {
-      metaBits.push({
+      primary.push({
         className: "list-cheap-hour",
         text: t("list.cheapestHour", { range: formatCheapRanges(cheapMeta) }),
       });
     }
-    if (updatedAt) {
-      metaBits.push({ className: "list-source", text: t("list.source") });
-    }
-    const meta = metaBits.length
-      ? `<p class="list-meta" title="${escapeHtml(metaBits.map((b) => b.text).join(" · "))}">${metaBits
+    const sourceText = updatedAt ? t("list.source") : "";
+    const primaryHtml = primary.length
+      ? `<span class="list-meta-primary">${primary
           .map((b) => `<span class="${b.className}">${escapeHtml(b.text)}</span>`)
-          .join("")}</p>`
+          .join("")}</span>`
       : "";
+    const sourceHtml = sourceText
+      ? `<span class="list-source">${escapeHtml(sourceText)}</span>`
+      : "";
+    const titleText = [...primary.map((b) => b.text), sourceText].filter(Boolean).join(" · ");
+    const meta =
+      primaryHtml || sourceHtml
+        ? `<p class="list-meta" title="${escapeHtml(titleText)}">${primaryHtml}${sourceHtml}</p>`
+        : "";
     const body = empty
       ? `<p class="empty">${escapeHtml(empty)}</p>`
       : `<ul class="station-list">${items.join("")}</ul>`;
