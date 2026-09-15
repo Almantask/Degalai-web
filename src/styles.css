@@ -27,6 +27,7 @@ body,
 #app {
   margin: 0;
   height: 100%;
+  height: 100dvh;
   font-family: var(--font);
   color: var(--ink);
   background: #d7e0d9;
@@ -35,6 +36,7 @@ body,
 .app {
   position: relative;
   height: 100%;
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -435,15 +437,12 @@ body,
   gap: 2px;
 }
 
-.list-updated {
+.list-updated,
+.list-source {
   margin: 0;
   color: var(--muted);
   font-size: 0.75rem;
   font-weight: 500;
-}
-
-.list-source::before {
-  content: " · ";
 }
 
 .list-chevron {
@@ -888,6 +887,16 @@ body,
   font-weight: 600;
 }
 
+.setting-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.setting-block .hint {
+  margin: 0;
+}
+
 .panel label.check {
   flex-direction: row;
   align-items: center;
@@ -936,6 +945,40 @@ body,
 .banner.info {
   background: #e7f6ee;
   color: var(--green-dark);
+}
+
+.install-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.install-banner p {
+  margin: 0;
+  flex: 1;
+}
+
+.install-banner .install-go {
+  background: var(--green);
+  color: #fff;
+  border: 0;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.install-banner .install-dismiss {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
 }
 
 .popup h3 {

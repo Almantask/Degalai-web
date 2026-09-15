@@ -90,6 +90,8 @@ export interface UserSettings {
   aroundReturn: boolean;
   routeDetourKm: number;
   hideUnpriced: boolean;
+  /** Use GPS (`enableHighAccuracy`) for a more precise browser location. */
+  highAccuracyLocation: boolean;
   /** Brand ids the user turned off. Empty means every provider is included. */
   excludedBrands: string[];
   locale?: "lt" | "en";
@@ -106,6 +108,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   aroundReturn: true,
   routeDetourKm: 5,
   hideUnpriced: true,
+  highAccuracyLocation: true,
   excludedBrands: [],
 };
 

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_SETTINGS } from "../src/types.ts";
-import { fuelFromUrl, isBrandIncluded, sanitizeSettings, uniqueBrands } from "../src/settings.ts";
+import {
+  fuelFromUrl,
+  isBrandIncluded,
+  locationPositionOptions,
+  sanitizeSettings,
+  uniqueBrands,
+} from "../src/settings.ts";
 
 describe("sanitizeSettings", () => {
   it("returns defaults for missing or invalid input", () => {
@@ -22,6 +28,7 @@ describe("sanitizeSettings", () => {
         aroundReturn: false,
         routeDetourKm: 8,
         hideUnpriced: false,
+        highAccuracyLocation: false,
         excludedBrands: ["viada"],
         locale: "en",
       }),
@@ -36,9 +43,17 @@ describe("sanitizeSettings", () => {
       aroundReturn: false,
       routeDetourKm: 8,
       hideUnpriced: false,
+      highAccuracyLocation: false,
       excludedBrands: ["viada"],
       locale: "en",
     });
+  });
+
+  it("defaults high-accuracy location to on", () => {
+    expect(sanitizeSettings({}).highAccuracyLocation).toBe(true);
+    expect(sanitizeSettings({ highAccuracyLocation: true }).highAccuracyLocation).toBe(true);
+    expect(sanitizeSettings({ highAccuracyLocation: false }).highAccuracyLocation).toBe(false);
+    expect(sanitizeSettings({ highAccuracyLocation: "yes" }).highAccuracyLocation).toBe(true);
   });
 
   it("drops HTML and unknown fields from localStorage payloads", () => {
@@ -93,6 +108,15 @@ describe("uniqueBrands", () => {
         { id: "c", name: "C", brand: "viada", lat: 1, lon: 1, fuels: ["D"], sourceIds: {} },
       ]),
     ).toEqual(["neste", "viada"]);
+  });
+});
+
+describe("locationPositionOptions", () => {
+  it("passes enableHighAccuracy through to the browser geolocation API", () => {
+    expect(locationPositionOptions(true).enableHighAccuracy).toBe(true);
+    expect(locationPositionOptions(false).enableHighAccuracy).toBe(false);
+    expect(locationPositionOptions(false).timeout).toBe(8000);
+    expect(locationPositionOptions(true).maximumAge).toBe(60_000);
   });
 });
 

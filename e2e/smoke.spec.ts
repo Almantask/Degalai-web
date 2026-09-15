@@ -1,5 +1,49 @@
 import { test, expect, type Page } from "@playwright/test";
 
+test("PWA can be installed as a standalone mobile app", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
+    "href",
+    /manifest-lt\.webmanifest/,
+  );
+  await expect(page.locator('meta[name="apple-mobile-web-app-capable"]')).toHaveAttribute(
+    "content",
+    "yes",
+  );
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute(
+    "href",
+    /apple-touch-icon/,
+  );
+  const manifestHref = await page.locator('link[rel="manifest"]').getAttribute("href");
+  expect(manifestHref).toBeTruthy();
+  const manifest = await page.evaluate(async (href) => {
+    const res = await fetch(href!);
+    return res.json() as Promise<{
+      display: string;
+      icons: Array<{ sizes: string; type: string }>;
+    }>;
+  }, manifestHref);
+  expect(manifest.display).toBe("standalone");
+  expect(manifest.icons.some((i) => i.sizes === "192x192" && i.type === "image/png")).toBe(true);
+  expect(manifest.icons.some((i) => i.sizes === "512x512" && i.type === "image/png")).toBe(true);
+  const icon = await page.request.get("/icons/icon-192.png");
+  expect(icon.ok()).toBe(true);
+  const apple = await page.request.get("/icons/apple-touch-icon.png");
+  expect(apple.ok()).toBe(true);
+
+  await page.evaluate(() => {
+    const ev = new Event("beforeinstallprompt", { cancelable: true }) as Event & {
+      prompt: () => Promise<void>;
+    };
+    ev.prompt = () => Promise.resolve();
+    window.dispatchEvent(ev);
+  });
+  await expect(page.getByRole("button", { name: "Įdiegti" })).toBeVisible();
+  await expect(page.getByText("Įdiekite programėlę greitesniam naudojimui.")).toBeVisible();
+  await page.locator(".install-dismiss").click();
+  await expect(page.getByRole("button", { name: "Įdiegti" })).toHaveCount(0);
+});
+
 test("Lithuanian map shell loads", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".logo")).toContainText("Kur degalai");
@@ -319,7 +363,9 @@ test("station list shows last updated time", async ({ page }) => {
   await expect(page.locator(".list-updated")).toBeVisible({ timeout: 15_000 });
   await expect(page.locator(".list-updated")).toContainText(/Atnaujinta/);
   await expect(page.locator(".list-updated")).toContainText(/\d{1,2}:\d{2}/);
-  await expect(page.locator(".list-source")).toHaveText("Energetikos agentūra");
+  await expect(page.locator(".list-source")).toHaveText(
+    "Duomenys gaunami iš LEA (Lietuvos energetikos agentūra)",
+  );
   await expect(page.locator(".list-cheap-hour")).toContainText(/Pigiausia/);
   await expect(page.locator(".list-cheap-hour")).toContainText(/\d{2}:\d{2}/);
 });
@@ -330,6 +376,8 @@ test("settings include consumption, time value, and provider checkboxes", async 
   await expect(page.getByRole("heading", { name: "Nustatymai" })).toBeVisible();
   await expect(page.getByText("Sąnaudos (l/100 km)")).toBeVisible();
   await expect(page.getByText("Laiko vertė (€/h)")).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Tikslesnė vieta" })).toBeChecked();
+  await expect(page.getByText("GPS nustato vietą tiksliau")).toBeVisible();
   await expect(page.getByRole("group", { name: "Tiekėjai" })).toBeVisible();
   const boxes = page.locator(".brand-filter input[type=checkbox]");
   await expect(boxes.first()).toBeChecked();
@@ -339,6 +387,66 @@ test("settings include consumption, time value, and provider checkboxes", async 
   await expect(page.getByText("Grįžtu į tą pačią vietą")).toHaveCount(0);
   await expect(page.getByText("Slėpti degalines")).toHaveCount(0);
   await expect(page.getByText("Užsukimo")).toHaveCount(0);
+});
+
+test("precise location setting persists and is sent to the geolocation API", async ({ page }) => {
+  await page.addInitScript(() => {
+    const pos = {
+      coords: {
+        latitude: 54.687,
+        longitude: 25.28,
+        accuracy: 10,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+      },
+      timestamp: Date.now(),
+    };
+    const calls: PositionOptions[] = [];
+    (window as unknown as { __geoOpts: PositionOptions[] }).__geoOpts = calls;
+    navigator.geolocation.getCurrentPosition = (ok, _err, opts) => {
+      calls.push(opts ?? {});
+      ok(pos as GeolocationPosition);
+    };
+  });
+
+  await page.goto("/");
+  await expect
+    .poll(async () =>
+      page.evaluate(() => (window as unknown as { __geoOpts: PositionOptions[] }).__geoOpts.length),
+    )
+    .toBeGreaterThan(0);
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { __geoOpts: PositionOptions[] }).__geoOpts[0].enableHighAccuracy,
+    ),
+  ).toBe(true);
+
+  await page.getByRole("button", { name: "Nustatymai" }).click();
+  const box = page.getByRole("checkbox", { name: "Tikslesnė vieta" });
+  await expect(box).toBeChecked();
+  await box.uncheck();
+  await expect
+    .poll(async () =>
+      page.evaluate(() => {
+        const calls = (window as unknown as { __geoOpts: PositionOptions[] }).__geoOpts;
+        return calls[calls.length - 1]?.enableHighAccuracy;
+      }),
+    )
+    .toBe(false);
+
+  await page.reload();
+  await expect
+    .poll(async () =>
+      page.evaluate(() => {
+        const calls = (window as unknown as { __geoOpts: PositionOptions[] }).__geoOpts;
+        return calls[0]?.enableHighAccuracy;
+      }),
+    )
+    .toBe(false);
+  await page.getByRole("button", { name: "Nustatymai" }).click();
+  await expect(page.getByRole("checkbox", { name: "Tikslesnė vieta" })).not.toBeChecked();
 });
 
 test("provider checkboxes hide those stations from the list", async ({ page }) => {

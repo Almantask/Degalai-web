@@ -39,7 +39,16 @@ export interface MapHandlers {
   onMapClick: (ll: LngLat) => void;
 }
 
-export function createMap(container: HTMLElement, handlers: MapHandlers): maplibregl.Map {
+const geolocateByMap = new WeakMap<
+  maplibregl.Map,
+  { control: maplibregl.GeolocateControl; highAccuracy: boolean }
+>();
+
+export function createMap(
+  container: HTMLElement,
+  handlers: MapHandlers,
+  enableHighAccuracy = true,
+): maplibregl.Map {
   const map = new maplibregl.Map({
     container,
     style: "https://tiles.openfreemap.org/styles/positron",
@@ -51,13 +60,7 @@ export function createMap(container: HTMLElement, handlers: MapHandlers): maplib
     ],
   });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-  map.addControl(
-    new maplibregl.GeolocateControl({
-      positionOptions: { enableHighAccuracy: true },
-      showUserLocation: true,
-    }),
-    "top-right",
-  );
+  addGeolocateControl(map, enableHighAccuracy);
 
   map.on("load", () => {
     map.addSource(SOURCE, {
@@ -274,6 +277,24 @@ export function createMap(container: HTMLElement, handlers: MapHandlers): maplib
   });
 
   return map;
+}
+
+function addGeolocateControl(map: maplibregl.Map, enableHighAccuracy: boolean): void {
+  const prev = geolocateByMap.get(map);
+  if (prev) map.removeControl(prev.control);
+  const control = new maplibregl.GeolocateControl({
+    positionOptions: { enableHighAccuracy },
+    showUserLocation: true,
+  });
+  map.addControl(control, "top-right");
+  geolocateByMap.set(map, { control, highAccuracy: enableHighAccuracy });
+}
+
+/** Recreate the locate control so the next GPS request uses the chosen accuracy. */
+export function setMapGeolocateAccuracy(map: maplibregl.Map, enableHighAccuracy: boolean): void {
+  const prev = geolocateByMap.get(map);
+  if (prev?.highAccuracy === enableHighAccuracy) return;
+  addGeolocateControl(map, enableHighAccuracy);
 }
 
 export function setStationData(

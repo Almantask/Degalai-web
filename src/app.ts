@@ -35,6 +35,7 @@ import {
   fitRoute,
   flyToStation,
   overlayPadding,
+  setMapGeolocateAccuracy,
   setRouteData,
   setStationData,
   stationPopupHtml,
@@ -45,6 +46,13 @@ import {
 import { mapRouteStationIds, ON_ROUTE_KM, orderRouteRows } from "./route-list.ts";
 import { hrefFor, navigate, parsePath, pathFor, type View } from "./router.ts";
 import { fetchRoute, geocode, reverseGeocode, type GeoHit, type RouteResult } from "./routing.ts";
+import {
+  installOffer,
+  isIosSafari,
+  isStandalone,
+  loadInstallDismissed,
+  persistInstallDismissed,
+} from "./pwa.ts";
 import DOMPurify from "dompurify";
 import {
   allHistoryBrandsOn,
@@ -57,6 +65,7 @@ import {
   fuelFromUrl,
   isBrandIncluded,
   loadSettings,
+  locationPositionOptions,
   saveSettings,
   uniqueBrands,
 } from "./settings.ts";
@@ -151,13 +160,25 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let locateStatus: "idle" | "pending" | "denied" | "outside" = "idle";
   let startMarker: maplibregl.Marker | null = null;
   let endMarker: maplibregl.Marker | null = null;
+  let installDismissed = loadInstallDismissed();
+  let installPrompt: { prompt: () => Promise<void> } | null = null;
+
+  const standalone = isStandalone(
+    (q) => window.matchMedia(q).matches,
+    (navigator as Navigator & { standalone?: boolean }).standalone,
+  );
+  if (standalone) document.documentElement.classList.add("is-standalone");
 
   root.innerHTML = shellHtml();
   const mapDiv = root.querySelector<HTMLElement>("#map")!;
-  const map = createMap(mapDiv, {
-    onStationClick: (id) => openStation(id),
-    onMapClick: (ll) => handleMapPick(ll),
-  });
+  const map = createMap(
+    mapDiv,
+    {
+      onStationClick: (id) => openStation(id),
+      onMapClick: (ll) => handleMapPick(ll),
+    },
+    settings.highAccuracyLocation,
+  );
 
   map.on("load", () => {
     refreshMap();
@@ -181,6 +202,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
 
   bind();
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    const ev = e as Event & { prompt?: () => Promise<void> };
+    if (typeof ev.prompt !== "function") return;
+    installPrompt = { prompt: () => ev.prompt!() };
+    render();
+  });
+  window.addEventListener("appinstalled", () => {
+    installPrompt = null;
+    installDismissed = true;
+    persistInstallDismissed();
+    render();
+  });
   requestLocation(false);
   render();
 
@@ -331,6 +365,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
       } else if (act === "toggle-history") {
         historyMinimized = !historyMinimized;
         applyHistoryMinimized();
+      } else if (act === "install") {
+        void promptInstall();
+      } else if (act === "install-dismiss") {
+        installDismissed = true;
+        persistInstallDismissed();
+        render();
       } else if (act === "history-all") {
         hiddenHistoryBrands = toggleAllHistoryBrands(hiddenHistoryBrands, historyBrandIds());
         applyHistoryVisibility();
@@ -353,6 +393,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     });
     root.addEventListener("change", (e) => {
       const el = e.target as HTMLInputElement;
+      if (el.id === "set-high-accuracy") {
+        settings.highAccuracyLocation = el.checked;
+        saveSettings(settings);
+        setMapGeolocateAccuracy(map, el.checked);
+        if (startIsGps) requestLocation(true);
+        return;
+      }
       if (el.id.startsWith("set-brand-") && el.dataset.brand) {
         const brand = el.dataset.brand;
         const next = new Set(settings.excludedBrands);
@@ -638,7 +685,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         }
         if (force) render();
       },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60_000 },
+      locationPositionOptions(settings.highAccuracyLocation),
     );
   }
 
@@ -1061,7 +1108,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const title = count ? `${t("list.title")} · ${tPlural("stations", count)}` : t("list.title");
     const updatedAt = data.prices?.generatedAt ?? data.meta?.generatedAt;
     const updated = updatedAt
-      ? `<p class="list-updated">${escapeHtml(t("list.updated", { time: formatDateTime(updatedAt) }))}<span class="list-source">${escapeHtml(t("list.source"))}</span></p>`
+      ? `<p class="list-updated">${escapeHtml(t("list.updated", { time: formatDateTime(updatedAt) }))}</p><p class="list-source">${escapeHtml(t("list.source"))}</p>`
       : "";
     const cheapMeta = data.meta?.cheapestHours?.[settings.fuel] ?? [];
     const cheapHour =
@@ -1202,6 +1249,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       <header><h2>${escapeHtml(t("settings.title"))}</h2><button type="button" data-act="close-panel">${escapeHtml(t("action.close"))}</button></header>
       <label>${escapeHtml(t("settings.consumption"))}<input id="set-cons" type="number" min="3" max="20" step="0.1" value="${escapeHtml(String(settings.consumption))}" /></label>
       <label>${escapeHtml(t("settings.timeValue"))}<input id="set-time" type="number" min="0" max="50" step="1" value="${escapeHtml(String(settings.timeValue))}" /></label>
+      <div class="setting-block">
+        <label class="check"><input id="set-high-accuracy" type="checkbox"${settings.highAccuracyLocation ? " checked" : ""} />${escapeHtml(t("settings.highAccuracy"))}</label>
+        <p class="hint">${escapeHtml(t("settings.highAccuracyHint"))}</p>
+      </div>
       <fieldset class="brand-filter">
         <legend>${escapeHtml(t("settings.providers"))}</legend>
         ${checks}
@@ -1229,7 +1280,42 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     if (destStatus === "not-found")
       return `<div class="banner">${escapeHtml(t("dest.notFound"))}</div>`;
+    const offer = currentInstallOffer();
+    if (offer === "prompt") {
+      return `<div class="banner info install-banner">
+        <p>${escapeHtml(t("install.hint"))}</p>
+        <button type="button" class="install-go" data-act="install">${escapeHtml(t("install.action"))}</button>
+        <button type="button" class="install-dismiss" data-act="install-dismiss" aria-label="${escapeHtml(t("action.close"))}">×</button>
+      </div>`;
+    }
+    if (offer === "ios") {
+      return `<div class="banner info install-banner">
+        <p>${escapeHtml(t("install.ios"))}</p>
+        <button type="button" class="install-dismiss" data-act="install-dismiss" aria-label="${escapeHtml(t("action.close"))}">×</button>
+      </div>`;
+    }
     return "";
+  }
+
+  function currentInstallOffer(): ReturnType<typeof installOffer> {
+    return installOffer({
+      standalone,
+      dismissed: installDismissed,
+      canPrompt: Boolean(installPrompt),
+      iosSafari: isIosSafari(navigator.userAgent, navigator),
+    });
+  }
+
+  async function promptInstall(): Promise<void> {
+    const prompt = installPrompt;
+    if (!prompt) return;
+    try {
+      await prompt.prompt();
+    } catch {
+      /* user closed the browser sheet */
+    }
+    installPrompt = null;
+    render();
   }
 
   function updateHreflang(): void {
@@ -1248,6 +1334,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     def.href = new URL(pathFor(view, "lt"), window.location.origin).toString();
     head.append(def);
     document.title = `${t("app.name")} – ${t(view === "history" ? "history.title" : "app.tagline")}`;
+    const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (appleTitle) appleTitle.setAttribute("content", t("app.name"));
     const manifest = document.querySelector<HTMLLinkElement>("link[rel='manifest']");
     if (manifest) {
       const base = import.meta.env.BASE_URL || "/";
