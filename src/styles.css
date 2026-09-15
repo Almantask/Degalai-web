@@ -849,6 +849,16 @@ body,
   font-weight: 600;
 }
 
+.setting-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.setting-block .hint {
+  margin: 0;
+}
+
 .panel label.check {
   flex-direction: row;
   align-items: center;

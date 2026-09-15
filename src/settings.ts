@@ -53,8 +53,21 @@ export function sanitizeSettings(raw: unknown): UserSettings {
     aroundReturn: asBoolean(parsed.aroundReturn, DEFAULT_SETTINGS.aroundReturn),
     routeDetourKm: clampNumber(parsed.routeDetourKm, DEFAULT_SETTINGS.routeDetourKm, 1, 15),
     hideUnpriced: asBoolean(parsed.hideUnpriced, DEFAULT_SETTINGS.hideUnpriced),
+    highAccuracyLocation: asBoolean(
+      parsed.highAccuracyLocation,
+      DEFAULT_SETTINGS.highAccuracyLocation,
+    ),
     excludedBrands: sanitizeExcludedBrands(parsed.excludedBrands),
     ...(locale ? { locale } : {}),
+  };
+}
+
+/** Options for `navigator.geolocation` based on the high-accuracy setting. */
+export function locationPositionOptions(highAccuracy: boolean): PositionOptions {
+  return {
+    enableHighAccuracy: highAccuracy,
+    timeout: 8000,
+    maximumAge: 60_000,
   };
 }
 

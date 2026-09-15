@@ -57,6 +57,8 @@
   "settings.title": "Nustatymai",
   "settings.consumption": "Sąnaudos (l/100 km)",
   "settings.timeValue": "Laiko vertė (€/h)",
+  "settings.highAccuracy": "Tikslesnė vieta",
+  "settings.highAccuracyHint": "GPS nustato vietą tiksliau, bet naudoja daugiau baterijos ir gali užtrukti.",
   "settings.providers": "Tiekėjai",
   "status.offline": "Neprisijungus – rodomos paskutinės žinomos kainos ({date})",
   "status.noData": "Kainų duomenų dar nėra. Paleiskite duomenų vamzdyną.",

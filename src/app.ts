@@ -35,6 +35,7 @@ import {
   fitRoute,
   flyToStation,
   overlayPadding,
+  setMapGeolocateAccuracy,
   setRouteData,
   setStationData,
   stationPopupHtml,
@@ -50,6 +51,7 @@ import {
   fuelFromUrl,
   isBrandIncluded,
   loadSettings,
+  locationPositionOptions,
   saveSettings,
   uniqueBrands,
 } from "./settings.ts";
@@ -143,10 +145,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   root.innerHTML = shellHtml();
   const mapDiv = root.querySelector<HTMLElement>("#map")!;
-  const map = createMap(mapDiv, {
-    onStationClick: (id) => openStation(id),
-    onMapClick: (ll) => handleMapPick(ll),
-  });
+  const map = createMap(
+    mapDiv,
+    {
+      onStationClick: (id) => openStation(id),
+      onMapClick: (ll) => handleMapPick(ll),
+    },
+    settings.highAccuracyLocation,
+  );
 
   map.on("load", () => {
     refreshMap();
@@ -336,6 +342,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     });
     root.addEventListener("change", (e) => {
       const el = e.target as HTMLInputElement;
+      if (el.id === "set-high-accuracy") {
+        settings.highAccuracyLocation = el.checked;
+        saveSettings(settings);
+        setMapGeolocateAccuracy(map, el.checked);
+        if (startIsGps) requestLocation(true);
+        return;
+      }
       if (el.id.startsWith("set-brand-") && el.dataset.brand) {
         const brand = el.dataset.brand;
         const next = new Set(settings.excludedBrands);
@@ -619,7 +632,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         }
         if (force) render();
       },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60_000 },
+      locationPositionOptions(settings.highAccuracyLocation),
     );
   }
 
@@ -1144,6 +1157,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       <header><h2>${escapeHtml(t("settings.title"))}</h2><button type="button" data-act="close-panel">${escapeHtml(t("action.close"))}</button></header>
       <label>${escapeHtml(t("settings.consumption"))}<input id="set-cons" type="number" min="3" max="20" step="0.1" value="${escapeHtml(String(settings.consumption))}" /></label>
       <label>${escapeHtml(t("settings.timeValue"))}<input id="set-time" type="number" min="0" max="50" step="1" value="${escapeHtml(String(settings.timeValue))}" /></label>
+      <div class="setting-block">
+        <label class="check"><input id="set-high-accuracy" type="checkbox"${settings.highAccuracyLocation ? " checked" : ""} />${escapeHtml(t("settings.highAccuracy"))}</label>
+        <p class="hint">${escapeHtml(t("settings.highAccuracyHint"))}</p>
+      </div>
       <fieldset class="brand-filter">
         <legend>${escapeHtml(t("settings.providers"))}</legend>
         ${checks}

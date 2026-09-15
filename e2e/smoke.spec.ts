@@ -285,6 +285,8 @@ test("settings include consumption, time value, and provider checkboxes", async 
   await expect(page.getByRole("heading", { name: "Nustatymai" })).toBeVisible();
   await expect(page.getByText("Sąnaudos (l/100 km)")).toBeVisible();
   await expect(page.getByText("Laiko vertė (€/h)")).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Tikslesnė vieta" })).toBeChecked();
+  await expect(page.getByText("GPS nustato vietą tiksliau")).toBeVisible();
   await expect(page.getByRole("group", { name: "Tiekėjai" })).toBeVisible();
   const boxes = page.locator(".brand-filter input[type=checkbox]");
   await expect(boxes.first()).toBeChecked();
@@ -294,6 +296,66 @@ test("settings include consumption, time value, and provider checkboxes", async 
   await expect(page.getByText("Grįžtu į tą pačią vietą")).toHaveCount(0);
   await expect(page.getByText("Slėpti degalines")).toHaveCount(0);
   await expect(page.getByText("Užsukimo")).toHaveCount(0);
+});
+
+test("precise location setting persists and is sent to the geolocation API", async ({ page }) => {
+  await page.addInitScript(() => {
+    const pos = {
+      coords: {
+        latitude: 54.687,
+        longitude: 25.28,
+        accuracy: 10,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+      },
+      timestamp: Date.now(),
+    };
+    const calls: PositionOptions[] = [];
+    (window as unknown as { __geoOpts: PositionOptions[] }).__geoOpts = calls;
+    navigator.geolocation.getCurrentPosition = (ok, _err, opts) => {
+      calls.push(opts ?? {});
+      ok(pos as GeolocationPosition);
+    };
+  });
+
+  await page.goto("/");
+  await expect
+    .poll(async () =>
+      page.evaluate(() => (window as unknown as { __geoOpts: PositionOptions[] }).__geoOpts.length),
+    )
+    .toBeGreaterThan(0);
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { __geoOpts: PositionOptions[] }).__geoOpts[0].enableHighAccuracy,
+    ),
+  ).toBe(true);
+
+  await page.getByRole("button", { name: "Nustatymai" }).click();
+  const box = page.getByRole("checkbox", { name: "Tikslesnė vieta" });
+  await expect(box).toBeChecked();
+  await box.uncheck();
+  await expect
+    .poll(async () =>
+      page.evaluate(() => {
+        const calls = (window as unknown as { __geoOpts: PositionOptions[] }).__geoOpts;
+        return calls[calls.length - 1]?.enableHighAccuracy;
+      }),
+    )
+    .toBe(false);
+
+  await page.reload();
+  await expect
+    .poll(async () =>
+      page.evaluate(() => {
+        const calls = (window as unknown as { __geoOpts: PositionOptions[] }).__geoOpts;
+        return calls[0]?.enableHighAccuracy;
+      }),
+    )
+    .toBe(false);
+  await page.getByRole("button", { name: "Nustatymai" }).click();
+  await expect(page.getByRole("checkbox", { name: "Tikslesnė vieta" })).not.toBeChecked();
 });
 
 test("provider checkboxes hide those stations from the list", async ({ page }) => {

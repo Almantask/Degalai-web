@@ -57,6 +57,8 @@
   "settings.title": "Settings",
   "settings.consumption": "Consumption (l/100 km)",
   "settings.timeValue": "Value of time (€/h)",
+  "settings.highAccuracy": "More precise location",
+  "settings.highAccuracyHint": "GPS is more accurate, but uses more battery and may take longer.",
   "settings.providers": "Providers",
   "status.offline": "Offline — showing last known prices ({date})",
   "status.noData": "No price data yet. Run the data pipeline.",
