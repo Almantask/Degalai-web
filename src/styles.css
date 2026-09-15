@@ -139,9 +139,11 @@ body,
 .header.is-min {
   right: auto;
   width: auto;
-  max-width: min(320px, calc(100% - 24px));
+  max-width: min(320px, calc(100% - 72px));
   padding: 8px 10px;
   gap: 0;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .header.is-min .header-body {
@@ -150,7 +152,8 @@ body,
 
 .header.is-min .header-toggle {
   width: 100%;
-  min-width: 148px;
+  max-width: 100%;
+  min-width: 0;
   margin: 0;
   padding: 2px 2px 2px 8px;
   justify-content: flex-start;
@@ -163,6 +166,8 @@ body,
 
 .header.is-min .header-min-label {
   display: block;
+  width: 100%;
+  max-width: 100%;
 }
 
 .header.is-min .header-chevron {
@@ -444,20 +449,18 @@ body,
   font-size: 0.7rem;
   font-weight: 500;
   line-height: 1.35;
-  display: flex;
-  flex-direction: column;
-  max-height: calc(1.35em * 2);
-  overflow: hidden;
-}
-
-.list-meta-primary,
-.list-source {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.list-meta-primary,
+.list-source {
+  font-weight: 500;
+}
+
+.list-meta > span + span::before,
 .list-meta-primary > span + span::before {
   content: " · ";
   color: var(--muted);
@@ -1197,9 +1200,9 @@ body,
 
   .header.is-min .header-toggle {
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
-    min-width: 168px;
+    min-width: 0;
     padding: 8px 14px 10px;
     gap: 6px;
   }

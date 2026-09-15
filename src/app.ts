@@ -1245,7 +1245,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       </div>
       <button type="button" class="header-toggle" data-act="toggle-header" aria-expanded="${headerMinimized ? "false" : "true"}" aria-label="${escapeHtml(headerMinimized ? t("header.expand") : t("header.collapse"))}">
         <span class="header-handle" aria-hidden="true"></span>
-        <span class="header-min-label">${escapeHtml(minLabel)}</span>
+        <span class="header-min-label" title="${escapeHtml(minLabel)}">${escapeHtml(minLabel)}</span>
         <span class="header-chevron" aria-hidden="true">${headerMinimized ? "▾" : "▴"}</span>
       </button>
     `;
