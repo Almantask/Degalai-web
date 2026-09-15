@@ -1,16 +1,11 @@
 name: Hourly data + deploy
 
 on:
-  schedule:
-    # Every hour, off the :00 stampede so GitHub is less likely to drop the run.
-    - cron: "17 * * * *"
+  # The hourly trigger is a Cloudflare Worker cron (see worker/) calling workflow_dispatch:
+  # GitHub's own schedule drifts, drops runs, and is disabled after 60 days without commits.
   workflow_dispatch:
   push:
     branches: [main]
-    # Data-only commits from this workflow already build+deploy in the same run.
-    paths-ignore:
-      - "data/**"
-      - "reports/**"
 
 permissions:
   contents: read
@@ -23,41 +18,41 @@ jobs:
   pipeline:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       issues: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci --ignore-scripts
+      # Pipeline state (price snapshots, hourly history samples, geocode cache) lives in the
+      # Actions cache, not git. The committed data/ is only a seed for when the cache is gone.
+      - name: Restore pipeline state
+        id: state
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            data
+            reports
+          key: pipeline-state-${{ github.run_id }}
+          restore-keys: pipeline-state-
       - name: Run data pipeline
-        if: github.event_name != 'push'
-        run: npm run pipeline
-      - name: Commit data if changed
-        if: github.event_name != 'push'
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- \
-            data/stations.json \
-            data/history.json \
-            data/meta.json \
-            data/prices \
-            data/overrides \
-            data/cache/.gitkeep \
-            data/cache/geocode.json \
-            reports/unmatched.json \
-            reports/validation.json
-          if git diff --staged --quiet; then
-            echo "No data changes"
+          if [ -z "${{ steps.state.outputs.cache-matched-key }}" ]; then
+            echo "::warning::No cached pipeline state; starting from committed seed data with backfill."
+            npm run pipeline -- --backfill
           else
-            git commit -m "data: $(TZ=Europe/Vilnius date +%F)"
-            git push
+            npm run pipeline
           fi
+      - name: Save pipeline state
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            data
+            reports
+          key: pipeline-state-${{ github.run_id }}-${{ github.run_attempt }}
       - run: npm run build
         env:
           BASE_URL: /Degalai-web/

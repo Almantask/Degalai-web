@@ -56,21 +56,27 @@ on a route is still by pump price.
 
 ## Data
 
-Git is the database. An hourly GitHub Actions workflow runs `npm run pipeline`,
-keeps at most **7 days** of daily snapshots, commits `data/` when it changed,
-and deploys the static site.
+Data is built with the site, not committed. Every hour a Cloudflare Worker cron
+(`worker/`) dispatches the **Hourly data + deploy** workflow, which restores the
+previous pipeline state from the GitHub Actions cache, runs `npm run pipeline`
+(keeping at most **7 days** of daily snapshots), and deploys `dist/` with the
+fresh JSON under `data/`. The site stays static and fetches those files from its
+own origin.
+
+The `data/` files in git are only a seed: the workflow falls back to them (and
+backfills from the LEA workbook) if the cache has been evicted.
 
 The map loads `stations.json`, `meta.json`, and **today’s** price file only.
 `history.json` is fetched when History opens. The published build does not ship
 older daily files.
 
-| Path                           | What                                |
-| ------------------------------ | ----------------------------------- |
-| `data/stations.json`           | OSM stations + unmatched LEA sites  |
-| `data/prices/YYYY-MM-DD.json`  | Daily snapshot (kept 7 days in git) |
-| `data/history.json`            | Provider averages by hour of day    |
-| `data/overrides/stations.json` | Manual OSM ↔ source matches         |
-| `reports/unmatched.json`       | Source rows that still need a home  |
+| Path                           | What                               |
+| ------------------------------ | ---------------------------------- |
+| `data/stations.json`           | OSM stations + unmatched LEA sites |
+| `data/prices/YYYY-MM-DD.json`  | Daily snapshot (kept 7 days)       |
+| `data/history.json`            | Provider averages by hour of day   |
+| `data/overrides/stations.json` | Manual OSM ↔ source matches        |
+| `reports/unmatched.json`       | Source rows that still need a home |
 
 Prices: Lithuanian Energy Agency (LEA) public dataset. Coordinates:
 OpenStreetMap. Attribute both, plus the station chains.

@@ -1,0 +1,68 @@
+name: Cron worker
+
+on:
+  pull_request:
+    paths:
+      - "worker/**"
+      - ".github/workflows/worker.yml"
+  push:
+    branches: [main]
+    paths:
+      - "worker/**"
+      - ".github/workflows/worker.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cron-worker-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+      - run: npm ci --ignore-scripts
+      - name: Typecheck + bundle (dry run)
+        run: npm run check
+
+  deploy:
+    needs: check
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+      - run: npm ci --ignore-scripts
+      - name: Deploy worker
+        run: npm run deploy
+      # Kept in GitHub secrets so rotating the PAT is a secret update + re-run of this workflow.
+      - name: Set GitHub dispatch token
+        env:
+          DISPATCH_TOKEN: ${{ secrets.WORKFLOW_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$DISPATCH_TOKEN" ]; then
+            echo "::error::WORKFLOW_DISPATCH_TOKEN secret is not set."
+            exit 1
+          fi
+          printf '%s' "$DISPATCH_TOKEN" | npm run --silent secret:github-token
