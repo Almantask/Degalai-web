@@ -48,7 +48,7 @@ minimise for a full map.
 - Open **History** (`/istorija`, `/en/history`) for provider averages by time of
   day. That file loads only when you open the page, so the map stays light.
 - Switch LT / EN in the header. **Donate** goes to
-  [GitHub Sponsors](https://github.com/sponsors/Almantask).
+  [almantask.github.io/donate-me](https://almantask.github.io/donate-me/).
 - Install it as a PWA. Offline, the last known prices still show.
 
 Settings store consumption (l/100 km) and value of time. Ranking on the map and

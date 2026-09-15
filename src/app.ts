@@ -79,7 +79,7 @@ import {
 import type { HistoryFile, HistoryHourSeries, Station } from "./types.ts";
 import { DEFAULT_SETTINGS } from "./types.ts";
 
-const DONATE_URL = "https://github.com/sponsors/Almantask";
+const DONATE_URL = "https://almantask.github.io/donate-me/";
 
 const DONATE_HEART = `<svg class="donate-heart" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
   <path fill="currentColor" d="M7.97 14s-5.3-3.18-6.76-6C.02 5.36 1.3 2.2 4.2 2.2c1.4 0 2.5.8 3.77 2.16C9.24 3 10.34 2.2 11.75 2.2c2.9 0 4.18 3.16 2.99 5.8C13.28 10.82 7.97 14 7.97 14z"/>

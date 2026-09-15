@@ -64,7 +64,7 @@ test("English locale loads without about", async ({ page }) => {
   await expect(page.getByPlaceholder("From my location")).toBeVisible();
   await expect(page.getByRole("link", { name: "Donate" })).toHaveAttribute(
     "href",
-    "https://github.com/sponsors/Almantask",
+    "https://almantask.github.io/donate-me/",
   );
   await expect(page.getByRole("link", { name: "Stations" })).toBeVisible();
   await expect(page.getByRole("link", { name: "History" })).toBeVisible();
@@ -373,12 +373,12 @@ test("fuel filter has no 95/98 petrol grades", async ({ page }) => {
   await expect(page.locator(".fuel-filter button")).toHaveCount(3);
 });
 
-test("donate button is a GitHub Sponsors link", async ({ page }) => {
+test("donate button links to the donate page", async ({ page }) => {
   await page.goto("/");
   const donate = page.getByRole("link", { name: "Remti" });
   await expect(donate).toBeVisible();
   await expect(donate.locator(".donate-heart")).toBeVisible();
-  await expect(donate).toHaveAttribute("href", "https://github.com/sponsors/Almantask");
+  await expect(donate).toHaveAttribute("href", "https://almantask.github.io/donate-me/");
   await expect(donate).toHaveAttribute("target", "_blank");
   await expect(page.getByRole("heading", { name: "Paremkite projektą" })).toHaveCount(0);
   await expect(page.getByText("almantusk@gmail.com")).toHaveCount(0);
