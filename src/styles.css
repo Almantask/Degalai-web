@@ -532,13 +532,26 @@ body,
   min-width: 0;
 }
 
+.station-main strong,
+.station-addr {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .station-main strong {
   font-size: 0.95rem;
   letter-spacing: -0.02em;
 }
 
 .station-addr,
-.station-eta,
+.station-eta {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
 .hint,
 .empty,
 .popup-addr,
@@ -548,22 +561,15 @@ body,
   font-size: 0.8rem;
 }
 
-.station-addr,
-.station-eta {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .station-eta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  white-space: normal;
 }
 
 .station-price {
+  flex: 0 0 auto;
   font-variant-numeric: tabular-nums;
   font-weight: 750;
   color: var(--green-dark);
@@ -891,6 +897,15 @@ body,
   letter-spacing: -0.02em;
 }
 
+.popup,
+.popup h3,
+.popup-addr,
+.popup-brand {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .popup-row {
   display: flex;
   justify-content: space-between;
@@ -945,6 +960,9 @@ body,
   padding: 10px 12px;
   cursor: pointer;
   font: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sug:last-child {
@@ -959,10 +977,17 @@ body,
   margin: 8px 6px 12px;
 }
 
+.maplibregl-popup.station-popup {
+  max-width: min(280px, calc(100vw - 24px)) !important;
+}
+
 .maplibregl-popup-content {
   border-radius: 16px;
   box-shadow: var(--shadow);
   font-family: var(--font);
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .maplibregl-ctrl-top-right {

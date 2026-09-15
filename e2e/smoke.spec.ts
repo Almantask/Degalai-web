@@ -295,6 +295,24 @@ test("station popup has no navigate or updated text", async ({ page }) => {
     .allTextContents();
   expect(fuelLabels).not.toContain("98");
   await expect(page.locator(".list-updated")).toContainText(/Atnaujinta/);
+  const addr = page.locator(".popup-addr");
+  await expect(addr).toBeVisible();
+  const fit = await page.evaluate(() => {
+    const box = document.querySelector(".maplibregl-popup-content");
+    const line = document.querySelector(".popup-addr");
+    if (!box || !line) return false;
+    const a = box.getBoundingClientRect();
+    const b = line.getBoundingClientRect();
+    return (
+      b.left >= a.left - 1 &&
+      b.right <= a.right + 1 &&
+      b.top >= a.top - 1 &&
+      b.bottom <= a.bottom + 1 &&
+      a.right <= window.innerWidth + 1 &&
+      a.bottom <= window.innerHeight + 1
+    );
+  });
+  expect(fit).toBe(true);
 });
 
 test("destination draws a route from the current location", async ({ page }) => {

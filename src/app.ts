@@ -10,6 +10,7 @@ import {
   formatMoney,
   formatPrice,
   escapeHtml,
+  shortAddress,
 } from "./format.ts";
 import {
   distanceAlongLineKm,
@@ -786,7 +787,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     popup?.remove();
     focusStationOnMap(s, routeRow);
-    popup = new maplibregl.Popup({ offset: 16, maxWidth: "300px" })
+    popup = new maplibregl.Popup({
+      offset: 16,
+      maxWidth: "min(280px, calc(100vw - 24px))",
+      className: "station-popup",
+    })
       .setLngLat([s.lon, s.lat])
       .setHTML(
         DOMPurify.sanitize(
@@ -1032,13 +1037,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
   ): string {
     const dist = distKm != null ? formatKm(distKm) : "";
     const metaLine = [dist, extra].filter(Boolean).join(" ");
+    const addr = stationAddress(s);
     const cls = ["station-row", className].filter(Boolean).join(" ");
     return `<li><button type="button" class="${cls}" data-act="station" data-id="${escapeHtml(s.id)}">
       <span class="swatch" data-brand="${escapeHtml(s.brand)}"></span>
       <span class="station-main">
         ${badges ? `<span class="station-badges">${badges}</span>` : ""}
         <strong>${escapeHtml(s.name)}</strong>
-        <small class="station-addr">${escapeHtml(stationAddress(s))}</small>
+        <small class="station-addr" title="${escapeHtml(addr)}">${escapeHtml(shortAddress(addr))}</small>
         ${metaLine ? `<small class="station-eta">${escapeHtml(metaLine)}</small>` : ""}
       </span>
       <span class="station-price">${escapeHtml(formatPrice(price))}</span>

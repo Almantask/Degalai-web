@@ -25,6 +25,25 @@ export function formatKm(km: number): string {
   return `${n} km`;
 }
 
+const STREET_ABBR: Array<[string, string]> = [
+  ["gatv[eė]s?", "g."],
+  ["prospektas", "pr."],
+  ["alėja", "al."],
+  ["plentas", "pl."],
+  ["aikšt[eė]", "a."],
+  ["skersgatvis", "skg."],
+  ["kelias", "kel."],
+];
+
+/** Compact a station address for list rows; the popup still shows the original. */
+export function shortAddress(address: string): string {
+  let s = address.replace(/\b\d{5}\b/g, "");
+  for (const [from, to] of STREET_ABBR) {
+    s = s.replace(new RegExp(`(?<!\\p{L})${from}(?!\\p{L})`, "giu"), to);
+  }
+  return s.replace(/\s+,/g, ",").replace(/,\s*$/g, "").replace(/\s+/g, " ").trim();
+}
+
 export function formatDuration(minutes: number): string {
   if (minutes < 0.5) return t("units.underMin");
   const m = Math.max(1, Math.round(minutes));
