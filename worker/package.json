@@ -1,0 +1,15 @@
+{
+  "name": "kur-degalai-cron",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "check": "tsc -p . && wrangler deploy --dry-run",
+    "deploy": "wrangler deploy",
+    "secret:github-token": "wrangler secret put GITHUB_TOKEN"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "wrangler": "4.132.0"
+  }
+}

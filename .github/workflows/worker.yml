@@ -19,9 +19,6 @@ concurrency:
   group: cron-worker-${{ github.ref }}
   cancel-in-progress: false
 
-env:
-  WRANGLER: wrangler@4
-
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -33,10 +30,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Typecheck
-        run: npx --yes -p typescript@5 tsc -p .
-      - name: Bundle (dry run)
-        run: npx --yes $WRANGLER deploy --dry-run
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+      - run: npm ci --ignore-scripts
+      - name: Typecheck + bundle (dry run)
+        run: npm run check
 
   deploy:
     needs: check
@@ -53,8 +51,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+      - run: npm ci --ignore-scripts
       - name: Deploy worker
-        run: npx --yes $WRANGLER deploy
+        run: npm run deploy
       # Kept in GitHub secrets so rotating the PAT is a secret update + re-run of this workflow.
       - name: Set GitHub dispatch token
         env:
@@ -64,4 +65,4 @@ jobs:
             echo "::error::WORKFLOW_DISPATCH_TOKEN secret is not set."
             exit 1
           fi
-          printf '%s' "$DISPATCH_TOKEN" | npx --yes $WRANGLER secret put GITHUB_TOKEN
+          printf '%s' "$DISPATCH_TOKEN" | npm run --silent secret:github-token
