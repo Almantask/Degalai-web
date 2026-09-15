@@ -208,6 +208,46 @@ test("search header can be minimised for a full map", async ({ page }) => {
   await expect(page.getByPlaceholder("Kur važiuojate?")).toBeVisible();
 });
 
+test("minimised search chip keeps a long destination inside the card", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.getByRole("button", { name: /Sutraukti paiešką|Išskleisti paiešką/ }).click();
+  await expect(page.locator("#header")).toHaveClass(/is-min/);
+  await page.locator(".header-min-label").evaluate((el) => {
+    el.textContent = "Kooperatyvinės sodininkystės bazė, Vydūno al. 4, Kaunas";
+  });
+  await expect(page.locator(".maplibregl-ctrl-top-right")).toBeVisible();
+  const fit = await page.evaluate(() => {
+    const header = document.querySelector("#header");
+    const label = document.querySelector(".header-min-label");
+    const ctrl = document.querySelector(".maplibregl-ctrl-top-right");
+    if (!header || !label || !ctrl) return null;
+    const h = header.getBoundingClientRect();
+    const l = label.getBoundingClientRect();
+    const c = ctrl.getBoundingClientRect();
+    const overlap = !(
+      l.right <= c.left + 1 ||
+      c.right <= l.left + 1 ||
+      l.bottom <= c.top + 1 ||
+      c.bottom <= l.top + 1
+    );
+    return {
+      labelInsideHeader:
+        l.left >= h.left - 1 &&
+        l.right <= h.right + 1 &&
+        l.top >= h.top - 1 &&
+        l.bottom <= h.bottom + 1,
+      headerOnScreen: h.left >= -1 && h.right <= window.innerWidth + 1,
+      overlap,
+    };
+  });
+  expect(fit).toEqual({
+    labelInsideHeader: true,
+    headerOnScreen: true,
+    overlap: false,
+  });
+});
+
 async function expectSettingsInsideHeader(page: Page): Promise<void> {
   const fit = await page.evaluate(() => {
     const header = document.querySelector("#header");
@@ -373,7 +413,7 @@ test("station list shows last checked time", async ({ page }) => {
     const lineHeight = Number.parseFloat(getComputedStyle(el).lineHeight);
     return el.getBoundingClientRect().height / lineHeight;
   });
-  expect(metaLines).toBeLessThanOrEqual(2.15);
+  expect(metaLines).toBeLessThanOrEqual(1.15);
 });
 
 test("station list shows last check even when prices were not updated", async ({ page }) => {
