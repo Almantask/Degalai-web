@@ -85,6 +85,8 @@
   "install.hint": "Install the app for quicker access.",
   "history.title": "Historical prices",
   "history.hour": "Hour",
+  "history.all": "All",
+  "history.legend": "Provider lines",
   "history.byHour": "Provider average prices by time of day (last 7 days).",
   "history.empty": "No historical prices yet.",
   "history.loading": "Loading history…",
