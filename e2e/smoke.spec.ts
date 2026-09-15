@@ -27,6 +27,19 @@ test("English locale loads without about", async ({ page }) => {
   await expect(page.getByRole("link", { name: "About" })).toHaveCount(0);
 });
 
+test("settings button stays inside the header when switching language", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Nustatymai" })).toBeVisible();
+  await expectSettingsInsideHeader(page);
+  await page.getByRole("link", { name: "EN" }).click();
+  await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
+  await expectSettingsInsideHeader(page);
+  await page.getByRole("link", { name: "LT" }).click();
+  await expect(page.getByRole("button", { name: "Nustatymai" })).toBeVisible();
+  await expectSettingsInsideHeader(page);
+});
+
 test("history button opens provider averages by hour", async ({ page }) => {
   const historyUrls: string[] = [];
   const priceUrls: string[] = [];
@@ -105,6 +118,24 @@ test("search header can be minimised for a full map", async ({ page }) => {
   await page.getByRole("button", { name: /Išskleisti paiešką|Expand search/ }).click();
   await expect(page.getByPlaceholder("Kur važiuojate?")).toBeVisible();
 });
+
+async function expectSettingsInsideHeader(page: Page): Promise<void> {
+  const fit = await page.evaluate(() => {
+    const header = document.querySelector("#header");
+    const btn = document.querySelector(".icon-settings");
+    if (!header || !btn) return false;
+    const h = header.getBoundingClientRect();
+    const b = btn.getBoundingClientRect();
+    return (
+      b.left >= h.left - 1 &&
+      b.right <= h.right + 1 &&
+      b.top >= h.top - 1 &&
+      b.bottom <= h.bottom + 1 &&
+      h.right <= window.innerWidth + 1
+    );
+  });
+  expect(fit).toBe(true);
+}
 
 async function expectHistoryFitsScreen(page: Page): Promise<void> {
   const panel = page.locator(".history-panel");
