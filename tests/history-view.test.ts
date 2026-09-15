@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { brandColor, hourTickLabel, providerSeries } from "../src/history-view.ts";
-import type { HistoryFile } from "../src/types.ts";
+import {
+  allHistoryBrandsOn,
+  chartBrands,
+  toggleAllHistoryBrands,
+  toggleHistoryBrand,
+} from "../src/history-series.ts";
+import type { HistoryFile, HistoryHourSeries } from "../src/types.ts";
 
 const file: HistoryFile = {
   generatedAt: "2026-09-14T12:00:00Z",
@@ -42,5 +48,43 @@ describe("brandColor", () => {
   it("uses a stable color for known brands", () => {
     expect(brandColor("neste", 0)).toBe("#1d4ed8");
     expect(brandColor("unknown-brand", 0)).not.toBe(brandColor("unknown-brand", 1));
+  });
+});
+
+describe("chartBrands", () => {
+  it("drops brands that have no prices", () => {
+    const series: HistoryHourSeries = {
+      hours: [...Array(24).keys()],
+      brands: {
+        viada: Array.from({ length: 24 }, (_, h) => (h === 8 ? 1.52 : null)),
+        neste: Array.from({ length: 24 }, () => null),
+      },
+    };
+    expect(chartBrands(series).map((b) => b.id)).toEqual(["viada"]);
+    expect(chartBrands(undefined)).toEqual([]);
+  });
+});
+
+describe("history series visibility", () => {
+  const ids = ["circle-k", "viada", "neste"];
+
+  it("starts with every provider on", () => {
+    expect(allHistoryBrandsOn(new Set(), ids)).toBe(true);
+  });
+
+  it("hides only the clicked provider and leaves the others on", () => {
+    const hidden = toggleHistoryBrand(new Set(), "viada");
+    expect([...hidden]).toEqual(["viada"]);
+    expect(allHistoryBrandsOn(hidden, ids)).toBe(false);
+    const restored = toggleHistoryBrand(hidden, "viada");
+    expect(restored.size).toBe(0);
+  });
+
+  it("toggles all selected providers on, then off", () => {
+    const mixed = toggleHistoryBrand(new Set(), "viada");
+    const allOn = toggleAllHistoryBrands(mixed, ids);
+    expect(allOn.size).toBe(0);
+    const allOff = toggleAllHistoryBrands(allOn, ids);
+    expect([...allOff].sort()).toEqual([...ids].sort());
   });
 });

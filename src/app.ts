@@ -55,6 +55,13 @@ import {
 } from "./pwa.ts";
 import DOMPurify from "dompurify";
 import {
+  allHistoryBrandsOn,
+  brandColor,
+  chartBrands,
+  toggleAllHistoryBrands,
+  toggleHistoryBrand,
+} from "./history-series.ts";
+import {
   fuelFromUrl,
   isBrandIncluded,
   loadSettings,
@@ -69,7 +76,7 @@ import {
   sheetFromDrag,
   type MinimizeSign,
 } from "./sheet-gesture.ts";
-import type { HistoryFile, Station } from "./types.ts";
+import type { HistoryFile, HistoryHourSeries, Station } from "./types.ts";
 import { DEFAULT_SETTINGS } from "./types.ts";
 
 const DONATE_URL = "https://github.com/sponsors/Almantask";
@@ -134,7 +141,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let historyMinimized = false;
   let historyFile: HistoryFile | null = null;
   let historyLoading = false;
-  let historyPlot: { destroy: () => void } | null = null;
+  let historyPlot: {
+    destroy: () => void;
+    setHidden: (hidden: ReadonlySet<string>) => void;
+  } | null = null;
+  let hiddenHistoryBrands = new Set<string>();
   let routeRows: RouteStationRow[] = [];
   let extraMapStationIds = new Set<string>();
   let routeLine: RouteResult | null = null;
@@ -360,6 +371,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
         installDismissed = true;
         persistInstallDismissed();
         render();
+      } else if (act === "history-all") {
+        hiddenHistoryBrands = toggleAllHistoryBrands(hiddenHistoryBrands, historyBrandIds());
+        applyHistoryVisibility();
+      } else if (act === "history-brand" && tEl.dataset.brand) {
+        hiddenHistoryBrands = toggleHistoryBrand(hiddenHistoryBrands, tEl.dataset.brand);
+        applyHistoryVisibility();
       }
     });
 
@@ -545,11 +562,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
       void evaluateRouteStations(routeLine).then(() => {
         refreshMap();
         renderList();
+        if (view === "history") render();
       });
       return;
     }
     refreshMap();
     renderList();
+    if (view === "history") render();
   }
 
   function onFuelChange(): void {
@@ -930,11 +949,51 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ${cheapHtml}
         <div class="history-chart-stack">
           <div id="history-chart"></div>
-          <div id="history-legend"></div>
+          ${historyLegendHtml(filtered)}
         </div>
         <p class="history-caption">${escapeHtml(caption)}</p>
       </div>
     </section>`;
+  }
+
+  function historyBrandIds(): string[] {
+    const series = historyFile?.byFuel[settings.fuel];
+    const filtered = series ? filterSeries(series, settings.excludedBrands) : undefined;
+    return chartBrands(filtered).map((b) => b.id);
+  }
+
+  function historyLegendHtml(filtered: HistoryHourSeries | undefined): string {
+    const brands = chartBrands(filtered);
+    if (brands.length === 0) return `<div id="history-legend"></div>`;
+    const ids = brands.map((b) => b.id);
+    const allOn = allHistoryBrandsOn(hiddenHistoryBrands, ids);
+    const chips = brands
+      .map((b, i) => {
+        const on = !hiddenHistoryBrands.has(b.id);
+        return `<button type="button" class="history-chip${on ? " is-on" : ""}" data-act="history-brand" data-brand="${escapeHtml(b.id)}" aria-pressed="${on ? "true" : "false"}">
+        <span class="history-chip-swatch" style="background:${escapeHtml(brandColor(b.id, i))}"></span>
+        ${escapeHtml(brandLabel(b.id))}
+      </button>`;
+      })
+      .join("");
+    return `<div id="history-legend" class="history-legend" role="group" aria-label="${escapeHtml(t("history.legend"))}">
+      <button type="button" class="history-chip history-chip-all${allOn ? " is-on" : ""}" data-act="history-all" aria-pressed="${allOn ? "true" : "false"}">${escapeHtml(t("history.all"))}</button>
+      ${chips}
+    </div>`;
+  }
+
+  function applyHistoryVisibility(): void {
+    const legend = root.querySelector("#history-legend");
+    const series = historyFile?.byFuel[settings.fuel];
+    const filtered = series ? filterSeries(series, settings.excludedBrands) : undefined;
+    if (legend) {
+      const next = document.createElement("div");
+      next.innerHTML = historyLegendHtml(filtered);
+      const replacement = next.firstElementChild;
+      if (replacement) legend.replaceWith(replacement);
+    }
+    if (historyPlot) historyPlot.setHidden(hiddenHistoryBrands);
+    else void paintHistoryChart();
   }
 
   async function paintHistoryChart(): Promise<void> {
@@ -942,14 +1001,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     historyPlot = null;
     if (view !== "history" || historyMinimized) return;
     const el = root.querySelector<HTMLElement>("#history-chart");
-    const legendEl = root.querySelector<HTMLElement>("#history-legend");
     if (!el || !historyFile) return;
     const series = historyFile.byFuel[settings.fuel];
     const filtered = series ? filterSeries(series, settings.excludedBrands) : undefined;
     const cheap = filtered ? cheapestHourRanges(filtered) : [];
     const { mountHistoryChart } = await import("./history-view.ts");
     if (view !== "history" || historyMinimized) return;
-    historyPlot = mountHistoryChart(el, filtered, cheap, legendEl ?? undefined);
+    historyPlot = mountHistoryChart(el, filtered, cheap, hiddenHistoryBrands);
   }
 
   function applyHistoryMinimized(): void {
