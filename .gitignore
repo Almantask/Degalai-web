@@ -6,6 +6,9 @@ dist/
 dist-ssr/
 dev-dist/
 
+# Wrangler
+.wrangler/
+
 # Vite
 .vite/
 vite.config.js.timestamp-*
@@ -63,7 +66,7 @@ Thumbs.db
 # Copied dataset used only by the static preview
 public/data/
 
-# data/ is the published dataset — ignore pipeline scratch and anything else
+# data/ is a seed snapshot (CI keeps live state in the Actions cache) — ignore pipeline scratch
 /data/*
 !/data/stations.json
 !/data/history.json
@@ -80,7 +83,7 @@ public/data/
 !/data/cache/.gitkeep
 !/data/cache/geocode.json
 
-# reports/ — keep only the review files the pipeline commits
+# reports/ — keep only the pipeline review files
 /reports/*
 !/reports/unmatched.json
 !/reports/validation.json
