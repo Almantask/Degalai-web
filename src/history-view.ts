@@ -2,24 +2,10 @@ import uPlot from "uplot";
 import "uplot/dist/uPlot.min.css";
 import type { CheapHourRange, FuelType, HistoryFile, HistoryHourSeries } from "./types.ts";
 import { formatPrice } from "./format.ts";
+import { brandColor, chartBrands, isHistoryBrandOn } from "./history-series.ts";
 import { brandLabel, t } from "./i18n/index.ts";
 
-const BRAND_COLORS: Record<string, string> = {
-  "circle-k": "#c81e1e",
-  viada: "#15803d",
-  orlen: "#b91c1c",
-  neste: "#1d4ed8",
-  "baltic-petroleum": "#0f766e",
-  alausa: "#a16207",
-  emsi: "#7c3aed",
-  jozita: "#c2410c",
-  stateta: "#0369a1",
-  ecoil: "#4d7c0f",
-  kvistija: "#be185d",
-  independent: "#6b7280",
-};
-
-const FALLBACK_COLORS = ["#ea580c", "#2563eb", "#9333ea", "#0d9488", "#ca8a04", "#e11d48"];
+export { brandColor, chartBrands } from "./history-series.ts";
 
 export function providerSeries(
   file: HistoryFile | null,
@@ -35,25 +21,23 @@ export function providerSeries(
   };
 }
 
-export function brandColor(brand: string, index: number): string {
-  return BRAND_COLORS[brand] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length];
-}
-
 export function hourTickLabel(hour: number): string {
   return `${String(hour).padStart(2, "0")}:00`;
 }
+
+export type HistoryPlot = {
+  destroy: () => void;
+  setHidden: (hidden: ReadonlySet<string>) => void;
+};
 
 export function mountHistoryChart(
   el: HTMLElement,
   series: HistoryHourSeries | undefined,
   cheapRanges: CheapHourRange[] = [],
-  legendEl?: HTMLElement,
-): { destroy: () => void } | null {
+  hiddenBrands: ReadonlySet<string> = new Set(),
+): HistoryPlot | null {
   if (!series) return null;
-  const brands = Object.entries(series.brands)
-    .map(([id, values]) => ({ id, values }))
-    .filter((b) => b.values.some((v) => v != null))
-    .sort((a, b) => a.id.localeCompare(b.id));
+  const brands = chartBrands(series);
   if (brands.length === 0) return null;
   const hours = series.hours;
   const data: uPlot.AlignedData = [hours, ...brands.map((b) => b.values)];
@@ -64,14 +48,7 @@ export function mountHistoryChart(
       height: size.height,
       padding: [4, 6, 0, 0],
       cursor: { focus: { prox: 24 }, show: size.width >= 480 },
-      legend: {
-        live: size.width >= 640,
-        mount: legendEl
-          ? (_u, legend) => {
-              legendEl.replaceChildren(legend);
-            }
-          : undefined,
-      },
+      legend: { show: false },
       scales: { x: { time: false, range: [0, 23] } },
       axes: [
         {
@@ -94,6 +71,7 @@ export function mountHistoryChart(
           stroke: brandColor(b.id, i),
           width: 2,
           spanGaps: true,
+          show: isHistoryBrandOn(hiddenBrands, b.id),
           value: (_u: uPlot, v: number | null) => (v == null ? "—" : formatPrice(v)),
         })),
       ],
@@ -137,7 +115,13 @@ export function mountHistoryChart(
       cancelAnimationFrame(raf);
       ro.disconnect();
       plot.destroy();
-      legendEl?.replaceChildren();
+    },
+    setHidden(hidden: ReadonlySet<string>) {
+      brands.forEach((b, i) => {
+        const seriesIdx = i + 1;
+        const show = !hidden.has(b.id);
+        if (plot.series[seriesIdx]?.show !== show) plot.setSeries(seriesIdx, { show });
+      });
     },
   };
 }

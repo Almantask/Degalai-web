@@ -85,6 +85,8 @@
   "install.hint": "Įdiekite programėlę greitesniam naudojimui.",
   "history.title": "Istorinės kainos",
   "history.hour": "Valanda",
+  "history.all": "Visi",
+  "history.legend": "Tiekėjų kreivės",
   "history.byHour": "Tiekėjų vidutinės kainos pagal paros laiką (paskutinės 7 dienos).",
   "history.empty": "Istorinių kainų dar nėra.",
   "history.loading": "Įkeliama istorija…",

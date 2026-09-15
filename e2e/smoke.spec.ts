@@ -81,6 +81,43 @@ test("history prices stay inside the panel on a phone", async ({ page }) => {
   await expectHistoryFitsScreen(page);
 });
 
+test("history legend toggles all providers then a single line", async ({ page }) => {
+  await page.goto("/istorija");
+  await expect(page.locator("#history-chart .uplot")).toBeVisible({ timeout: 15_000 });
+  const all = page.getByRole("button", { name: "Visi" });
+  await expect(all).toHaveAttribute("aria-pressed", "true");
+  const brands = page.locator("#history-legend [data-act='history-brand']");
+  await expect(brands.first()).toBeVisible();
+  expect(await brands.count()).toBeGreaterThan(1);
+  await expect(brands.first()).toHaveAttribute("aria-pressed", "true");
+  await expect(brands.nth(1)).toHaveAttribute("aria-pressed", "true");
+
+  await brands.first().click();
+  await expect(brands.first()).toHaveAttribute("aria-pressed", "false");
+  await expect(brands.nth(1)).toHaveAttribute("aria-pressed", "true");
+  await expect(all).toHaveAttribute("aria-pressed", "false");
+
+  await brands.first().click();
+  await expect(brands.first()).toHaveAttribute("aria-pressed", "true");
+  await expect(all).toHaveAttribute("aria-pressed", "true");
+
+  await all.click();
+  await expect(all).toHaveAttribute("aria-pressed", "false");
+  await expect(brands.first()).toHaveAttribute("aria-pressed", "false");
+  await expect(brands.nth(1)).toHaveAttribute("aria-pressed", "false");
+
+  await all.click();
+  await expect(all).toHaveAttribute("aria-pressed", "true");
+  await expect(brands.first()).toHaveAttribute("aria-pressed", "true");
+  await expect(brands.nth(1)).toHaveAttribute("aria-pressed", "true");
+
+  await page.getByRole("button", { name: "Nustatymai" }).click();
+  await page.locator("#set-brand-viada").uncheck();
+  await page.getByRole("button", { name: "Uždaryti" }).click();
+  await expect(page.locator("#history-legend [data-brand='viada']")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Visi" })).toHaveAttribute("aria-pressed", "true");
+});
+
 test("station list is cheapest-first with a badge on top", async ({ page }) => {
   await page.goto("/");
   const first = page.locator(".station-row").first();
@@ -140,7 +177,8 @@ async function expectSettingsInsideHeader(page: Page): Promise<void> {
 async function expectHistoryFitsScreen(page: Page): Promise<void> {
   const panel = page.locator(".history-panel");
   await expect(panel).toBeVisible();
-  await expect(page.locator("#history-legend .u-legend")).toBeVisible();
+  await expect(page.locator("#history-legend")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Visi" })).toBeVisible();
   await expect
     .poll(async () => {
       return panel.evaluate((el) => {
