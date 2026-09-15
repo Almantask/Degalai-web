@@ -60,6 +60,8 @@ export interface HistoryFile {
 export interface DataMeta {
   date: string | null;
   generatedAt: string;
+  /** When the pipeline last fetched sources, even if prices did not change. */
+  checkedAt?: string;
   stationCount: number;
   pricedStationCount: number;
   sources: string[];

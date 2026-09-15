@@ -61,6 +61,21 @@ export function observationsToDaily(
   };
 }
 
+/** Keep the previous snapshot timestamp when this check found the same prices. */
+export function reuseGeneratedAtIfUnchanged(
+  previous: DailyPrices | null,
+  next: DailyPrices,
+): DailyPrices {
+  if (
+    previous &&
+    previous.date === next.date &&
+    JSON.stringify(previous.prices) === JSON.stringify(next.prices)
+  ) {
+    return { ...next, generatedAt: previous.generatedAt };
+  }
+  return next;
+}
+
 export function applyStale(
   daily: DailyPrices,
   previous: DailyPrices | null,
