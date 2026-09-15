@@ -359,15 +359,20 @@ test("zoom and locate controls sit together in the top-right", async ({ page }) 
 });
 
 test("station list shows last updated time", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await expect(page.locator(".list-updated")).toBeVisible({ timeout: 15_000 });
   await expect(page.locator(".list-updated")).toContainText(/Atnaujinta/);
   await expect(page.locator(".list-updated")).toContainText(/\d{1,2}:\d{2}/);
-  await expect(page.locator(".list-source")).toHaveText(
-    "Duomenys gaunami iš LEA (Lietuvos energetikos agentūra)",
-  );
+  await expect(page.locator(".list-source")).toHaveText("LEA (Lietuvos energetikos agentūra)");
   await expect(page.locator(".list-cheap-hour")).toContainText(/Pigiausia/);
   await expect(page.locator(".list-cheap-hour")).toContainText(/\d{2}:\d{2}/);
+  await expect(page.locator(".list-meta")).toBeVisible();
+  const metaLines = await page.locator(".list-meta").evaluate((el) => {
+    const lineHeight = Number.parseFloat(getComputedStyle(el).lineHeight);
+    return el.getBoundingClientRect().height / lineHeight;
+  });
+  expect(metaLines).toBeLessThanOrEqual(2.15);
 });
 
 test("settings include consumption, time value, and provider checkboxes", async ({ page }) => {

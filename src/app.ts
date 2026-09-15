@@ -1107,14 +1107,28 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const count = items.length;
     const title = count ? `${t("list.title")} · ${tPlural("stations", count)}` : t("list.title");
     const updatedAt = data.prices?.generatedAt ?? data.meta?.generatedAt;
-    const updated = updatedAt
-      ? `<p class="list-updated">${escapeHtml(t("list.updated", { time: formatDateTime(updatedAt) }))}</p><p class="list-source">${escapeHtml(t("list.source"))}</p>`
-      : "";
     const cheapMeta = data.meta?.cheapestHours?.[settings.fuel] ?? [];
-    const cheapHour =
-      cheapMeta.length > 0
-        ? `<p class="list-cheap-hour">${escapeHtml(t("list.cheapestHour", { range: formatCheapRanges(cheapMeta) }))}</p>`
-        : "";
+    const metaBits: Array<{ className: string; text: string }> = [];
+    if (updatedAt) {
+      metaBits.push({
+        className: "list-updated",
+        text: t("list.updated", { time: formatDateTime(updatedAt) }),
+      });
+    }
+    if (cheapMeta.length > 0) {
+      metaBits.push({
+        className: "list-cheap-hour",
+        text: t("list.cheapestHour", { range: formatCheapRanges(cheapMeta) }),
+      });
+    }
+    if (updatedAt) {
+      metaBits.push({ className: "list-source", text: t("list.source") });
+    }
+    const meta = metaBits.length
+      ? `<p class="list-meta" title="${escapeHtml(metaBits.map((b) => b.text).join(" · "))}">${metaBits
+          .map((b) => `<span class="${b.className}">${escapeHtml(b.text)}</span>`)
+          .join("")}</p>`
+      : "";
     const body = empty
       ? `<p class="empty">${escapeHtml(empty)}</p>`
       : `<ul class="station-list">${items.join("")}</ul>`;
@@ -1123,8 +1137,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         <span class="list-handle" aria-hidden="true"></span>
         <span class="list-head-copy">
           <h2>${escapeHtml(title)}</h2>
-          ${updated}
-          ${cheapHour}
+          ${meta}
         </span>
         <span class="list-chevron" aria-hidden="true">${listMinimized ? "▴" : "▾"}</span>
       </button>
