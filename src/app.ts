@@ -1107,13 +1107,33 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const count = items.length;
     const title = count ? `${t("list.title")} · ${tPlural("stations", count)}` : t("list.title");
     const checkedAt = lastCheckedAt(data);
-    const updated = checkedAt
-      ? `<p class="list-updated">${escapeHtml(t("list.checked", { time: formatDateTime(checkedAt) }))}</p><p class="list-source">${escapeHtml(t("list.source"))}</p>`
-      : "";
     const cheapMeta = data.meta?.cheapestHours?.[settings.fuel] ?? [];
-    const cheapHour =
-      cheapMeta.length > 0
-        ? `<p class="list-cheap-hour">${escapeHtml(t("list.cheapestHour", { range: formatCheapRanges(cheapMeta) }))}</p>`
+    const primary: Array<{ className: string; text: string }> = [];
+    if (checkedAt) {
+      primary.push({
+        className: "list-updated",
+        text: t("list.checked", { time: formatDateTime(checkedAt) }),
+      });
+    }
+    if (cheapMeta.length > 0) {
+      primary.push({
+        className: "list-cheap-hour",
+        text: t("list.cheapestHour", { range: formatCheapRanges(cheapMeta) }),
+      });
+    }
+    const sourceText = checkedAt ? t("list.source") : "";
+    const primaryHtml = primary.length
+      ? `<span class="list-meta-primary">${primary
+          .map((b) => `<span class="${b.className}">${escapeHtml(b.text)}</span>`)
+          .join("")}</span>`
+      : "";
+    const sourceHtml = sourceText
+      ? `<span class="list-source">${escapeHtml(sourceText)}</span>`
+      : "";
+    const titleText = [...primary.map((b) => b.text), sourceText].filter(Boolean).join(" · ");
+    const meta =
+      primaryHtml || sourceHtml
+        ? `<p class="list-meta" title="${escapeHtml(titleText)}">${primaryHtml}${sourceHtml}</p>`
         : "";
     const body = empty
       ? `<p class="empty">${escapeHtml(empty)}</p>`
@@ -1123,8 +1143,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         <span class="list-handle" aria-hidden="true"></span>
         <span class="list-head-copy">
           <h2>${escapeHtml(title)}</h2>
-          ${updated}
-          ${cheapHour}
+          ${meta}
         </span>
         <span class="list-chevron" aria-hidden="true">${listMinimized ? "▴" : "▾"}</span>
       </button>

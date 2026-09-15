@@ -33,7 +33,7 @@
   "dest.pickStart": "Bakstelėkite žemėlapį pradžios vietai",
   "list.title": "Degalinės",
   "list.checked": "Tikrinta {time}",
-  "list.source": "Duomenys gaunami iš LEA (Lietuvos energetikos agentūra)",
+  "list.source": "LEA (Lietuvos energetikos agentūra)",
   "list.empty": "Nėra degalinių su pasirinktais degalais šiame vaizde.",
   "list.sortPrice": "Pagal kainą",
   "list.cheapest": "Pigiausia",
