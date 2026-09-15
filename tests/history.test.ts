@@ -69,6 +69,12 @@ describe("sampleFromDaily", () => {
     expect(sampleKey(sample)).toBe("2026-09-14-08");
   });
 
+  it("stamps the check hour when prices were reused from an earlier snapshot", () => {
+    const sample = sampleFromDaily(daily, stations, new Date("2026-09-14T14:00:00.000Z"));
+    expect(sample.hour).toBe(17);
+    expect(sampleKey(sample)).toBe("2026-09-14-17");
+  });
+
   it("keys by the file date when generatedAt is from a later backfill", () => {
     const backfilled: DailyPrices = {
       date: "2026-09-07",

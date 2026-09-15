@@ -32,7 +32,7 @@
   "dest.clear": "Clear destination",
   "dest.pickStart": "Tap the map to set a starting point",
   "list.title": "Stations",
-  "list.updated": "Updated {time}",
+  "list.checked": "Last checked {time}",
   "list.source": "LEA (Lithuanian Energy Agency)",
   "list.empty": "No stations with the selected fuel in this view.",
   "list.sortPrice": "By price",

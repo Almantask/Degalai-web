@@ -12,6 +12,11 @@ export interface AppData {
   meta: DataMeta | null;
 }
 
+/** Last source fetch, falling back to snapshot times from older data files. */
+export function lastCheckedAt(data: Pick<AppData, "prices" | "meta">): string | undefined {
+  return data.meta?.checkedAt ?? data.prices?.generatedAt ?? data.meta?.generatedAt ?? undefined;
+}
+
 export async function loadAppData(): Promise<AppData> {
   const [stations, meta] = await Promise.all([
     fetchJson<Station[]>(dataUrl("stations.json"), []),

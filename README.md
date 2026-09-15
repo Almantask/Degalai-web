@@ -39,7 +39,7 @@ minimise for a full map.
 - Filter **Diesel**, **Petrol** (95), or **Gas (LPG)**. Pins and the list follow
   that fuel.
 - Scan a cheapest-first list of stations in view, with cheapest / most expensive
-  badges and a last-updated time.
+  badges and a last-checked time.
 - Plan a trip: start defaults to your location; type a destination (Photon,
   Lithuania only). The map fits the route, hides off-route stations, and can
   draw via-paths through the five cheapest stops.
