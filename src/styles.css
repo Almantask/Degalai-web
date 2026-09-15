@@ -435,6 +435,10 @@ body,
   font-weight: 500;
 }
 
+.list-source::before {
+  content: " · ";
+}
+
 .list-chevron {
   color: var(--muted);
   font-size: 0.85rem;

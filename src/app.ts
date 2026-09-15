@@ -998,7 +998,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const title = count ? `${t("list.title")} · ${tPlural("stations", count)}` : t("list.title");
     const updatedAt = data.prices?.generatedAt ?? data.meta?.generatedAt;
     const updated = updatedAt
-      ? `<p class="list-updated">${escapeHtml(t("list.updated", { time: formatDateTime(updatedAt) }))}</p>`
+      ? `<p class="list-updated">${escapeHtml(t("list.updated", { time: formatDateTime(updatedAt) }))}<span class="list-source">${escapeHtml(t("list.source"))}</span></p>`
       : "";
     const cheapMeta = data.meta?.cheapestHours?.[settings.fuel] ?? [];
     const cheapHour =

@@ -243,6 +243,7 @@ test("station list shows last updated time", async ({ page }) => {
   await expect(page.locator(".list-updated")).toBeVisible({ timeout: 15_000 });
   await expect(page.locator(".list-updated")).toContainText(/Atnaujinta/);
   await expect(page.locator(".list-updated")).toContainText(/\d{1,2}:\d{2}/);
+  await expect(page.locator(".list-source")).toHaveText("Energetikos agentūra");
   await expect(page.locator(".list-cheap-hour")).toContainText(/Pigiausia/);
   await expect(page.locator(".list-cheap-hour")).toContainText(/\d{2}:\d{2}/);
 });
