@@ -82,7 +82,7 @@ export default defineConfig({
     },
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.svg"],
+      includeAssets: ["favicon.svg", "icons/**"],
       manifest: false,
       workbox: {
         globDirectory: "dist",

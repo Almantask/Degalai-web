@@ -85,6 +85,8 @@
   "lang.lt": "Lietuvių",
   "lang.en": "English",
   "install.hint": "Įdiekite programėlę greitesniam naudojimui.",
+  "install.action": "Įdiegti",
+  "install.ios": "Safari: Bendrinti → Pridėti prie pradžios ekrano.",
   "history.title": "Istorinės kainos",
   "history.hour": "Valanda",
   "history.byHour": "Tiekėjų vidutinės kainos pagal paros laiką (paskutinės 7 dienos).",

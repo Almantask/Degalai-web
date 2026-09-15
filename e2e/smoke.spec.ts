@@ -1,5 +1,49 @@
 import { test, expect, type Page } from "@playwright/test";
 
+test("PWA can be installed as a standalone mobile app", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
+    "href",
+    /manifest-lt\.webmanifest/,
+  );
+  await expect(page.locator('meta[name="apple-mobile-web-app-capable"]')).toHaveAttribute(
+    "content",
+    "yes",
+  );
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute(
+    "href",
+    /apple-touch-icon/,
+  );
+  const manifestHref = await page.locator('link[rel="manifest"]').getAttribute("href");
+  expect(manifestHref).toBeTruthy();
+  const manifest = await page.evaluate(async (href) => {
+    const res = await fetch(href!);
+    return res.json() as Promise<{
+      display: string;
+      icons: Array<{ sizes: string; type: string }>;
+    }>;
+  }, manifestHref);
+  expect(manifest.display).toBe("standalone");
+  expect(manifest.icons.some((i) => i.sizes === "192x192" && i.type === "image/png")).toBe(true);
+  expect(manifest.icons.some((i) => i.sizes === "512x512" && i.type === "image/png")).toBe(true);
+  const icon = await page.request.get("/icons/icon-192.png");
+  expect(icon.ok()).toBe(true);
+  const apple = await page.request.get("/icons/apple-touch-icon.png");
+  expect(apple.ok()).toBe(true);
+
+  await page.evaluate(() => {
+    const ev = new Event("beforeinstallprompt", { cancelable: true }) as Event & {
+      prompt: () => Promise<void>;
+    };
+    ev.prompt = () => Promise.resolve();
+    window.dispatchEvent(ev);
+  });
+  await expect(page.getByRole("button", { name: "Įdiegti" })).toBeVisible();
+  await expect(page.getByText("Įdiekite programėlę greitesniam naudojimui.")).toBeVisible();
+  await page.locator(".install-dismiss").click();
+  await expect(page.getByRole("button", { name: "Įdiegti" })).toHaveCount(0);
+});
+
 test("Lithuanian map shell loads", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".logo")).toContainText("Kur degalai");

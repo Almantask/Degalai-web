@@ -46,6 +46,13 @@ import {
 import { mapRouteStationIds, ON_ROUTE_KM, orderRouteRows } from "./route-list.ts";
 import { hrefFor, navigate, parsePath, pathFor, type View } from "./router.ts";
 import { fetchRoute, geocode, reverseGeocode, type GeoHit, type RouteResult } from "./routing.ts";
+import {
+  installOffer,
+  isIosSafari,
+  isStandalone,
+  loadInstallDismissed,
+  persistInstallDismissed,
+} from "./pwa.ts";
 import DOMPurify from "dompurify";
 import {
   fuelFromUrl,
@@ -142,6 +149,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let locateStatus: "idle" | "pending" | "denied" | "outside" = "idle";
   let startMarker: maplibregl.Marker | null = null;
   let endMarker: maplibregl.Marker | null = null;
+  let installDismissed = loadInstallDismissed();
+  let installPrompt: { prompt: () => Promise<void> } | null = null;
+
+  const standalone = isStandalone(
+    (q) => window.matchMedia(q).matches,
+    (navigator as Navigator & { standalone?: boolean }).standalone,
+  );
+  if (standalone) document.documentElement.classList.add("is-standalone");
 
   root.innerHTML = shellHtml();
   const mapDiv = root.querySelector<HTMLElement>("#map")!;
@@ -176,6 +191,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
 
   bind();
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    const ev = e as Event & { prompt?: () => Promise<void> };
+    if (typeof ev.prompt !== "function") return;
+    installPrompt = { prompt: () => ev.prompt!() };
+    render();
+  });
+  window.addEventListener("appinstalled", () => {
+    installPrompt = null;
+    installDismissed = true;
+    persistInstallDismissed();
+    render();
+  });
   requestLocation(false);
   render();
 
@@ -326,6 +354,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
       } else if (act === "toggle-history") {
         historyMinimized = !historyMinimized;
         applyHistoryMinimized();
+      } else if (act === "install") {
+        void promptInstall();
+      } else if (act === "install-dismiss") {
+        installDismissed = true;
+        persistInstallDismissed();
+        render();
       }
     });
 
@@ -1188,7 +1222,42 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     if (destStatus === "not-found")
       return `<div class="banner">${escapeHtml(t("dest.notFound"))}</div>`;
+    const offer = currentInstallOffer();
+    if (offer === "prompt") {
+      return `<div class="banner info install-banner">
+        <p>${escapeHtml(t("install.hint"))}</p>
+        <button type="button" class="install-go" data-act="install">${escapeHtml(t("install.action"))}</button>
+        <button type="button" class="install-dismiss" data-act="install-dismiss" aria-label="${escapeHtml(t("action.close"))}">×</button>
+      </div>`;
+    }
+    if (offer === "ios") {
+      return `<div class="banner info install-banner">
+        <p>${escapeHtml(t("install.ios"))}</p>
+        <button type="button" class="install-dismiss" data-act="install-dismiss" aria-label="${escapeHtml(t("action.close"))}">×</button>
+      </div>`;
+    }
     return "";
+  }
+
+  function currentInstallOffer(): ReturnType<typeof installOffer> {
+    return installOffer({
+      standalone,
+      dismissed: installDismissed,
+      canPrompt: Boolean(installPrompt),
+      iosSafari: isIosSafari(navigator.userAgent, navigator),
+    });
+  }
+
+  async function promptInstall(): Promise<void> {
+    const prompt = installPrompt;
+    if (!prompt) return;
+    try {
+      await prompt.prompt();
+    } catch {
+      /* user closed the browser sheet */
+    }
+    installPrompt = null;
+    render();
   }
 
   function updateHreflang(): void {
@@ -1207,6 +1276,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     def.href = new URL(pathFor(view, "lt"), window.location.origin).toString();
     head.append(def);
     document.title = `${t("app.name")} – ${t(view === "history" ? "history.title" : "app.tagline")}`;
+    const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (appleTitle) appleTitle.setAttribute("content", t("app.name"));
     const manifest = document.querySelector<HTMLLinkElement>("link[rel='manifest']");
     if (manifest) {
       const base = import.meta.env.BASE_URL || "/";

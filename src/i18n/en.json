@@ -85,6 +85,8 @@
   "lang.lt": "Lietuvių",
   "lang.en": "English",
   "install.hint": "Install the app for quicker access.",
+  "install.action": "Install",
+  "install.ios": "In Safari, open Share and tap Add to Home Screen.",
   "history.title": "Historical prices",
   "history.hour": "Hour",
   "history.byHour": "Provider average prices by time of day (last 7 days).",
