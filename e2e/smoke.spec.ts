@@ -110,12 +110,19 @@ test("history legend toggles all providers then a single line", async ({ page })
   await expect(all).toHaveAttribute("aria-pressed", "true");
   await expect(brands.first()).toHaveAttribute("aria-pressed", "true");
   await expect(brands.nth(1)).toHaveAttribute("aria-pressed", "true");
+});
 
+test("history legend only lists providers enabled in settings", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".station-row").first()).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "Nustatymai" }).click();
   await page.locator("#set-brand-viada").uncheck();
   await page.getByRole("button", { name: "Uždaryti" }).click();
+  await page.getByRole("link", { name: "Istorija" }).click();
+  await expect(page.locator("#history-chart .uplot")).toBeVisible({ timeout: 15_000 });
   await expect(page.locator("#history-legend [data-brand='viada']")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Visi" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#history-legend [data-act='history-brand']").first()).toBeVisible();
 });
 
 test("station list is cheapest-first with a badge on top", async ({ page }) => {
