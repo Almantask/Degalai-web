@@ -106,8 +106,12 @@ export function brandAverages(
   return out;
 }
 
-export function sampleFromDaily(daily: DailyPrices, stations: Map<string, Station>): HistorySample {
-  const hour = sampleHour(daily);
+export function sampleFromDaily(
+  daily: DailyPrices,
+  stations: Map<string, Station>,
+  at?: Date,
+): HistorySample {
+  const hour = at ? hourInVilnius(at.toISOString()) : sampleHour(daily);
   return {
     at: `${daily.date}T${String(hour).padStart(2, "0")}:00:00.000Z`,
     hour,
@@ -215,11 +219,24 @@ export function recomputeHistory(
   now = new Date(),
 ): HistoryFile {
   const byId = new Map(stations.map((s) => [s.id, s]));
+  const today = dateInVilnius(now.toISOString());
   const fromFiles: HistorySample[] = [];
   for (const date of listPriceDates(pricesDir)) {
     const daily = JSON.parse(readFileSync(join(pricesDir, `${date}.json`), "utf8")) as DailyPrices;
-    fromFiles.push(sampleFromDaily(daily, byId));
+    fromFiles.push(sampleFromDaily(daily, byId, date === today ? now : undefined));
   }
   const samples = mergeSamples(previous?.samples ?? [], fromFiles, now);
-  return buildHistoryFile(samples, now.toISOString());
+  const next = buildHistoryFile(samples, now.toISOString());
+  if (previous && historyPayload(previous) === historyPayload(next)) {
+    next.generatedAt = previous.generatedAt;
+  }
+  return next;
+}
+
+function historyPayload(file: HistoryFile): string {
+  return JSON.stringify({
+    keepDays: file.keepDays,
+    samples: file.samples,
+    byFuel: file.byFuel,
+  });
 }

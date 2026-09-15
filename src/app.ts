@@ -2,7 +2,7 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { netBenefit } from "./calc.ts";
 import { cheapestHourRanges, filterSeries, formatCheapRanges } from "./cheap-hours.ts";
-import { loadAppData, loadHistory, type AppData } from "./data.ts";
+import { loadAppData, lastCheckedAt, loadHistory, type AppData } from "./data.ts";
 import {
   formatDate,
   formatDateTime,
@@ -1106,9 +1106,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function listWrap(items: string[], empty?: string): string {
     const count = items.length;
     const title = count ? `${t("list.title")} · ${tPlural("stations", count)}` : t("list.title");
-    const updatedAt = data.prices?.generatedAt ?? data.meta?.generatedAt;
-    const updated = updatedAt
-      ? `<p class="list-updated">${escapeHtml(t("list.updated", { time: formatDateTime(updatedAt) }))}</p><p class="list-source">${escapeHtml(t("list.source"))}</p>`
+    const checkedAt = lastCheckedAt(data);
+    const updated = checkedAt
+      ? `<p class="list-updated">${escapeHtml(t("list.checked", { time: formatDateTime(checkedAt) }))}</p><p class="list-source">${escapeHtml(t("list.source"))}</p>`
       : "";
     const cheapMeta = data.meta?.cheapestHours?.[settings.fuel] ?? [];
     const cheapHour =

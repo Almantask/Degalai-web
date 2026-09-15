@@ -8,7 +8,7 @@ import { geocodePhoton, loadGeocodeCache, saveGeocodeCache, sleep } from "./geoc
 import { datesWithinDays, isHistoryFile, prunePriceFiles, recomputeHistory } from "./history.ts";
 import { loadOverrides, matchByAddress, matchObservations } from "./match.ts";
 import { chooseOsmStations, fetchOsmStations } from "./osm.ts";
-import { applyStale, observationsToDaily } from "./validate.ts";
+import { applyStale, observationsToDaily, reuseGeneratedAtIfUnchanged } from "./validate.ts";
 
 const ROOT = join(import.meta.dirname, "..");
 const DATA = join(ROOT, "data");
@@ -184,8 +184,9 @@ async function main(): Promise<void> {
   const previous = prevDate
     ? readJson<DailyPrices | null>(join(PRICES, `${prevDate}.json`), null)
     : null;
-  const { daily, log } = observationsToDaily(date, matched.observations, previous);
-  applyStale(daily, previous, prevDate);
+  const { daily: fresh, log } = observationsToDaily(date, matched.observations, previous);
+  applyStale(fresh, previous, prevDate);
+  const daily = reuseGeneratedAtIfUnchanged(previous, fresh);
   writeJson(join(PRICES, `${date}.json`), daily);
   writeJson(join(REPORTS, "validation.json"), log);
 
@@ -200,9 +201,11 @@ async function main(): Promise<void> {
   writeJson(join(DATA, "stations.json"), stations);
 
   const priced = Object.keys(daily.prices).length;
+  const checkedAt = new Date().toISOString();
   const meta: DataMeta = {
     date,
-    generatedAt: new Date().toISOString(),
+    generatedAt: daily.generatedAt,
+    checkedAt,
     stationCount: stations.length,
     pricedStationCount: priced,
     sources: adapterNames,
@@ -210,7 +213,7 @@ async function main(): Promise<void> {
   };
   writeJson(join(DATA, "meta.json"), meta);
   console.log(
-    `Wrote ${stations.length} stations, ${priced} with prices for ${date}. Unmatched groups: ${matched.unmatched.length}`,
+    `Wrote ${stations.length} stations, ${priced} with prices for ${date}. Checked ${checkedAt}; prices generated ${daily.generatedAt}. Unmatched groups: ${matched.unmatched.length}`,
   );
 
   const otherDates = leaDates.filter((d) => d !== date);

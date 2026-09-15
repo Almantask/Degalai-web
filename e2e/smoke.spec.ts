@@ -69,6 +69,7 @@ test("English locale loads without about", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Stations" })).toBeVisible();
   await expect(page.getByRole("link", { name: "History" })).toBeVisible();
   await expect(page.getByRole("link", { name: "About" })).toHaveCount(0);
+  await expect(page.locator(".list-updated")).toContainText(/Last checked/);
 });
 
 test("settings button stays inside the header when switching language", async ({ page }) => {
@@ -358,10 +359,10 @@ test("zoom and locate controls sit together in the top-right", async ({ page }) 
   );
 });
 
-test("station list shows last updated time", async ({ page }) => {
+test("station list shows last checked time", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".list-updated")).toBeVisible({ timeout: 15_000 });
-  await expect(page.locator(".list-updated")).toContainText(/Atnaujinta/);
+  await expect(page.locator(".list-updated")).toContainText(/Tikrinta/);
   await expect(page.locator(".list-updated")).toContainText(/\d{1,2}:\d{2}/);
   await expect(page.locator(".list-source")).toHaveText(
     "Duomenys gaunami iš LEA (Lietuvos energetikos agentūra)",
@@ -473,12 +474,13 @@ test("station popup has no navigate or updated text", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Naviguoti" })).toHaveCount(0);
   await expect(page.locator(".popup-nav")).toHaveCount(0);
   await expect(page.locator(".popup-meta")).toHaveCount(0);
+  await expect(page.locator(".maplibregl-popup")).not.toContainText(/Tikrinta/);
   await expect(page.locator(".maplibregl-popup")).not.toContainText(/Atnaujinta/);
   const fuelLabels = await page
     .locator(".maplibregl-popup .popup-row > span:first-child")
     .allTextContents();
   expect(fuelLabels).not.toContain("98");
-  await expect(page.locator(".list-updated")).toContainText(/Atnaujinta/);
+  await expect(page.locator(".list-updated")).toContainText(/Tikrinta/);
   const addr = page.locator(".popup-addr");
   await expect(addr).toBeVisible();
   const fit = await page.evaluate(() => {
