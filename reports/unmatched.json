@@ -5,9 +5,19 @@
     "address": "Ožtakių k., Dariaus ir Girėno g. 76, 88321",
     "city": "Telšių r. sav.",
     "name": "UAB Baltic Petroleum",
+    "fuel": "LPG",
+    "price": 0.789,
+    "observedAt": "2026-09-15T07:00:00+03:00"
+  },
+  {
+    "sourceStationId": "lea:76-88321-baltic-dariaus-g-girėno-ir-k-ožtakių-petroleum-r-sav-telšių-uab",
+    "brand": "baltic-petroleum",
+    "address": "Ožtakių k., Dariaus ir Girėno g. 76, 88321",
+    "city": "Telšių r. sav.",
+    "name": "UAB Baltic Petroleum",
     "fuel": "95",
-    "price": 1.999,
-    "observedAt": "2026-09-14T07:00:00+03:00"
+    "price": 1.979,
+    "observedAt": "2026-09-15T07:00:00+03:00"
   },
   {
     "sourceStationId": "lea:76-88321-baltic-dariaus-g-girėno-ir-k-ožtakių-petroleum-r-sav-telšių-uab",
@@ -16,17 +26,7 @@
     "city": "Telšių r. sav.",
     "name": "UAB Baltic Petroleum",
     "fuel": "D",
-    "price": 2.229,
-    "observedAt": "2026-09-14T07:00:00+03:00"
-  },
-  {
-    "sourceStationId": "lea:76-88321-baltic-dariaus-g-girėno-ir-k-ožtakių-petroleum-r-sav-telšių-uab",
-    "brand": "baltic-petroleum",
-    "address": "Ožtakių k., Dariaus ir Girėno g. 76, 88321",
-    "city": "Telšių r. sav.",
-    "name": "UAB Baltic Petroleum",
-    "fuel": "LPG",
-    "price": 0.789,
-    "observedAt": "2026-09-14T07:00:00+03:00"
+    "price": 2.259,
+    "observedAt": "2026-09-15T07:00:00+03:00"
   }
 ]
