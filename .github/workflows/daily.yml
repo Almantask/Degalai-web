@@ -1,8 +1,11 @@
 name: Hourly data + deploy
 
 on:
-  # The hourly trigger is a Cloudflare Worker cron (see worker/) calling workflow_dispatch:
-  # GitHub's own schedule drifts, drops runs, and is disabled after 60 days without commits.
+  # Two hourly triggers: a Cloudflare Worker cron (see worker/) calls workflow_dispatch at :17,
+  # and GitHub's own schedule runs at :37 as a backup (it drifts, drops runs, and is disabled
+  # after 60 days without repository activity).
+  schedule:
+    - cron: "37 * * * *"
   workflow_dispatch:
   push:
     branches: [main]
