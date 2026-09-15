@@ -371,6 +371,28 @@ test("station list shows last checked time", async ({ page }) => {
   await expect(page.locator(".list-cheap-hour")).toContainText(/\d{2}:\d{2}/);
 });
 
+test("station list shows last check even when prices were not updated", async ({ page }) => {
+  await page.route("**/data/meta.json", async (route) => {
+    const res = await route.fetch();
+    const meta = (await res.json()) as {
+      generatedAt?: string;
+      checkedAt?: string;
+    };
+    await route.fulfill({
+      json: {
+        ...meta,
+        generatedAt: "2026-09-15T07:46:15.859Z",
+        checkedAt: "2026-09-15T13:17:00.000Z",
+      },
+    });
+  });
+  await page.goto("/");
+  await expect(page.locator(".list-updated")).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator(".list-updated")).toContainText(/Tikrinta/);
+  await expect(page.locator(".list-updated")).toContainText("16:17");
+  await expect(page.locator(".list-updated")).not.toContainText("10:46");
+});
+
 test("settings include consumption, time value, and provider checkboxes", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Nustatymai" }).click();
