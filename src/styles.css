@@ -721,13 +721,61 @@ body,
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
+  position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-#history-chart .uplot,
-#history-chart .u-wrap {
-  max-width: 100%;
-  width: 100% !important;
+.history-chart-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(16 32 24 / 28%) transparent;
+}
+
+.history-chart-scroll:focus {
+  outline: none;
+}
+
+.history-chart-scroll:focus-visible {
+  outline: 2px solid rgb(15 138 75 / 45%);
+  outline-offset: -2px;
+}
+
+.history-chart-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.history-chart-scroll::-webkit-scrollbar-thumb {
+  background: rgb(16 32 24 / 22%);
+  border-radius: 99px;
+}
+
+.history-chart-plot {
+  height: 100%;
+  width: max-content;
+  min-height: 72px;
+}
+
+.history-chart-plot .u-over,
+.history-chart-plot .u-under {
+  touch-action: pan-x;
+}
+
+.history-chart-yaxis {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  z-index: 2;
+  background: rgb(255 255 255 / 94%);
 }
 
 #history-legend {

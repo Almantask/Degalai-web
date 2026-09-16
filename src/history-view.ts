@@ -7,6 +7,11 @@ import { brandLabel, t } from "./i18n/index.ts";
 
 export { brandColor, chartBrands } from "./history-series.ts";
 
+/** CSS pixels per hour so 24h labels stay readable and the chart can scroll. */
+export const HISTORY_HOUR_MIN_PX = 48;
+export const HISTORY_Y_AXIS_PX = 36;
+export const HISTORY_X_PAD_PX = 8;
+
 export function providerSeries(
   file: HistoryFile | null,
   fuel: FuelType,
@@ -25,6 +30,12 @@ export function hourTickLabel(hour: number): string {
   return `${String(hour).padStart(2, "0")}:00`;
 }
 
+export function historyChartWidth(viewportWidth: number, hourCount: number): number {
+  const viewport = Math.max(120, Math.floor(viewportWidth) || 280);
+  const hours = Math.max(1, hourCount);
+  return Math.max(viewport, hours * HISTORY_HOUR_MIN_PX + HISTORY_Y_AXIS_PX + HISTORY_X_PAD_PX);
+}
+
 export type HistoryPlot = {
   destroy: () => void;
   setHidden: (hidden: ReadonlySet<string>) => void;
@@ -41,13 +52,32 @@ export function mountHistoryChart(
   if (brands.length === 0) return null;
   const hours = series.hours;
   const data: uPlot.AlignedData = [hours, ...brands.map((b) => b.values)];
-  const size = chartSize(el);
+
+  el.replaceChildren();
+  const scroll = document.createElement("div");
+  scroll.className = "history-chart-scroll";
+  scroll.tabIndex = 0;
+  scroll.setAttribute("role", "region");
+  scroll.setAttribute("aria-label", t("history.scroll"));
+  const plotEl = document.createElement("div");
+  plotEl.className = "history-chart-plot";
+  scroll.append(plotEl);
+  const yAxis = document.createElement("canvas");
+  yAxis.className = "history-chart-yaxis";
+  yAxis.setAttribute("aria-hidden", "true");
+  el.append(scroll, yAxis);
+
+  const size = chartSize(scroll, hours.length);
   const plot = new uPlot(
     {
       width: size.width,
       height: size.height,
       padding: [4, 6, 0, 0],
-      cursor: { focus: { prox: 24 }, show: size.width >= 480 },
+      cursor: {
+        focus: { prox: 24 },
+        show: scroll.clientWidth >= 480,
+        drag: { x: false, y: false, setScale: false },
+      },
       legend: { show: false },
       scales: { x: { time: false, range: [0, 23] } },
       axes: [
@@ -59,7 +89,7 @@ export function mountHistoryChart(
         },
         {
           stroke: "#5c6f64",
-          size: 36,
+          size: HISTORY_Y_AXIS_PX,
           grid: { stroke: "rgb(16 32 24 / 8%)" },
           values: (_u, vals) => vals.map((v) => (v == null ? "" : Number(v).toFixed(2))),
         },
@@ -78,43 +108,45 @@ export function mountHistoryChart(
       hooks: {
         draw: [
           (u) => {
-            if (cheapRanges.length === 0) return;
-            const { ctx } = u;
-            ctx.save();
-            ctx.fillStyle = "rgb(15 138 75 / 12%)";
-            for (const range of cheapRanges) {
-              for (const [from, to] of hourBands(range)) {
-                const x0 = u.valToPos(from, "x", true);
-                const x1 = u.valToPos(to, "x", true);
-                const top = u.bbox.top;
-                ctx.fillRect(x0, top, Math.max(1, x1 - x0), u.bbox.height);
+            if (cheapRanges.length > 0) {
+              const { ctx } = u;
+              ctx.save();
+              ctx.fillStyle = "rgb(15 138 75 / 12%)";
+              for (const range of cheapRanges) {
+                for (const [from, to] of hourBands(range)) {
+                  const x0 = u.valToPos(from, "x", true);
+                  const x1 = u.valToPos(to, "x", true);
+                  const top = u.bbox.top;
+                  ctx.fillRect(x0, top, Math.max(1, x1 - x0), u.bbox.height);
+                }
               }
+              ctx.restore();
             }
-            ctx.restore();
+            syncYAxisOverlay(u, yAxis);
           },
         ],
       },
     },
     data,
-    el,
+    plotEl,
   );
-  const ro = new ResizeObserver(() => {
-    const next = chartSize(el);
-    if (next.width === plot.width && next.height === plot.height) return;
-    plot.setSize({ width: next.width, height: next.height });
-  });
-  ro.observe(el);
-  const raf = requestAnimationFrame(() => {
-    const next = chartSize(el);
+
+  const applySize = (): void => {
+    const next = chartSize(scroll, hours.length);
     if (next.width !== plot.width || next.height !== plot.height) {
       plot.setSize({ width: next.width, height: next.height });
     }
-  });
+  };
+
+  const ro = new ResizeObserver(applySize);
+  ro.observe(scroll);
+  const raf = requestAnimationFrame(applySize);
   return {
     destroy() {
       cancelAnimationFrame(raf);
       ro.disconnect();
       plot.destroy();
+      el.replaceChildren();
     },
     setHidden(hidden: ReadonlySet<string>) {
       brands.forEach((b, i) => {
@@ -126,11 +158,30 @@ export function mountHistoryChart(
   };
 }
 
-function chartSize(el: HTMLElement): { width: number; height: number } {
-  const width = Math.max(120, Math.floor(el.clientWidth) || 280);
-  const available = Math.floor(el.clientHeight);
-  const height = Math.max(72, available || (width < 520 ? 140 : 180));
+function chartSize(viewport: HTMLElement, hourCount: number): { width: number; height: number } {
+  const viewportWidth = Math.max(120, Math.floor(viewport.clientWidth) || 280);
+  const width = historyChartWidth(viewportWidth, hourCount);
+  const available = Math.floor(viewport.clientHeight);
+  const height = Math.max(72, available || (viewportWidth < 520 ? 140 : 180));
   return { width, height };
+}
+
+function syncYAxisOverlay(plot: uPlot, overlay: HTMLCanvasElement): void {
+  const src = plot.ctx.canvas;
+  const dpr = src.width / Math.max(1, plot.width);
+  const slice = Math.max(1, Math.ceil(plot.bbox.left));
+  const cssW = Math.ceil(slice / dpr);
+  if (overlay.width !== slice || overlay.height !== src.height) {
+    overlay.width = slice;
+    overlay.height = src.height;
+  }
+  overlay.style.width = `${cssW}px`;
+  overlay.style.height = `${plot.height}px`;
+  const ctx = overlay.getContext("2d");
+  if (!ctx) return;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+  ctx.drawImage(src, 0, 0, slice, src.height, 0, 0, slice, src.height);
 }
 
 function hourBands(range: CheapHourRange): Array<[number, number]> {

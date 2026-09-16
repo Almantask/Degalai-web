@@ -98,6 +98,7 @@
   "history.cheapestAvg": "vid. {price}",
   "history.collapse": "Sutraukti istoriją",
   "history.expand": "Išskleisti istoriją",
+  "history.scroll": "Kainos pagal valandą. Slinkite į kairę arba dešinę, kad pamatytumėte kitas valandas.",
   "list.cheapestHour": "Pigiausia {range}",
   "plural.stations.one": "{n} degalinė",
   "plural.stations.few": "{n} degalinės",

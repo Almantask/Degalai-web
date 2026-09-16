@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { brandColor, hourTickLabel, providerSeries } from "../src/history-view.ts";
+import {
+  HISTORY_HOUR_MIN_PX,
+  HISTORY_X_PAD_PX,
+  HISTORY_Y_AXIS_PX,
+  brandColor,
+  historyChartWidth,
+  hourTickLabel,
+  providerSeries,
+} from "../src/history-view.ts";
 import {
   allHistoryBrandsOn,
   chartBrands,
@@ -41,6 +49,18 @@ describe("hourTickLabel", () => {
     expect(hourTickLabel(0)).toBe("00:00");
     expect(hourTickLabel(9)).toBe("09:00");
     expect(hourTickLabel(15)).toBe("15:00");
+  });
+});
+
+describe("historyChartWidth", () => {
+  it("is wider than a phone viewport so 24 hours can scroll", () => {
+    const min = 24 * HISTORY_HOUR_MIN_PX + HISTORY_Y_AXIS_PX + HISTORY_X_PAD_PX;
+    expect(historyChartWidth(320, 24)).toBe(min);
+    expect(min).toBeGreaterThan(320);
+  });
+
+  it("uses the viewport when it already fits every hour", () => {
+    expect(historyChartWidth(1600, 24)).toBe(1600);
   });
 });
 

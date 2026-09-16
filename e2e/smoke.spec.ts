@@ -126,6 +126,27 @@ test("history prices stay inside the panel on a phone", async ({ page }) => {
   await expectHistoryFitsScreen(page);
 });
 
+test("history chart scrolls left and right on a phone", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 667 });
+  await page.goto("/istorija");
+  const scroll = page.locator(".history-chart-scroll");
+  await expect(page.locator("#history-chart .uplot")).toBeVisible({ timeout: 15_000 });
+  await expect
+    .poll(async () => scroll.evaluate((el) => el.scrollWidth - el.clientWidth))
+    .toBeGreaterThan(80);
+  expect(await scroll.evaluate((el) => el.scrollLeft)).toBe(0);
+
+  const box = await scroll.boundingBox();
+  expect(box).toBeTruthy();
+  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+  await page.mouse.wheel(180, 0);
+  await expect.poll(async () => scroll.evaluate((el) => el.scrollLeft)).toBeGreaterThan(40);
+
+  await page.mouse.wheel(-180, 0);
+  await expect.poll(async () => scroll.evaluate((el) => el.scrollLeft)).toBeLessThan(40);
+  await expectHistoryFitsScreen(page);
+});
+
 test("history legend toggles all providers then a single line", async ({ page }) => {
   await page.goto("/istorija");
   await expect(page.locator("#history-chart .uplot")).toBeVisible({ timeout: 15_000 });
