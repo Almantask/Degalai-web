@@ -101,7 +101,7 @@ test("history button opens provider averages by date and time", async ({ page })
   await expect(page.getByRole("heading", { name: "Istorinės kainos" })).toBeVisible();
   await expect(page.locator(".history-caption")).toContainText(/Tiekėjų vidutinės kainos/);
   await expect(page.locator(".history-cheap")).toContainText(/Pigiausia/);
-  await expect(page.locator(".history-cheap")).toContainText(/09-\d{2} \d{2}:\d{2}/);
+  await expect(page.locator(".history-cheap")).toContainText(/09-15 \d{2}:\d{2}/);
   await expect.poll(() => historyUrls.length).toBe(1);
   await expect(page.locator("#history-chart .uplot")).toBeVisible();
   expect(priceUrls).toHaveLength(1);
@@ -109,8 +109,10 @@ test("history button opens provider averages by date and time", async ({ page })
   await page.getByRole("button", { name: "Sutraukti istoriją" }).click();
   await expect(page.locator(".history-panel")).toHaveClass(/is-min/);
   await expect(page.locator("#history-chart")).toBeHidden();
+  await expect(page.locator(".map-wrap")).toHaveCSS("visibility", "visible");
   await page.getByRole("button", { name: "Išskleisti istoriją" }).click();
   await expect(page.locator("#history-chart .uplot")).toBeVisible();
+  await expect(page.locator(".map-wrap")).toHaveCSS("visibility", "hidden");
   await page.getByRole("link", { name: "Degalinės" }).click();
   await expect(page).not.toHaveURL(/istorija/);
   await expect(page.getByPlaceholder("Kur važiuojate?")).toBeVisible();
@@ -300,6 +302,7 @@ async function expectHistoryFitsScreen(page: Page): Promise<void> {
   await expect(panel).toBeVisible();
   await expect(page.locator("#history-legend")).toBeVisible();
   await expect(page.getByRole("button", { name: "Visi" })).toBeVisible();
+  await expect(page.locator(".map-wrap")).toHaveCSS("visibility", "hidden");
   await expect
     .poll(async () => {
       return panel.evaluate((el) => {
@@ -321,8 +324,9 @@ async function expectHistoryFitsScreen(page: Page): Promise<void> {
         const caption = el.querySelector(".history-caption");
         return (
           r.top >= -1 &&
-          r.left >= -1 &&
-          r.right <= vw + 1 &&
+          r.left <= 1 &&
+          r.right >= vw - 1 &&
+          r.bottom >= vh - 1 &&
           r.bottom <= vh + 1 &&
           (!chart || inside(chart)) &&
           (!legend || inside(legend)) &&
@@ -436,7 +440,7 @@ test("station list shows last checked time", async ({ page }) => {
   await expect(page.locator(".list-updated")).toContainText(/\d{1,2}:\d{2}/);
   await expect(page.locator(".list-source")).toHaveText("LEA (Lietuvos energetikos agentūra)");
   await expect(page.locator(".list-cheap-hour")).toContainText(/Pigiausia/);
-  await expect(page.locator(".list-cheap-hour")).toContainText(/09-\d{2} \d{2}:\d{2}/);
+  await expect(page.locator(".list-cheap-hour")).toContainText(/09-15 \d{2}:\d{2}/);
   await expect(page.locator(".list-meta")).toBeVisible();
   const metaLines = await page.locator(".list-meta").evaluate((el) => {
     const lineHeight = Number.parseFloat(getComputedStyle(el).lineHeight);

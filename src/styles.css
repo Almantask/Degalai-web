@@ -725,6 +725,7 @@ body,
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  background: #fff;
 }
 
 .history-chart-scroll {
@@ -762,6 +763,7 @@ body,
   height: 100%;
   width: max-content;
   min-height: 72px;
+  background: #fff;
 }
 
 .history-chart-plot .u-over,
@@ -775,7 +777,7 @@ body,
   top: 0;
   pointer-events: none;
   z-index: 2;
-  background: rgb(255 255 255 / 94%);
+  background: #fff;
   max-height: calc(100% - 40px);
 }
 
@@ -1354,4 +1356,26 @@ body,
   .dest-field .search {
     font-size: 1rem;
   }
+}
+
+/* Expanded history uses the full area under the header so map pins cannot
+   show through the translucent card or sit under date/time ticks. */
+.app.is-history:not(:has(.history-panel.is-min)) .map-wrap,
+.app.is-history:not(:has(.history-panel.is-min)) .maplibregl-ctrl-top-right {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.app.is-history .history-panel:not(.is-min) {
+  top: calc(var(--header-h, 186px) + 6px);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: #fff;
+  backdrop-filter: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
 }

@@ -7,6 +7,7 @@ import {
   formatCheapRanges,
   formatHourSpan,
   hourAverages,
+  indicesInLastHours,
 } from "../src/cheap-hours.ts";
 import type { HistoryHourSeries } from "../src/types.ts";
 
@@ -62,6 +63,26 @@ describe("cheapestHourRanges", () => {
     expect(ranges).toEqual([{ start: 23, end: 1, price: 1.4, from: "T23:00", to: "T01:00" }]);
   });
 
+  it("marks the cheapest samples in the last 24 hours, not the whole week", () => {
+    const ranges = cheapestHourRanges(
+      dated([
+        { date: "2026-09-08", hour: 7, price: 1.2 },
+        { date: "2026-09-14", hour: 7, price: 1.3 },
+        { date: "2026-09-15", hour: 10, price: 1.5 },
+        { date: "2026-09-15", hour: 21, price: 1.4 },
+      ]),
+    );
+    expect(ranges).toEqual([
+      {
+        start: 3,
+        end: 3,
+        price: 1.4,
+        from: "2026-09-15T21:00",
+        to: "2026-09-15T21:00",
+      },
+    ]);
+  });
+
   it("does not wrap midnight on a dated timeline", () => {
     const ranges = cheapestHourRanges(
       dated([
@@ -90,6 +111,19 @@ describe("cheapestHourRanges", () => {
 
   it("returns nothing when every hour is empty", () => {
     expect(cheapestHourRanges(series({}))).toEqual([]);
+  });
+});
+
+describe("indicesInLastHours", () => {
+  it("keeps samples on or after the latest sample minus 24 hours", () => {
+    const s = dated([
+      { date: "2026-09-14", hour: 7, price: 1.3 },
+      { date: "2026-09-14", hour: 21, price: 1.4 },
+      { date: "2026-09-15", hour: 10, price: 1.5 },
+      { date: "2026-09-15", hour: 21, price: 1.4 },
+    ]);
+    expect(indicesInLastHours(s)).toEqual([1, 2, 3]);
+    expect(indicesInLastHours(series({ 7: 1.4 }))).toBeUndefined();
   });
 });
 
