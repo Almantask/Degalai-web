@@ -220,18 +220,21 @@ function syncYAxisOverlay(plot: uPlot, overlay: HTMLCanvasElement): void {
   const src = plot.ctx.canvas;
   const dpr = src.width / Math.max(1, plot.width);
   const slice = Math.max(1, Math.ceil(plot.bbox.left));
+  // Keep the x-axis hour labels free so they can scroll; pin only the €/l ticks.
+  const sliceH = Math.min(src.height, Math.ceil(plot.bbox.top + plot.bbox.height + 2));
   const cssW = Math.ceil(slice / dpr);
-  if (overlay.width !== slice || overlay.height !== src.height) {
+  const cssH = sliceH / dpr;
+  if (overlay.width !== slice || overlay.height !== sliceH) {
     overlay.width = slice;
-    overlay.height = src.height;
+    overlay.height = sliceH;
   }
   overlay.style.width = `${cssW}px`;
-  overlay.style.height = `${plot.height}px`;
+  overlay.style.height = `${cssH}px`;
   const ctx = overlay.getContext("2d");
   if (!ctx) return;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, overlay.width, overlay.height);
-  ctx.drawImage(src, 0, 0, slice, src.height, 0, 0, slice, src.height);
+  ctx.drawImage(src, 0, 0, slice, sliceH, 0, 0, slice, sliceH);
 }
 
 function hourBands(range: CheapHourRange): Array<[number, number]> {
