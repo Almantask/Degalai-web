@@ -109,6 +109,45 @@ describe("cheapestHourRanges", () => {
     ]);
   });
 
+  it("collapses a flat last-24h plateau to the cheapest snapshot", () => {
+    const ranges = cheapestHourRanges(
+      dated([
+        { date: "2026-09-16", hour: 0, price: 1.501 },
+        { date: "2026-09-16", hour: 6, price: 1.5 },
+        { date: "2026-09-16", hour: 12, price: 1.502 },
+        { date: "2026-09-16", hour: 18, price: 1.501 },
+      ]),
+    );
+    expect(ranges).toEqual([
+      {
+        start: 1,
+        end: 1,
+        price: 1.5,
+        from: "2026-09-16T06:00",
+        to: "2026-09-16T06:00",
+      },
+    ]);
+  });
+
+  it("keeps a short consecutive valley on a dated timeline", () => {
+    const ranges = cheapestHourRanges(
+      dated([
+        { date: "2026-09-16", hour: 7, price: 1.4 },
+        { date: "2026-09-16", hour: 8, price: 1.403 },
+        { date: "2026-09-16", hour: 14, price: 1.6 },
+      ]),
+    );
+    expect(ranges).toEqual([
+      {
+        start: 0,
+        end: 1,
+        price: 1.4,
+        from: "2026-09-16T07:00",
+        to: "2026-09-16T08:00",
+      },
+    ]);
+  });
+
   it("returns nothing when every hour is empty", () => {
     expect(cheapestHourRanges(series({}))).toEqual([]);
   });

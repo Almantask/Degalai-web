@@ -322,12 +322,16 @@ async function expectHistoryFitsScreen(page: Page): Promise<void> {
         const chart = el.querySelector("#history-chart");
         const legend = el.querySelector("#history-legend");
         const caption = el.querySelector(".history-caption");
+        const chartBox = chart?.getBoundingClientRect();
+        const legendBox = legend?.getBoundingClientRect();
+        const legendBelowChart = !chartBox || !legendBox || legendBox.top >= chartBox.bottom - 1;
         return (
           r.top >= -1 &&
           r.left <= 1 &&
           r.right >= vw - 1 &&
           r.bottom >= vh - 1 &&
           r.bottom <= vh + 1 &&
+          legendBelowChart &&
           (!chart || inside(chart)) &&
           (!legend || inside(legend)) &&
           (!caption || inside(caption))
