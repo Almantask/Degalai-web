@@ -53,6 +53,7 @@ import {
   loadInstallDismissed,
   persistInstallDismissed,
 } from "./pwa.ts";
+import { browserRefreshDeps, refreshWebsite } from "./refresh.ts";
 import DOMPurify from "dompurify";
 import {
   allHistoryBrandsOn,
@@ -95,6 +96,11 @@ const SETTINGS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height
   <path d="M1 14h6"/>
   <path d="M9 8h6"/>
   <path d="M17 16h6"/>
+</svg>`;
+
+const REFRESH_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M21 12a9 9 0 1 1-3.5-7.1"/>
+  <path d="M21 3v6h-6"/>
 </svg>`;
 
 /** Price-delta savings only — user consumption and time value stay out of ranking. */
@@ -347,6 +353,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       } else if (act === "settings") {
         settingsOpen = !settingsOpen;
         render();
+      } else if (act === "refresh") {
+        tEl.setAttribute("disabled", "true");
+        tEl.setAttribute("aria-busy", "true");
+        void refreshWebsite(browserRefreshDeps());
       } else if (act === "close-panel") {
         settingsOpen = false;
         render();
@@ -1204,6 +1214,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       <div class="header-body">
         <div class="topbar">
           <a class="logo" data-act="view" data-view="map" href="${pathFor("map", locale)}">${escapeHtml(t("app.name"))}</a>
+          <div class="topbar-tools">
+            <button type="button" class="icon-btn icon-tool icon-refresh" data-act="refresh" aria-label="${escapeHtml(t("action.refresh"))}">${REFRESH_ICON}</button>
+            <button type="button" class="icon-btn icon-tool icon-settings ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">${SETTINGS_ICON}</button>
+          </div>
           <div class="topbar-end">
             <div class="lang">
               <a data-act="locale" data-locale="lt" href="${escapeHtml(hrefFor(view, "lt", settings.fuel))}" hreflang="lt" class="${locale === "lt" ? "on" : ""}">LT</a>
@@ -1217,7 +1231,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
               ${DONATE_HEART}
               ${escapeHtml(t("action.donate"))}
             </a>
-            <button type="button" class="icon-btn icon-settings ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">${SETTINGS_ICON}</button>
           </div>
         </div>
         <div class="fuel-filter" role="group" aria-label="${escapeHtml(t("fuel.filter"))}">
