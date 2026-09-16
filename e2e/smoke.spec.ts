@@ -134,7 +134,11 @@ test("history chart scrolls left and right on a phone", async ({ page }) => {
   await expect
     .poll(async () => scroll.evaluate((el) => el.scrollWidth - el.clientWidth))
     .toBeGreaterThan(80);
+  await scroll.evaluate((el) => {
+    el.scrollLeft = 0;
+  });
   const startLeft = await scroll.evaluate((el) => el.scrollLeft);
+  expect(startLeft).toBe(0);
 
   const box = await scroll.boundingBox();
   expect(box).toBeTruthy();

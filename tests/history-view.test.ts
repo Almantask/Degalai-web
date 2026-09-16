@@ -74,8 +74,8 @@ describe("historyChartWidth", () => {
     expect(min).toBeGreaterThan(320);
   });
 
-  it("uses the viewport when it already fits every hour", () => {
-    expect(historyChartWidth(1600, 24)).toBe(1600);
+  it("uses the viewport when it already fits every sample", () => {
+    expect(historyChartWidth(1600, 9)).toBe(1600);
   });
 });
 

@@ -12,7 +12,7 @@ export { brandColor, chartBrands } from "./history-series.ts";
 export const HISTORY_HOUR_MIN_PX = 64;
 export const HISTORY_Y_AXIS_PX = 36;
 export const HISTORY_X_AXIS_PX = 40;
-export const HISTORY_X_PAD_PX = 8;
+export const HISTORY_X_PAD_PX = 36;
 
 export function providerSeries(
   file: HistoryFile | null,
@@ -115,7 +115,7 @@ export function mountHistoryChart(
     {
       width: size.width,
       height: size.height,
-      padding: [4, 6, 0, 0],
+      padding: [4, HISTORY_X_PAD_PX, 0, 0],
       cursor: {
         focus: { prox: 24 },
         show: scroll.clientWidth >= 480,
