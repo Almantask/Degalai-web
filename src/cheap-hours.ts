@@ -12,6 +12,38 @@ import {
 /** Hours within this many euros of the cheapest count as the same cheap window. */
 export const CHEAP_HOUR_EPS = 0.005;
 
+/** Dated timelines mark the cheapest samples in this trailing window, not the whole week. */
+export const CHEAP_WINDOW_HOURS = 24;
+
+/** Comparable Europe/Vilnius wall hours since a UTC epoch, for windowing samples. */
+export function sampleOrdinalHours(date: string | undefined, hour: number): number | null {
+  if (!Number.isFinite(hour)) return null;
+  if (!date) return hour;
+  const utc = Date.parse(`${date.slice(0, 10)}T00:00:00Z`);
+  if (!Number.isFinite(utc)) return hour;
+  return utc / 3_600_000 + hour;
+}
+
+/** Indices in the trailing window ending at the latest sample; `undefined` means the whole series. */
+export function indicesInLastHours(
+  series: HistoryHourSeries,
+  hours = CHEAP_WINDOW_HOURS,
+): number[] | undefined {
+  if (!series.dates?.length) return undefined;
+  const ords = series.hours.map((h, i) => sampleOrdinalHours(series.dates?.[i], h));
+  let max = -Infinity;
+  for (const o of ords) {
+    if (o != null && o > max) max = o;
+  }
+  if (!Number.isFinite(max)) return undefined;
+  const cutoff = max - hours;
+  const out: number[] = [];
+  ords.forEach((o, i) => {
+    if (o != null && o >= cutoff) out.push(i);
+  });
+  return out;
+}
+
 export function filterSeries(
   series: HistoryHourSeries,
   excluded: readonly string[] = [],
@@ -41,13 +73,18 @@ export function cheapestHourRanges(
   epsilon = CHEAP_HOUR_EPS,
 ): CheapHourRange[] {
   const avgs = hourAverages(series);
+  const windowIdx = indicesInLastHours(series);
+  const allowed = windowIdx ? new Set(windowIdx) : null;
   const cheapHours: number[] = [];
   let min = Infinity;
-  for (const price of avgs) {
+  for (let h = 0; h < avgs.length; h++) {
+    if (allowed && !allowed.has(h)) continue;
+    const price = avgs[h];
     if (price != null && price < min) min = price;
   }
   if (!Number.isFinite(min)) return [];
   for (let h = 0; h < avgs.length; h++) {
+    if (allowed && !allowed.has(h)) continue;
     const price = avgs[h];
     if (price != null && price <= min + epsilon) cheapHours.push(h);
   }
