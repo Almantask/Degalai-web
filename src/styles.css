@@ -776,7 +776,7 @@ body,
   pointer-events: none;
   z-index: 2;
   background: rgb(255 255 255 / 94%);
-  max-height: calc(100% - 26px);
+  max-height: calc(100% - 40px);
 }
 
 #history-legend {

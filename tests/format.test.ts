@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { escapeHtml, formatDateTime, shortAddress } from "../src/format.ts";
+import { escapeHtml, formatChartDate, formatDateTime, shortAddress } from "../src/format.ts";
 import { setLocale } from "../src/i18n/index.ts";
 
 describe("escapeHtml", () => {
@@ -27,5 +27,14 @@ describe("formatDateTime", () => {
     expect(formatDateTime("2026-09-12T19:09:22.245Z")).toMatch(/12 Sept 2026.*22:09/);
     setLocale("lt");
     expect(formatDateTime("2026-09-12T19:09:22.245Z")).toContain("22:09");
+  });
+});
+
+describe("formatChartDate", () => {
+  it("formats a calendar day without shifting the date", () => {
+    setLocale("en");
+    expect(formatChartDate("2026-09-15")).toMatch(/15/);
+    setLocale("lt");
+    expect(formatChartDate("2026-09-15")).toMatch(/15/);
   });
 });

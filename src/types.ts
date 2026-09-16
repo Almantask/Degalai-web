@@ -39,15 +39,21 @@ export interface HistorySample {
 }
 
 export interface HistoryHourSeries {
+  /** Calendar dates (`YYYY-MM-DD`, Europe/Vilnius) aligned with `hours` and brand values. */
+  dates?: string[];
+  /** Hour of day in Europe/Vilnius for each sample (not a 24-hour clock profile). */
   hours: number[];
   brands: Record<string, Array<number | null>>;
 }
 
 export interface CheapHourRange {
-  /** Inclusive hour 0–23. May be greater than `end` when the range wraps midnight. */
+  /** Inclusive sample index on the chart x-axis. May wrap midnight on a 24-hour profile. */
   start: number;
   end: number;
   price: number;
+  /** Inclusive Europe/Vilnius wall times (`YYYY-MM-DDTHH:mm`). */
+  from?: string;
+  to?: string;
 }
 
 export interface HistoryFile {

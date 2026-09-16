@@ -85,7 +85,7 @@ test("settings button stays inside the header when switching language", async ({
   await expectSettingsInsideHeader(page);
 });
 
-test("history button opens provider averages by hour", async ({ page }) => {
+test("history button opens provider averages by date and time", async ({ page }) => {
   const historyUrls: string[] = [];
   const priceUrls: string[] = [];
   page.on("request", (req) => {
@@ -101,7 +101,7 @@ test("history button opens provider averages by hour", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Istorinės kainos" })).toBeVisible();
   await expect(page.locator(".history-caption")).toContainText(/Tiekėjų vidutinės kainos/);
   await expect(page.locator(".history-cheap")).toContainText(/Pigiausia/);
-  await expect(page.locator(".history-cheap")).toContainText(/\d{2}:\d{2}/);
+  await expect(page.locator(".history-cheap")).toContainText(/09-\d{2} \d{2}:\d{2}/);
   await expect.poll(() => historyUrls.length).toBe(1);
   await expect(page.locator("#history-chart .uplot")).toBeVisible();
   expect(priceUrls).toHaveLength(1);
@@ -432,7 +432,7 @@ test("station list shows last checked time", async ({ page }) => {
   await expect(page.locator(".list-updated")).toContainText(/\d{1,2}:\d{2}/);
   await expect(page.locator(".list-source")).toHaveText("LEA (Lietuvos energetikos agentūra)");
   await expect(page.locator(".list-cheap-hour")).toContainText(/Pigiausia/);
-  await expect(page.locator(".list-cheap-hour")).toContainText(/\d{2}:\d{2}/);
+  await expect(page.locator(".list-cheap-hour")).toContainText(/09-\d{2} \d{2}:\d{2}/);
   await expect(page.locator(".list-meta")).toBeVisible();
   const metaLines = await page.locator(".list-meta").evaluate((el) => {
     const lineHeight = Number.parseFloat(getComputedStyle(el).lineHeight);

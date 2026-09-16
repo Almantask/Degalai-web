@@ -61,6 +61,16 @@ export function formatDate(isoDate: string): string {
   }).format(d);
 }
 
+/** Compact calendar day for chart ticks; `YYYY-MM-DD` is shown as-is in Vilnius. */
+export function formatChartDate(isoDate: string): string {
+  const day = isoDate.slice(0, 10);
+  return new Intl.DateTimeFormat(intlLocale(), {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  }).format(new Date(`${day}T12:00:00Z`));
+}
+
 export function formatDateTime(iso: string): string {
   return new Intl.DateTimeFormat(intlLocale(), {
     dateStyle: "medium",

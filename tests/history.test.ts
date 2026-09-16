@@ -129,15 +129,16 @@ describe("mergeSamples", () => {
 });
 
 describe("rollupHourAverages", () => {
-  it("averages providers into a 24-hour profile", () => {
+  it("keeps each snapshot as a dated point instead of averaging the same hour", () => {
     const samples: HistorySample[] = [
       { at: "2026-09-13T05:00:00Z", hour: 8, byFuel: { D: { neste: 1.5, viada: 1.4 } } },
       { at: "2026-09-14T05:00:00Z", hour: 8, byFuel: { D: { neste: 1.7, viada: 1.4 } } },
     ];
     const rolled = rollupHourAverages(samples).D!;
-    expect(rolled.brands.neste[8]).toBe(1.6);
-    expect(rolled.brands.viada[8]).toBe(1.4);
-    expect(rolled.brands.neste[9]).toBeNull();
+    expect(rolled.dates).toEqual(["2026-09-13", "2026-09-14"]);
+    expect(rolled.hours).toEqual([8, 8]);
+    expect(rolled.brands.neste).toEqual([1.5, 1.7]);
+    expect(rolled.brands.viada).toEqual([1.4, 1.4]);
   });
 });
 
@@ -147,12 +148,14 @@ describe("compactHistoryForClient", () => {
       generatedAt: "2026-09-14T12:00:00Z",
       keepDays: 7,
       samples: [{ at: "2026-09-14T08:00:00.000Z", hour: 8, byFuel: { D: { neste: 1.6 } } }],
-      byFuel: { D: { hours: [8], brands: { neste: [1.6] } } },
+      byFuel: {
+        D: { dates: ["2026-09-14"], hours: [8], brands: { neste: [1.6] } },
+      },
     });
     expect(compact).toEqual({
       generatedAt: "2026-09-14T12:00:00Z",
       keepDays: 7,
-      byFuel: { D: { hours: [8], brands: { neste: [1.6] } } },
+      byFuel: { D: { dates: ["2026-09-14"], hours: [8], brands: { neste: [1.6] } } },
     });
     expect("samples" in compact).toBe(false);
   });
