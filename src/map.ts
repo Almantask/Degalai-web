@@ -307,10 +307,11 @@ export function setStationData(
 ): void {
   const src = map.getSource(SOURCE) as maplibregl.GeoJSONSource | undefined;
   if (!src) return;
+  const excluded = new Set(settings.excludedBrands);
   const priced = stations
     .map((s) => ({ s, price: prices?.prices[s.id]?.[fuel]?.price }))
     .filter(({ s, price }) => {
-      if (settings.excludedBrands.includes(s.brand)) return false;
+      if (excluded.has(s.brand)) return false;
       if (price == null && settings.hideUnpriced) return false;
       if (price == null && !s.fuels.includes(fuel)) return false;
       return true;
@@ -485,11 +486,17 @@ export function stationPopupHtml(
   </div>`;
 }
 
-function percentile(sorted: number[], value: number): number {
+/** Rank of `value` in ascending `sorted`: index of the first entry ≥ value, scaled to 0–1. */
+export function percentile(sorted: number[], value: number): number {
   if (sorted.length === 1) return 0.5;
-  let i = 0;
-  while (i < sorted.length && sorted[i] < value) i++;
-  return i / (sorted.length - 1);
+  let lo = 0;
+  let hi = sorted.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (sorted[mid] < value) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo / (sorted.length - 1);
 }
 
 function emptyFc(): { type: "FeatureCollection"; features: [] } {

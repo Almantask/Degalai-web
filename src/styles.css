@@ -486,6 +486,12 @@ body,
   gap: 6px;
 }
 
+/* Country zoom lists hundreds of rows; skip layout and paint for the ones scrolled away. */
+.station-list > li {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 72px;
+}
+
 .station-row {
   display: flex;
   gap: 12px;

@@ -124,6 +124,8 @@ interface RouteStationRow {
 type DestStatus = "idle" | "locating" | "routing" | "denied" | "not-found";
 
 export async function startApp(root: HTMLElement): Promise<void> {
+  // Fetch data alongside the map style and tiles instead of before them.
+  const dataPromise = loadAppData();
   const settings = loadSettings();
   const parsed = parsePath();
   let locale: Locale = parsed.locale;
@@ -132,7 +134,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   if (urlFuel) settings.fuel = urlFuel;
 
   let view: View = parsed.view;
-  const data: AppData = await loadAppData();
   let userLocation: LngLat | null = null;
   let pickMode: "dest-start" | null = null;
   let settingsOpen = false;
@@ -162,6 +163,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let endMarker: maplibregl.Marker | null = null;
   let installDismissed = loadInstallDismissed();
   let installPrompt: { prompt: () => Promise<void> } | null = null;
+  let listHtml = "";
+  let includedCache: { excluded: string[]; stations: Station[] } | null = null;
 
   const standalone = isStandalone(
     (q) => window.matchMedia(q).matches,
@@ -171,16 +174,22 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   root.innerHTML = shellHtml();
   const mapDiv = root.querySelector<HTMLElement>("#map")!;
+  let dataReady = false;
   const map = createMap(
     mapDiv,
     {
       onStationClick: (id) => openStation(id),
-      onMapClick: (ll) => handleMapPick(ll),
+      onMapClick: (ll) => {
+        if (dataReady) handleMapPick(ll);
+      },
     },
     settings.highAccuracyLocation,
   );
+  const mapLoaded = new Promise<void>((resolve) => map.once("load", () => resolve()));
 
-  map.on("load", () => {
+  const data: AppData = await dataPromise;
+  dataReady = true;
+  void mapLoaded.then(() => {
     refreshMap();
     render();
   });
@@ -553,8 +562,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
     navigate(view, locale, settings.fuel, true);
   }
 
+  /** Brand filter is replaced, never mutated, so the array identity keys the cache. */
   function includedStations(): Station[] {
-    return data.stations.filter((s) => isBrandIncluded(s.brand, settings.excludedBrands));
+    if (includedCache?.excluded !== settings.excludedBrands) {
+      includedCache = {
+        excluded: settings.excludedBrands,
+        stations: data.stations.filter((s) => isBrandIncluded(s.brand, settings.excludedBrands)),
+      };
+    }
+    return includedCache.stations;
   }
 
   function applyBrandFilter(): void {
@@ -1034,48 +1050,56 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function renderList(): void {
     const list = root.querySelector("#list")!;
+    const setList = (html: string): void => {
+      // Map moves often leave the list unchanged; skip reparsing hundreds of rows.
+      if (html === listHtml && list.childElementCount) return;
+      listHtml = html;
+      list.innerHTML = html;
+    };
     if (routeLine && routeRows.length) {
       const { cheapestOn, cheapestOverall, ordered } = orderRouteRows(routeRows);
-      list.innerHTML = listWrap(
-        ordered.map((r, i) => {
-          const isCheapestOn = cheapestOn?.station.id === r.station.id;
-          const isCheapestOverall = cheapestOverall?.station.id === r.station.id;
-          const detourWorth = r.benefit.netBenefit > 0 ? t("route.worth") : t("route.notWorth");
-          const badges = [
-            isCheapestOn
-              ? `<span class="badge">${escapeHtml(t("route.cheapestBadge"))}</span>`
-              : "",
-            isCheapestOverall
-              ? `<span class="badge">${escapeHtml(t("route.cheapestOverall"))}</span>`
-              : "",
-            !isCheapestOn && r.kind === "on"
-              ? `<span class="badge muted">${escapeHtml(t("route.onTheWay"))}</span>`
-              : "",
-            !isCheapestOverall && r.kind === "detour"
-              ? `<span class="badge">${escapeHtml(detourWorth)}</span>`
-              : "",
-          ].join("");
-          const extra =
-            r.kind === "detour"
-              ? t("route.extra", {
-                  km: r.extraKm.toFixed(1),
-                  save: formatMoney(r.benefit.netBenefit),
-                })
-              : "";
-          const pinned = isCheapestOn || isCheapestOverall;
-          const rowClass = [
-            pinned && i < 2 ? "is-pick" : "",
-            r.kind === "on" ? "is-on-route" : "is-detour",
-          ]
-            .filter(Boolean)
-            .join(" ");
-          return stationRow(r.station, r.price, r.distFromStartKm, extra, rowClass, badges);
-        }),
+      setList(
+        listWrap(
+          ordered.map((r, i) => {
+            const isCheapestOn = cheapestOn?.station.id === r.station.id;
+            const isCheapestOverall = cheapestOverall?.station.id === r.station.id;
+            const detourWorth = r.benefit.netBenefit > 0 ? t("route.worth") : t("route.notWorth");
+            const badges = [
+              isCheapestOn
+                ? `<span class="badge">${escapeHtml(t("route.cheapestBadge"))}</span>`
+                : "",
+              isCheapestOverall
+                ? `<span class="badge">${escapeHtml(t("route.cheapestOverall"))}</span>`
+                : "",
+              !isCheapestOn && r.kind === "on"
+                ? `<span class="badge muted">${escapeHtml(t("route.onTheWay"))}</span>`
+                : "",
+              !isCheapestOverall && r.kind === "detour"
+                ? `<span class="badge">${escapeHtml(detourWorth)}</span>`
+                : "",
+            ].join("");
+            const extra =
+              r.kind === "detour"
+                ? t("route.extra", {
+                    km: r.extraKm.toFixed(1),
+                    save: formatMoney(r.benefit.netBenefit),
+                  })
+                : "";
+            const pinned = isCheapestOn || isCheapestOverall;
+            const rowClass = [
+              pinned && i < 2 ? "is-pick" : "",
+              r.kind === "on" ? "is-on-route" : "is-detour",
+            ]
+              .filter(Boolean)
+              .join(" ");
+            return stationRow(r.station, r.price, r.distFromStartKm, extra, rowClass, badges);
+          }),
+        ),
       );
       return;
     }
     if (routeLine && endHit && routeRows.length === 0) {
-      list.innerHTML = listWrap([], t("route.noStations"));
+      setList(listWrap([], t("route.noStations")));
       return;
     }
     const priced = stationsInView(map, includedStations())
@@ -1086,20 +1110,22 @@ export async function startApp(root: HTMLElement): Promise<void> {
       .filter((r): r is { s: Station; price: number } => r.price != null)
       .sort((a, b) => a.price - b.price || a.s.id.localeCompare(b.s.id));
     if (priced.length === 0) {
-      list.innerHTML = listWrap([], t("list.empty"));
+      setList(listWrap([], t("list.empty")));
       return;
     }
     const last = priced.length - 1;
-    list.innerHTML = listWrap(
-      priced.map((r, i) => {
-        const badges = [
-          i === 0 ? `<span class="badge">${escapeHtml(t("list.cheapest"))}</span>` : "",
-          i === last && last > 0
-            ? `<span class="badge muted">${escapeHtml(t("list.expensive"))}</span>`
-            : "",
-        ].join("");
-        return stationRow(r.s, r.price, undefined, "", i === 0 ? "is-pick" : "", badges);
-      }),
+    setList(
+      listWrap(
+        priced.map((r, i) => {
+          const badges = [
+            i === 0 ? `<span class="badge">${escapeHtml(t("list.cheapest"))}</span>` : "",
+            i === last && last > 0
+              ? `<span class="badge muted">${escapeHtml(t("list.expensive"))}</span>`
+              : "",
+          ].join("");
+          return stationRow(r.s, r.price, undefined, "", i === 0 ? "is-pick" : "", badges);
+        }),
+      ),
     );
   }
 

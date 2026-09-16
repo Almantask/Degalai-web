@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { setLocale } from "../src/i18n/index.ts";
 import {
   overlayPadding,
+  percentile,
   stationPopupHtml,
   stationsForRouteMap,
   stationsInView,
@@ -144,5 +145,23 @@ describe("stationPopupHtml", () => {
     expect(html).toContain("12 km");
     expect(html).not.toContain("max speed");
     expect(html).not.toContain("min");
+  });
+});
+
+describe("percentile", () => {
+  it("matches a linear scan for the first entry at or above the value", () => {
+    const linear = (sorted: number[], value: number): number => {
+      if (sorted.length === 1) return 0.5;
+      let i = 0;
+      while (i < sorted.length && sorted[i] < value) i++;
+      return i / (sorted.length - 1);
+    };
+    const sorted = [1.699, 1.749, 1.749, 1.749, 1.799, 1.899, 1.899];
+    for (const v of [1.5, 1.699, 1.72, 1.749, 1.799, 1.85, 1.899, 2]) {
+      expect(percentile(sorted, v)).toBe(linear(sorted, v));
+    }
+    expect(percentile([1.8], 1.8)).toBe(0.5);
+    expect(percentile([1.7, 1.9], 1.7)).toBe(0);
+    expect(percentile([1.7, 1.9], 1.9)).toBe(1);
   });
 });

@@ -11,7 +11,8 @@ import {
 import { join, relative, resolve } from "node:path";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
-import { includePublishedDataFile } from "./scripts/publish-data.ts";
+import { includePublishedDataFile, slimPrices, slimStations } from "./scripts/publish-data.ts";
+import type { DailyPrices, Station } from "./src/types.ts";
 
 const base = process.env.BASE_URL ?? "/";
 
@@ -69,6 +70,10 @@ export default defineConfig({
             // Keep the copied file if it is not JSON.
           }
         }
+        rewriteJson<Station[]>(join(dist, "data/stations.json"), slimStations);
+        if (latestPrice) {
+          rewriteJson<DailyPrices>(join(dist, `data/prices/${latestPrice}.json`), slimPrices);
+        }
         const indexPath = join(dist, "index.html");
         if (!existsSync(indexPath)) return;
         const index = readFileSync(indexPath, "utf8");
@@ -124,3 +129,14 @@ export default defineConfig({
     alias: { "@": resolve("src") },
   },
 });
+
+/** Rewrites a published JSON file minified; leaves it as copied if it is missing or not JSON. */
+function rewriteJson<T>(path: string, transform: (value: T) => unknown): void {
+  if (!existsSync(path)) return;
+  try {
+    const value = JSON.parse(readFileSync(path, "utf8")) as T;
+    writeFileSync(path, `${JSON.stringify(transform(value))}\n`);
+  } catch {
+    // Keep the copied file if it is not JSON.
+  }
+}

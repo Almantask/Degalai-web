@@ -151,7 +151,7 @@ export function matchByAddress(stations: Station[], sample: Observation): Statio
   let best: Station | undefined;
   let bestScore = 0.45;
   for (const s of stations) {
-    const score = jaccard(key, tokens(`${s.city ?? ""} ${s.address ?? ""} ${s.name}`));
+    const score = jaccard(key, stationTokens(s));
     const brandOk = brand === "independent" || s.brand === brand || score >= 0.7;
     if (!brandOk) continue;
     if (score > bestScore) {
@@ -160,4 +160,17 @@ export function matchByAddress(stations: Station[], sample: Observation): Statio
     }
   }
   return best;
+}
+
+const stationTokenCache = new Map<string, Set<string>>();
+
+/** Station tokens are the same for every observation, so tokenize each station text once. */
+function stationTokens(s: Station): Set<string> {
+  const text = `${s.city ?? ""} ${s.address ?? ""} ${s.name}`;
+  let cached = stationTokenCache.get(text);
+  if (!cached) {
+    cached = tokens(text);
+    stationTokenCache.set(text, cached);
+  }
+  return cached;
 }

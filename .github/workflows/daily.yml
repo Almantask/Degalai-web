@@ -56,7 +56,8 @@ jobs:
             data
             reports
           key: pipeline-state-${{ github.run_id }}-${{ github.run_attempt }}
-      - run: npm run build
+      # Type checking runs in ci.yml on every push and PR; the hourly data build skips it.
+      - run: npx vite build
         env:
           BASE_URL: /Degalai-web/
       - uses: actions/upload-pages-artifact@v3
