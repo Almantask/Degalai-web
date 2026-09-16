@@ -134,16 +134,20 @@ test("history chart scrolls left and right on a phone", async ({ page }) => {
   await expect
     .poll(async () => scroll.evaluate((el) => el.scrollWidth - el.clientWidth))
     .toBeGreaterThan(80);
-  expect(await scroll.evaluate((el) => el.scrollLeft)).toBe(0);
+  const startLeft = await scroll.evaluate((el) => el.scrollLeft);
 
   const box = await scroll.boundingBox();
   expect(box).toBeTruthy();
   await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
   await page.mouse.wheel(180, 0);
-  await expect.poll(async () => scroll.evaluate((el) => el.scrollLeft)).toBeGreaterThan(40);
+  await expect
+    .poll(async () => scroll.evaluate((el) => el.scrollLeft))
+    .toBeGreaterThan(startLeft + 40);
 
-  await page.mouse.wheel(-180, 0);
-  await expect.poll(async () => scroll.evaluate((el) => el.scrollLeft)).toBeLessThan(40);
+  await page.mouse.wheel(-240, 0);
+  await expect
+    .poll(async () => scroll.evaluate((el) => el.scrollLeft))
+    .toBeLessThan(startLeft + 20);
   await expectHistoryFitsScreen(page);
 });
 

@@ -42,6 +42,28 @@ export function historyChartWheelDelta(deltaX: number, deltaY: number, shiftKey:
   return shiftKey ? deltaY : 0;
 }
 
+export function historyChartInitialHour(
+  hours: number[],
+  valuesByBrand: Array<Array<number | null>>,
+  cheapStart?: number,
+): number {
+  if (cheapStart != null && Number.isFinite(cheapStart)) return cheapStart;
+  for (let i = 0; i < hours.length; i++) {
+    if (valuesByBrand.some((vals) => vals[i] != null)) return hours[i] ?? i;
+  }
+  return hours[0] ?? 0;
+}
+
+export function historyChartScrollLeft(
+  viewportWidth: number,
+  plotWidth: number,
+  hour: number,
+): number {
+  const max = Math.max(0, plotWidth - viewportWidth);
+  if (max <= 0) return 0;
+  return Math.max(0, Math.min(max, Math.max(0, hour) * HISTORY_HOUR_MIN_PX));
+}
+
 export type HistoryPlot = {
   destroy: () => void;
   setHidden: (hidden: ReadonlySet<string>) => void;
@@ -74,6 +96,11 @@ export function mountHistoryChart(
   el.append(scroll, yAxis);
 
   const size = chartSize(scroll, hours.length);
+  const initialHour = historyChartInitialHour(
+    hours,
+    brands.map((b) => b.values),
+    cheapRanges[0]?.start,
+  );
   const plot = new uPlot(
     {
       width: size.width,
@@ -137,10 +164,15 @@ export function mountHistoryChart(
     plotEl,
   );
 
+  let didInitScroll = false;
   const applySize = (): void => {
     const next = chartSize(scroll, hours.length);
     if (next.width !== plot.width || next.height !== plot.height) {
       plot.setSize({ width: next.width, height: next.height });
+    }
+    if (!didInitScroll && scroll.clientWidth > 0) {
+      didInitScroll = true;
+      scroll.scrollLeft = historyChartScrollLeft(scroll.clientWidth, next.width, initialHour);
     }
   };
 
