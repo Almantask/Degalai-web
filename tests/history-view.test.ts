@@ -4,6 +4,8 @@ import { formatChartDate } from "../src/format.ts";
 import {
   HISTORY_HOUR_MIN_PX,
   HISTORY_X_PAD_PX,
+  HISTORY_CHART_MIN_PX,
+  HISTORY_X_AXIS_PX,
   HISTORY_Y_AXIS_PX,
   brandColor,
   historyChartInitialHour,
@@ -11,6 +13,7 @@ import {
   historyChartWheelDelta,
   historyChartWidth,
   historyTickLabel,
+  historyXAxisSize,
   hourTickLabel,
   providerSeries,
 } from "../src/history-view.ts";
@@ -64,6 +67,16 @@ describe("historyTickLabel", () => {
     setLocale("en");
     expect(historyTickLabel("2026-09-15", 7)).toBe(`07:00\n${formatChartDate("2026-09-15")}`);
     expect(historyTickLabel(undefined, 9)).toBe("09:00");
+  });
+});
+
+describe("historyXAxisSize", () => {
+  it("leaves room for both tick lines, descenders and an overlay scrollbar", () => {
+    // uPlot draws a tick, a gap, then 12px lines; the date line would clip at the old 40px.
+    expect(HISTORY_X_AXIS_PX).toBe(historyXAxisSize(2));
+    expect(HISTORY_X_AXIS_PX).toBeGreaterThanOrEqual(4 + 4 + 12 * 1.25 + 12 + 10);
+    expect(historyXAxisSize(2)).toBeGreaterThan(historyXAxisSize(1));
+    expect(HISTORY_CHART_MIN_PX).toBeGreaterThan(HISTORY_X_AXIS_PX + 40);
   });
 });
 

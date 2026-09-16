@@ -11,8 +11,24 @@ export { brandColor, chartBrands } from "./history-series.ts";
 /** CSS pixels per sample so date+time labels stay readable and the chart can scroll. */
 export const HISTORY_HOUR_MIN_PX = 64;
 export const HISTORY_Y_AXIS_PX = 36;
-export const HISTORY_X_AXIS_PX = 40;
 export const HISTORY_X_PAD_PX = 36;
+const HISTORY_X_TICK_PX = 4;
+const HISTORY_X_GAP_PX = 4;
+/** uPlot's default axis font size. */
+const HISTORY_AXIS_FONT_PX = 12;
+const HISTORY_AXIS_LINE_GAP = 1.25;
+/** Room for glyph descenders plus a phone's overlay scrollbar under the tick labels. */
+const HISTORY_X_BOTTOM_PX = 12;
+
+/** Height that fits `lines` of tick text so the date line is never clipped or covered. */
+export function historyXAxisSize(lines: number): number {
+  const text = HISTORY_AXIS_FONT_PX * (1 + HISTORY_AXIS_LINE_GAP * Math.max(0, lines - 1));
+  return Math.ceil(HISTORY_X_TICK_PX + HISTORY_X_GAP_PX + text + HISTORY_X_BOTTOM_PX);
+}
+
+export const HISTORY_X_AXIS_PX = historyXAxisSize(2);
+/** Smallest chart that still shows a readable plot above the two-line date/time ticks. */
+export const HISTORY_CHART_MIN_PX = HISTORY_X_AXIS_PX + 64;
 
 export function providerSeries(
   file: HistoryFile | null,
@@ -104,6 +120,10 @@ export function mountHistoryChart(
   yAxis.className = "history-chart-yaxis";
   yAxis.setAttribute("aria-hidden", "true");
   el.append(scroll, yAxis);
+  // Layout CSS around the chart (legend, pinned €/l axis) needs the same sizes.
+  const rootStyle = document.documentElement.style;
+  rootStyle.setProperty("--history-x-axis", `${HISTORY_X_AXIS_PX}px`);
+  rootStyle.setProperty("--history-chart-min", `${HISTORY_CHART_MIN_PX}px`);
 
   const size = chartSize(scroll, xs.length);
   const initialHour = historyChartInitialHour(
@@ -127,6 +147,9 @@ export function mountHistoryChart(
         {
           stroke: "#5c6f64",
           size: HISTORY_X_AXIS_PX,
+          ticks: { size: HISTORY_X_TICK_PX },
+          gap: HISTORY_X_GAP_PX,
+          lineGap: HISTORY_AXIS_LINE_GAP,
           grid: { stroke: "rgb(16 32 24 / 8%)" },
           values: (_u, vals) =>
             vals.map((v) => {
@@ -230,7 +253,7 @@ function chartSize(viewport: HTMLElement, hourCount: number): { width: number; h
   const viewportWidth = Math.max(120, Math.floor(viewport.clientWidth) || 280);
   const width = historyChartWidth(viewportWidth, hourCount);
   const available = Math.floor(viewport.clientHeight);
-  const height = Math.max(72, available || (viewportWidth < 520 ? 140 : 180));
+  const height = Math.max(HISTORY_CHART_MIN_PX, available || (viewportWidth < 520 ? 140 : 180));
   return { width, height };
 }
 

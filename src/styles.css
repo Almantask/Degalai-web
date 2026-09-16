@@ -715,8 +715,10 @@ body,
 }
 
 .history-chart-stack {
+  --history-legend-row: 1.75rem;
   flex: 1 1 auto;
-  min-height: 120px;
+  /* Chart plus one row of provider chips; shorter screens scroll the panel body instead. */
+  min-height: calc(var(--history-chart-min, 111px) + 6px + var(--history-legend-row));
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -725,7 +727,8 @@ body,
 
 #history-chart {
   flex: 1 1 auto;
-  min-height: 0;
+  /* Never shorter than the plot: a squeezed chart clips the date line into the legend. */
+  min-height: var(--history-chart-min, 111px);
   width: 100%;
   position: relative;
   overflow: hidden;
@@ -736,7 +739,7 @@ body,
 
 .history-chart-scroll {
   flex: 1 1 auto;
-  min-height: 0;
+  min-height: var(--history-chart-min, 111px);
   width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
@@ -768,7 +771,7 @@ body,
 .history-chart-plot {
   height: 100%;
   width: max-content;
-  min-height: 72px;
+  min-height: var(--history-chart-min, 111px);
   background: #fff;
 }
 
@@ -784,13 +787,13 @@ body,
   pointer-events: none;
   z-index: 2;
   background: #fff;
-  max-height: calc(100% - 40px);
+  max-height: calc(100% - var(--history-x-axis, 47px));
 }
 
 #history-legend {
   flex: 0 1 auto;
   max-height: 5.5rem;
-  min-height: 0;
+  min-height: var(--history-legend-row);
   overflow: auto;
   overscroll-behavior: contain;
 }
@@ -1199,10 +1202,6 @@ body,
 
   .history-cheap {
     display: none;
-  }
-
-  .history-chart-stack {
-    min-height: 96px;
   }
 
   #history-legend {
