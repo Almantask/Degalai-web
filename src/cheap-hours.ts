@@ -1,4 +1,5 @@
 import { round3 } from "./calc.ts";
+import { formatChartDate } from "./format.ts";
 import { getLocale } from "./i18n/index.ts";
 import {
   FUEL_TYPES,
@@ -18,15 +19,16 @@ export function filterSeries(
   if (excluded.length === 0) return series;
   const skip = new Set(excluded);
   const brands = Object.fromEntries(Object.entries(series.brands).filter(([id]) => !skip.has(id)));
-  return { hours: series.hours, brands };
+  return { dates: series.dates, hours: series.hours, brands };
 }
 
 export function hourAverages(series: HistoryHourSeries): Array<number | null> {
-  const hours = series.hours.length ? series.hours : [...Array(24).keys()];
-  return hours.map((h) => {
+  const n =
+    series.hours.length || series.dates?.length || Object.values(series.brands)[0]?.length || 0;
+  return Array.from({ length: n }, (_, i) => {
     const vals: number[] = [];
     for (const row of Object.values(series.brands)) {
-      const v = row[h];
+      const v = row[i];
       if (v != null) vals.push(v);
     }
     if (vals.length === 0) return null;
@@ -54,15 +56,23 @@ export function cheapestHourRanges(
   const groups: CheapHourRange[] = [];
   for (const h of cheapHours) {
     const last = groups.at(-1);
+    const at = sampleWallTime(series, h);
     if (last && h === last.end + 1) {
       last.end = h;
       last.price = Math.min(last.price, avgs[h]!);
+      if (at) last.to = at;
     } else {
-      groups.push({ start: h, end: h, price: avgs[h]! });
+      groups.push({
+        start: h,
+        end: h,
+        price: avgs[h]!,
+        ...(at ? { from: at, to: at } : {}),
+      });
     }
   }
 
-  if (groups.length >= 2) {
+  // A 24-hour clock profile can wrap midnight; a dated timeline cannot.
+  if (!series.dates?.length && groups.length >= 2) {
     const first = groups[0];
     const last = groups.at(-1)!;
     if (first.start === 0 && last.end === avgs.length - 1) {
@@ -72,6 +82,7 @@ export function cheapestHourRanges(
         start: last.start,
         end: first.end,
         price: Math.min(first.price, last.price),
+        ...(last.from && first.to ? { from: last.from, to: first.to } : {}),
       });
     }
   }
@@ -88,8 +99,32 @@ export function formatHourSpan(start: number, end: number): string {
   return `${formatHourClock(start)}–${formatHourClock(end)}`;
 }
 
+/** `YYYY-MM-DDTHH:mm` in Europe/Vilnius wall time, or a time-only `THH:mm`. */
+export function formatCheapInstant(isoLocal: string): string {
+  const m = isoLocal.match(/^(?:(\d{4}-\d{2}-\d{2}))?T(\d{2}:\d{2})/);
+  if (!m) return isoLocal;
+  const time = m[2];
+  return m[1] ? `${formatChartDate(m[1])} ${time}` : time;
+}
+
+export function formatCheapRange(range: CheapHourRange): string {
+  if (range.from) {
+    const to = range.to ?? range.from;
+    if (to === range.from) return formatCheapInstant(range.from);
+    const fromDay = range.from.slice(0, 10);
+    const toDay = to.slice(0, 10);
+    const fromTime = range.from.slice(11, 16);
+    const toTime = to.slice(11, 16);
+    if (fromDay.length === 10 && fromDay === toDay) {
+      return `${formatChartDate(fromDay)} ${fromTime}–${toTime}`;
+    }
+    return `${formatCheapInstant(range.from)}–${formatCheapInstant(to)}`;
+  }
+  return formatHourSpan(range.start, range.end);
+}
+
 export function formatCheapRanges(ranges: CheapHourRange[]): string {
-  const parts = ranges.map((r) => formatHourSpan(r.start, r.end));
+  const parts = ranges.map((r) => formatCheapRange(r));
   if (parts.length === 0) return "";
   if (parts.length === 1) return parts[0];
   const sep = getLocale() === "lt" ? " ir " : " and ";
@@ -109,4 +144,12 @@ export function cheapestHoursByFuel(
     if (ranges.length) out[fuel] = ranges;
   }
   return out;
+}
+
+function sampleWallTime(series: HistoryHourSeries, index: number): string | undefined {
+  const hour = series.hours[index];
+  if (hour == null || !Number.isFinite(hour)) return undefined;
+  const time = formatHourClock(hour);
+  const date = series.dates?.[index];
+  return date ? `${date}T${time}` : `T${time}`;
 }

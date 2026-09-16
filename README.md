@@ -23,10 +23,10 @@ add it.
 
 ![Route from Vilnius to Kaunas with on-the-way stations](docs/screenshots/route.png)
 
-**History** shows each brand’s average price by hour of day, using the last
-seven days of snapshots.
+**History** shows each brand’s average price over the last seven days, with
+date and time on the timeline.
 
-![Provider average prices by hour of day](docs/screenshots/history.png)
+![Provider average prices by date and time](docs/screenshots/history.png)
 
 On a phone the search bar and station list are bottom sheets you can drag or
 minimise for a full map.
@@ -45,8 +45,9 @@ minimise for a full map.
   draw via-paths through the five cheapest stops.
 - Tap a station for name, brand, address, and 95 / diesel / LPG prices. Search
   and the list collapse so the map can fit the route or the pin.
-- Open **History** (`/istorija`, `/en/history`) for provider averages by time of
-  day. That file loads only when you open the page, so the map stays light.
+- Open **History** (`/istorija`, `/en/history`) for provider averages over the
+  last seven days. That file loads only when you open the page, so the map stays
+  light.
 - Switch LT / EN in the header. **Donate** goes to
   [almantask.github.io/donate-me](https://almantask.github.io/donate-me/).
 - Install it as a PWA. Offline, the last known prices still show.
@@ -74,7 +75,7 @@ older daily files.
 | ------------------------------ | ---------------------------------- |
 | `data/stations.json`           | OSM stations + unmatched LEA sites |
 | `data/prices/YYYY-MM-DD.json`  | Daily snapshot (kept 7 days)       |
-| `data/history.json`            | Provider averages by hour of day   |
+| `data/history.json`            | Provider averages by date and time |
 | `data/overrides/stations.json` | Manual OSM ↔ source matches        |
 | `reports/unmatched.json`       | Source rows that still need a home |
 

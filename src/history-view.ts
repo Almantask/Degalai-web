@@ -1,23 +1,25 @@
 import uPlot from "uplot";
 import "uplot/dist/uPlot.min.css";
 import type { CheapHourRange, FuelType, HistoryFile, HistoryHourSeries } from "./types.ts";
-import { formatPrice } from "./format.ts";
+import { formatChartDate, formatPrice } from "./format.ts";
 import { brandColor, chartBrands, isHistoryBrandOn } from "./history-series.ts";
+import { formatHourClock } from "./cheap-hours.ts";
 import { brandLabel, t } from "./i18n/index.ts";
 
 export { brandColor, chartBrands } from "./history-series.ts";
 
-/** CSS pixels per hour so 24h labels stay readable and the chart can scroll. */
-export const HISTORY_HOUR_MIN_PX = 48;
+/** CSS pixels per sample so date+time labels stay readable and the chart can scroll. */
+export const HISTORY_HOUR_MIN_PX = 64;
 export const HISTORY_Y_AXIS_PX = 36;
-export const HISTORY_X_PAD_PX = 8;
+export const HISTORY_X_AXIS_PX = 40;
+export const HISTORY_X_PAD_PX = 36;
 
 export function providerSeries(
   file: HistoryFile | null,
   fuel: FuelType,
 ): { hours: number[]; brands: Array<{ id: string; values: Array<number | null> }> } {
   const series = file?.byFuel[fuel];
-  if (!series) return { hours: [...Array(24).keys()], brands: [] };
+  if (!series) return { hours: [], brands: [] };
   return {
     hours: series.hours,
     brands: Object.entries(series.brands)
@@ -27,7 +29,14 @@ export function providerSeries(
 }
 
 export function hourTickLabel(hour: number): string {
-  return `${String(hour).padStart(2, "0")}:00`;
+  return formatHourClock(hour);
+}
+
+/** Two-line tick: time, then the calendar day when a date is known. */
+export function historyTickLabel(date: string | undefined, hour: number): string {
+  const time = formatHourClock(hour);
+  if (!date) return time;
+  return `${time}\n${formatChartDate(date)}`;
 }
 
 export function historyChartWidth(viewportWidth: number, hourCount: number): number {
@@ -49,9 +58,9 @@ export function historyChartInitialHour(
 ): number {
   if (cheapStart != null && Number.isFinite(cheapStart)) return cheapStart;
   for (let i = 0; i < hours.length; i++) {
-    if (valuesByBrand.some((vals) => vals[i] != null)) return hours[i] ?? i;
+    if (valuesByBrand.some((vals) => vals[i] != null)) return i;
   }
-  return hours[0] ?? 0;
+  return 0;
 }
 
 export function historyChartScrollLeft(
@@ -78,8 +87,9 @@ export function mountHistoryChart(
   if (!series) return null;
   const brands = chartBrands(series);
   if (brands.length === 0) return null;
-  const hours = series.hours;
-  const data: uPlot.AlignedData = [hours, ...brands.map((b) => b.values)];
+  const xs = series.hours.map((_, i) => i);
+  const lastX = Math.max(0, xs.length - 1);
+  const data: uPlot.AlignedData = [xs, ...brands.map((b) => b.values)];
 
   el.replaceChildren();
   const scroll = document.createElement("div");
@@ -95,9 +105,9 @@ export function mountHistoryChart(
   yAxis.setAttribute("aria-hidden", "true");
   el.append(scroll, yAxis);
 
-  const size = chartSize(scroll, hours.length);
+  const size = chartSize(scroll, xs.length);
   const initialHour = historyChartInitialHour(
-    hours,
+    xs,
     brands.map((b) => b.values),
     cheapRanges[0]?.start,
   );
@@ -105,20 +115,28 @@ export function mountHistoryChart(
     {
       width: size.width,
       height: size.height,
-      padding: [4, 6, 0, 0],
+      padding: [4, HISTORY_X_PAD_PX, 0, 0],
       cursor: {
         focus: { prox: 24 },
         show: scroll.clientWidth >= 480,
         drag: { x: false, y: false, setScale: false },
       },
       legend: { show: false },
-      scales: { x: { time: false, range: [0, 23] } },
+      scales: { x: { time: false, range: [0, lastX] } },
       axes: [
         {
           stroke: "#5c6f64",
-          size: 26,
+          size: HISTORY_X_AXIS_PX,
           grid: { stroke: "rgb(16 32 24 / 8%)" },
-          values: (_u, vals) => vals.map((v) => (v == null ? "" : hourTickLabel(Number(v)))),
+          values: (_u, vals) =>
+            vals.map((v) => {
+              if (v == null) return "";
+              const i = Math.round(Number(v));
+              if (Math.abs(i - Number(v)) > 0.05) return "";
+              const hour = series.hours[i];
+              if (hour == null) return "";
+              return historyTickLabel(series.dates?.[i], hour);
+            }),
         },
         {
           stroke: "#5c6f64",
@@ -146,7 +164,7 @@ export function mountHistoryChart(
               ctx.save();
               ctx.fillStyle = "rgb(15 138 75 / 12%)";
               for (const range of cheapRanges) {
-                for (const [from, to] of hourBands(range)) {
+                for (const [from, to] of hourBands(range, lastX)) {
                   const x0 = u.valToPos(from, "x", true);
                   const x1 = u.valToPos(to, "x", true);
                   const top = u.bbox.top;
@@ -166,7 +184,7 @@ export function mountHistoryChart(
 
   let didInitScroll = false;
   const applySize = (): void => {
-    const next = chartSize(scroll, hours.length);
+    const next = chartSize(scroll, xs.length);
     if (next.width !== plot.width || next.height !== plot.height) {
       plot.setSize({ width: next.width, height: next.height });
     }
@@ -220,7 +238,7 @@ function syncYAxisOverlay(plot: uPlot, overlay: HTMLCanvasElement): void {
   const src = plot.ctx.canvas;
   const dpr = src.width / Math.max(1, plot.width);
   const slice = Math.max(1, Math.ceil(plot.bbox.left));
-  // Keep the x-axis hour labels free so they can scroll; pin only the €/l ticks.
+  // Keep the x-axis date/time labels free so they can scroll; pin only the €/l ticks.
   const sliceH = Math.min(src.height, Math.ceil(plot.bbox.top + plot.bbox.height + 2));
   const cssW = Math.ceil(slice / dpr);
   const cssH = sliceH / dpr;
@@ -237,10 +255,10 @@ function syncYAxisOverlay(plot: uPlot, overlay: HTMLCanvasElement): void {
   ctx.drawImage(src, 0, 0, slice, sliceH, 0, 0, slice, sliceH);
 }
 
-function hourBands(range: CheapHourRange): Array<[number, number]> {
+function hourBands(range: CheapHourRange, lastX: number): Array<[number, number]> {
   if (range.start <= range.end) return [[range.start - 0.45, range.end + 0.45]];
   return [
-    [range.start - 0.45, 23.45],
+    [range.start - 0.45, lastX + 0.45],
     [-0.45, range.end + 0.45],
   ];
 }

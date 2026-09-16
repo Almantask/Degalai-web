@@ -137,46 +137,30 @@ export function mergeSamples(
   return [...byKey.values()].sort((a, b) => a.at.localeCompare(b.at) || a.hour - b.hour);
 }
 
+/** One chart point per snapshot so the timeline can show date and time. */
 export function rollupHourAverages(
   samples: HistorySample[],
 ): Partial<Record<FuelType, HistoryHourSeries>> {
-  const hours = [...Array(24).keys()];
   const out: Partial<Record<FuelType, HistoryHourSeries>> = {};
   for (const fuel of FUEL_TYPES) {
     const brands = new Set<string>();
-    for (const s of samples) {
-      const row = s.byFuel[fuel];
-      if (row) for (const b of Object.keys(row)) brands.add(b);
-    }
-    if (brands.size === 0) continue;
-    const sums = new Map<string, number[]>();
-    const counts = new Map<string, number[]>();
-    for (const b of brands) {
-      sums.set(
-        b,
-        hours.map(() => 0),
-      );
-      counts.set(
-        b,
-        hours.map(() => 0),
-      );
-    }
+    const points: Array<{ date: string; hour: number; prices: Record<string, number> }> = [];
     for (const s of samples) {
       const row = s.byFuel[fuel];
       if (!row) continue;
-      for (const [b, price] of Object.entries(row)) {
-        sums.get(b)![s.hour] += price;
-        counts.get(b)![s.hour] += 1;
-      }
+      for (const b of Object.keys(row)) brands.add(b);
+      points.push({ date: s.at.slice(0, 10), hour: s.hour, prices: row });
     }
+    if (brands.size === 0 || points.length === 0) continue;
     const series: Record<string, Array<number | null>> = {};
     for (const b of [...brands].sort()) {
-      series[b] = hours.map((h) => {
-        const n = counts.get(b)![h];
-        return n ? round3(sums.get(b)![h] / n) : null;
-      });
+      series[b] = points.map((p) => (p.prices[b] != null ? p.prices[b] : null));
     }
-    out[fuel] = { hours, brands: series };
+    out[fuel] = {
+      dates: points.map((p) => p.date),
+      hours: points.map((p) => p.hour),
+      brands: series,
+    };
   }
   return out;
 }

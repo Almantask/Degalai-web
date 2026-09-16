@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { setLocale } from "../src/i18n/index.ts";
+import { formatChartDate } from "../src/format.ts";
 import {
   HISTORY_HOUR_MIN_PX,
   HISTORY_X_PAD_PX,
@@ -8,6 +10,7 @@ import {
   historyChartScrollLeft,
   historyChartWheelDelta,
   historyChartWidth,
+  historyTickLabel,
   hourTickLabel,
   providerSeries,
 } from "../src/history-view.ts";
@@ -25,6 +28,7 @@ const file: HistoryFile = {
   samples: [],
   byFuel: {
     D: {
+      dates: Array.from({ length: 24 }, () => "2026-09-14"),
       hours: [...Array(24).keys()],
       brands: {
         "circle-k": Array.from({ length: 24 }, (_, h) => (h === 8 ? 1.55 : null)),
@@ -55,15 +59,23 @@ describe("hourTickLabel", () => {
   });
 });
 
+describe("historyTickLabel", () => {
+  it("pairs time with the calendar day", () => {
+    setLocale("en");
+    expect(historyTickLabel("2026-09-15", 7)).toBe(`07:00\n${formatChartDate("2026-09-15")}`);
+    expect(historyTickLabel(undefined, 9)).toBe("09:00");
+  });
+});
+
 describe("historyChartWidth", () => {
-  it("is wider than a phone viewport so 24 hours can scroll", () => {
+  it("is wider than a phone viewport so several days can scroll", () => {
     const min = 24 * HISTORY_HOUR_MIN_PX + HISTORY_Y_AXIS_PX + HISTORY_X_PAD_PX;
     expect(historyChartWidth(320, 24)).toBe(min);
     expect(min).toBeGreaterThan(320);
   });
 
-  it("uses the viewport when it already fits every hour", () => {
-    expect(historyChartWidth(1600, 24)).toBe(1600);
+  it("uses the viewport when it already fits every sample", () => {
+    expect(historyChartWidth(1600, 9)).toBe(1600);
   });
 });
 
@@ -76,7 +88,7 @@ describe("historyChartWheelDelta", () => {
 });
 
 describe("historyChartInitialHour", () => {
-  it("uses the cheapest hour when given, otherwise the first hour with prices", () => {
+  it("uses the cheapest sample index when given, otherwise the first with prices", () => {
     const hours = [...Array(24).keys()];
     const values = [Array.from({ length: 24 }, (_, h) => (h === 8 ? 1.5 : null))];
     expect(historyChartInitialHour(hours, values, 7)).toBe(7);
@@ -104,6 +116,7 @@ describe("brandColor", () => {
 describe("chartBrands", () => {
   it("drops brands that have no prices", () => {
     const series: HistoryHourSeries = {
+      dates: Array.from({ length: 24 }, () => "2026-09-14"),
       hours: [...Array(24).keys()],
       brands: {
         viada: Array.from({ length: 24 }, (_, h) => (h === 8 ? 1.52 : null)),
