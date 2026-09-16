@@ -12,6 +12,13 @@ import {
 /** Hours within this many euros of the cheapest count as the same cheap window. */
 export const CHEAP_HOUR_EPS = 0.005;
 
+/**
+ * On a dated timeline, a cheap band wider than this is not a useful “when to go”
+ * hint (prices were simply flat), so it collapses to the cheapest snapshot.
+ */
+export const MAX_DATED_CHEAP_SPAN_HOURS = 4;
+export const MAX_DATED_CHEAP_SAMPLES = 4;
+
 /** Dated timelines mark the cheapest samples in this trailing window, not the whole week. */
 export const CHEAP_WINDOW_HOURS = 24;
 
@@ -123,7 +130,40 @@ export function cheapestHourRanges(
       });
     }
   }
-  return groups;
+  return tightenDatedCheapRanges(groups, series, avgs, min);
+}
+
+/** Keep a short valley; collapse a day-long plateau to the latest exact minimum. */
+function tightenDatedCheapRanges(
+  groups: CheapHourRange[],
+  series: HistoryHourSeries,
+  avgs: Array<number | null>,
+  min: number,
+): CheapHourRange[] {
+  if (!series.dates?.length || groups.length === 0) return groups;
+  return groups.map((g) => {
+    const count = g.end - g.start + 1;
+    const span = datedSpanHours(series, g.start, g.end);
+    if (count <= MAX_DATED_CHEAP_SAMPLES && span <= MAX_DATED_CHEAP_SPAN_HOURS) return g;
+    let best = g.start;
+    for (let i = g.start; i <= g.end; i++) {
+      if (avgs[i] === min) best = i;
+    }
+    const at = sampleWallTime(series, best);
+    return {
+      start: best,
+      end: best,
+      price: avgs[best] ?? g.price,
+      ...(at ? { from: at, to: at } : {}),
+    };
+  });
+}
+
+function datedSpanHours(series: HistoryHourSeries, start: number, end: number): number {
+  const a = sampleOrdinalHours(series.dates?.[start], series.hours[start] ?? start);
+  const b = sampleOrdinalHours(series.dates?.[end], series.hours[end] ?? end);
+  if (a == null || b == null) return Math.max(0, end - start);
+  return Math.abs(b - a);
 }
 
 export function formatHourClock(hour: number): string {

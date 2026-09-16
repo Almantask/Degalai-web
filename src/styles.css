@@ -713,7 +713,7 @@ body,
   min-height: 120px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
   overflow: hidden;
 }
 
@@ -778,15 +778,19 @@ body,
   pointer-events: none;
   z-index: 2;
   background: #fff;
-  max-height: calc(100% - 40px);
+  max-height: calc(100% - 56px);
 }
 
 #history-legend {
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   max-height: 5.5rem;
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
+  padding-top: 8px;
+  margin-top: 2px;
+  border-top: 1px solid var(--line);
+  background: #fff;
 }
 
 .history-legend {
