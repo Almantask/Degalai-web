@@ -4,6 +4,7 @@ import {
   HISTORY_X_PAD_PX,
   HISTORY_Y_AXIS_PX,
   brandColor,
+  historyChartWheelDelta,
   historyChartWidth,
   hourTickLabel,
   providerSeries,
@@ -61,6 +62,14 @@ describe("historyChartWidth", () => {
 
   it("uses the viewport when it already fits every hour", () => {
     expect(historyChartWidth(1600, 24)).toBe(1600);
+  });
+});
+
+describe("historyChartWheelDelta", () => {
+  it("pans from deltaX, or from shift+wheel when only deltaY is set", () => {
+    expect(historyChartWheelDelta(40, 12, false)).toBe(40);
+    expect(historyChartWheelDelta(0, 40, true)).toBe(40);
+    expect(historyChartWheelDelta(0, 40, false)).toBe(0);
   });
 });
 

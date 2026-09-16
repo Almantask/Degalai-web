@@ -36,6 +36,12 @@ export function historyChartWidth(viewportWidth: number, hourCount: number): num
   return Math.max(viewport, hours * HISTORY_HOUR_MIN_PX + HISTORY_Y_AXIS_PX + HISTORY_X_PAD_PX);
 }
 
+/** Horizontal wheel/trackpad pan; Shift+wheel also pans when the device only reports deltaY. */
+export function historyChartWheelDelta(deltaX: number, deltaY: number, shiftKey: boolean): number {
+  if (deltaX !== 0) return deltaX;
+  return shiftKey ? deltaY : 0;
+}
+
 export type HistoryPlot = {
   destroy: () => void;
   setHidden: (hidden: ReadonlySet<string>) => void;
@@ -141,10 +147,22 @@ export function mountHistoryChart(
   const ro = new ResizeObserver(applySize);
   ro.observe(scroll);
   const raf = requestAnimationFrame(applySize);
+  const onWheel = (e: WheelEvent): void => {
+    const dx = historyChartWheelDelta(e.deltaX, e.deltaY, e.shiftKey);
+    if (dx === 0) return;
+    const max = scroll.scrollWidth - scroll.clientWidth;
+    if (max <= 0) return;
+    const next = Math.min(max, Math.max(0, scroll.scrollLeft + dx));
+    if (next === scroll.scrollLeft) return;
+    e.preventDefault();
+    scroll.scrollLeft = next;
+  };
+  scroll.addEventListener("wheel", onWheel, { passive: false, capture: true });
   return {
     destroy() {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      scroll.removeEventListener("wheel", onWheel, { capture: true });
       plot.destroy();
       el.replaceChildren();
     },
