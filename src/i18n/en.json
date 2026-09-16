@@ -98,6 +98,7 @@
   "history.cheapestAvg": "avg. {price}",
   "history.collapse": "Minimise history",
   "history.expand": "Expand history",
+  "history.scroll": "Hourly prices. Scroll left or right to see other hours.",
   "list.cheapestHour": "Cheapest {range}",
   "plural.stations.one": "{n} station",
   "plural.stations.few": "{n} stations",

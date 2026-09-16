@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { brandColor, hourTickLabel, providerSeries } from "../src/history-view.ts";
+import {
+  HISTORY_HOUR_MIN_PX,
+  HISTORY_X_PAD_PX,
+  HISTORY_Y_AXIS_PX,
+  brandColor,
+  historyChartInitialHour,
+  historyChartScrollLeft,
+  historyChartWheelDelta,
+  historyChartWidth,
+  hourTickLabel,
+  providerSeries,
+} from "../src/history-view.ts";
 import {
   allHistoryBrandsOn,
   chartBrands,
@@ -41,6 +52,45 @@ describe("hourTickLabel", () => {
     expect(hourTickLabel(0)).toBe("00:00");
     expect(hourTickLabel(9)).toBe("09:00");
     expect(hourTickLabel(15)).toBe("15:00");
+  });
+});
+
+describe("historyChartWidth", () => {
+  it("is wider than a phone viewport so 24 hours can scroll", () => {
+    const min = 24 * HISTORY_HOUR_MIN_PX + HISTORY_Y_AXIS_PX + HISTORY_X_PAD_PX;
+    expect(historyChartWidth(320, 24)).toBe(min);
+    expect(min).toBeGreaterThan(320);
+  });
+
+  it("uses the viewport when it already fits every hour", () => {
+    expect(historyChartWidth(1600, 24)).toBe(1600);
+  });
+});
+
+describe("historyChartWheelDelta", () => {
+  it("pans from deltaX, or from shift+wheel when only deltaY is set", () => {
+    expect(historyChartWheelDelta(40, 12, false)).toBe(40);
+    expect(historyChartWheelDelta(0, 40, true)).toBe(40);
+    expect(historyChartWheelDelta(0, 40, false)).toBe(0);
+  });
+});
+
+describe("historyChartInitialHour", () => {
+  it("uses the cheapest hour when given, otherwise the first hour with prices", () => {
+    const hours = [...Array(24).keys()];
+    const values = [Array.from({ length: 24 }, (_, h) => (h === 8 ? 1.5 : null))];
+    expect(historyChartInitialHour(hours, values, 7)).toBe(7);
+    expect(historyChartInitialHour(hours, values)).toBe(8);
+    expect(historyChartInitialHour(hours, [Array(24).fill(null)])).toBe(0);
+  });
+});
+
+describe("historyChartScrollLeft", () => {
+  it("clamps to the scrollable range and starts near the requested hour", () => {
+    expect(historyChartScrollLeft(1600, 1196, 7)).toBe(0);
+    expect(historyChartScrollLeft(320, 1196, 0)).toBe(0);
+    expect(historyChartScrollLeft(320, 1196, 7)).toBe(7 * HISTORY_HOUR_MIN_PX);
+    expect(historyChartScrollLeft(320, 1196, 23)).toBe(1196 - 320);
   });
 });
 
