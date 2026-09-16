@@ -53,6 +53,7 @@ test("Lithuanian map shell loads", async ({ page }) => {
   await expect(page.getByPlaceholder("Nuo mano vietos")).toBeVisible();
   await expect(page.getByRole("link", { name: "Degalinės" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Istorija" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Atnaujinti" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Apie" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Maršrutas" })).toHaveCount(0);
 });
@@ -68,6 +69,7 @@ test("English locale loads without about", async ({ page }) => {
   );
   await expect(page.getByRole("link", { name: "Stations" })).toBeVisible();
   await expect(page.getByRole("link", { name: "History" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Refresh" })).toBeVisible();
   await expect(page.getByRole("link", { name: "About" })).toHaveCount(0);
   await expect(page.locator(".list-updated")).toContainText(/Last checked/);
 });
@@ -76,13 +78,25 @@ test("settings button stays inside the header when switching language", async ({
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Nustatymai" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Atnaujinti" })).toBeVisible();
   await expectSettingsInsideHeader(page);
   await page.getByRole("link", { name: "EN" }).click();
   await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Refresh" })).toBeVisible();
   await expectSettingsInsideHeader(page);
   await page.getByRole("link", { name: "LT" }).click();
   await expect(page.getByRole("button", { name: "Nustatymai" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Atnaujinti" })).toBeVisible();
   await expectSettingsInsideHeader(page);
+});
+
+test("refresh button reloads the page", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".station-row").first()).toBeVisible({ timeout: 15_000 });
+  const btn = page.getByRole("button", { name: "Atnaujinti" });
+  await Promise.all([page.waitForEvent("load"), btn.click()]);
+  await expect(page.locator(".station-row").first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("button", { name: "Atnaujinti" })).toBeVisible();
 });
 
 test("history button opens provider averages by hour", async ({ page }) => {
@@ -251,16 +265,19 @@ test("minimised search chip keeps a long destination inside the card", async ({ 
 async function expectSettingsInsideHeader(page: Page): Promise<void> {
   const fit = await page.evaluate(() => {
     const header = document.querySelector("#header");
-    const btn = document.querySelector(".icon-settings");
-    if (!header || !btn) return false;
+    const btns = [...document.querySelectorAll(".icon-settings, .icon-refresh")];
+    if (!header || btns.length < 2) return false;
     const h = header.getBoundingClientRect();
-    const b = btn.getBoundingClientRect();
     return (
-      b.left >= h.left - 1 &&
-      b.right <= h.right + 1 &&
-      b.top >= h.top - 1 &&
-      b.bottom <= h.bottom + 1 &&
-      h.right <= window.innerWidth + 1
+      btns.every((btn) => {
+        const b = btn.getBoundingClientRect();
+        return (
+          b.left >= h.left - 1 &&
+          b.right <= h.right + 1 &&
+          b.top >= h.top - 1 &&
+          b.bottom <= h.bottom + 1
+        );
+      }) && h.right <= window.innerWidth + 1
     );
   });
   expect(fit).toBe(true);
