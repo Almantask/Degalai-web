@@ -90,6 +90,30 @@ test("settings button stays inside the header when switching language", async ({
   await expectSettingsInsideHeader(page);
 });
 
+test("phone header puts refresh and settings on the title row", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 667 });
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Atnaujinti" })).toBeVisible();
+  const layout = await page.evaluate(() => {
+    const logo = document.querySelector(".logo")?.getBoundingClientRect();
+    const refresh = document.querySelector(".icon-refresh")?.getBoundingClientRect();
+    const settings = document.querySelector(".icon-settings")?.getBoundingClientRect();
+    const nav = document.querySelector(".nav-views")?.getBoundingClientRect();
+    if (!logo || !refresh || !settings || !nav) return null;
+    const overlapY = (a: DOMRect, b: DOMRect) => a.top < b.bottom - 1 && b.top < a.bottom - 1;
+    return {
+      toolsWithLogo: overlapY(logo, refresh) && overlapY(logo, settings),
+      toolsRightOfLogo: refresh.left >= logo.right - 1 && settings.left >= refresh.right - 4,
+      navBelowLogo: nav.top >= logo.bottom - 2,
+    };
+  });
+  expect(layout).toEqual({
+    toolsWithLogo: true,
+    toolsRightOfLogo: true,
+    navBelowLogo: true,
+  });
+});
+
 test("refresh button reloads the page", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".station-row").first()).toBeVisible({ timeout: 15_000 });

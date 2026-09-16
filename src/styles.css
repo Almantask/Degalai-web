@@ -203,12 +203,22 @@ body,
 
 .topbar {
   flex-wrap: wrap;
-  justify-content: space-between;
+  justify-content: flex-start;
   width: 100%;
   min-width: 0;
 }
 
+.logo {
+  order: 0;
+  min-width: 0;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-size: 1.12rem;
+  padding: 4px 6px;
+}
+
 .topbar-end {
+  order: 1;
   flex-wrap: wrap;
   justify-content: flex-end;
   margin-left: auto;
@@ -217,6 +227,7 @@ body,
 }
 
 .topbar-tools {
+  order: 2;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -273,13 +284,6 @@ body,
   cursor: pointer;
   font: inherit;
   text-decoration: none;
-}
-
-.logo {
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  font-size: 1.12rem;
-  padding: 4px 6px;
 }
 
 .fuel-filter button,
@@ -1148,6 +1152,18 @@ body,
   .topbar-tools,
   .lang {
     gap: 4px;
+  }
+
+  .topbar-tools {
+    order: 1;
+    margin-left: auto;
+  }
+
+  .topbar-end {
+    order: 2;
+    flex: 1 1 100%;
+    margin-left: 0;
+    justify-content: flex-start;
   }
 
   .header .donate-btn {

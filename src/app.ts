@@ -1214,6 +1214,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       <div class="header-body">
         <div class="topbar">
           <a class="logo" data-act="view" data-view="map" href="${pathFor("map", locale)}">${escapeHtml(t("app.name"))}</a>
+          <div class="topbar-tools">
+            <button type="button" class="icon-btn icon-tool icon-refresh" data-act="refresh" aria-label="${escapeHtml(t("action.refresh"))}">${REFRESH_ICON}</button>
+            <button type="button" class="icon-btn icon-tool icon-settings ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">${SETTINGS_ICON}</button>
+          </div>
           <div class="topbar-end">
             <div class="lang">
               <a data-act="locale" data-locale="lt" href="${escapeHtml(hrefFor(view, "lt", settings.fuel))}" hreflang="lt" class="${locale === "lt" ? "on" : ""}">LT</a>
@@ -1227,10 +1231,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
               ${DONATE_HEART}
               ${escapeHtml(t("action.donate"))}
             </a>
-            <div class="topbar-tools">
-              <button type="button" class="icon-btn icon-tool icon-refresh" data-act="refresh" aria-label="${escapeHtml(t("action.refresh"))}">${REFRESH_ICON}</button>
-              <button type="button" class="icon-btn icon-tool icon-settings ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">${SETTINGS_ICON}</button>
-            </div>
           </div>
         </div>
         <div class="fuel-filter" role="group" aria-label="${escapeHtml(t("fuel.filter"))}">
