@@ -183,6 +183,7 @@ body,
 
 .topbar,
 .topbar-end,
+.topbar-tools,
 .fuel-filter,
 .lang {
   display: flex;
@@ -214,6 +215,10 @@ body,
   margin-left: auto;
   min-width: 0;
   max-width: 100%;
+}
+
+.topbar-tools {
+  flex: 0 0 auto;
 }
 
 .nav-views {
@@ -298,7 +303,7 @@ body,
   color: #fff;
 }
 
-.icon-settings {
+.icon-tool {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -306,8 +311,24 @@ body,
   padding: 6px 8px;
 }
 
-.icon-settings svg {
+.icon-tool svg {
   display: block;
+}
+
+.icon-refresh[aria-busy="true"] svg {
+  animation: icon-spin 0.8s linear infinite;
+}
+
+@keyframes icon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-refresh[aria-busy="true"] svg {
+    animation: none;
+  }
 }
 
 .dest {
@@ -1182,6 +1203,7 @@ body,
 
   .topbar,
   .topbar-end,
+  .topbar-tools,
   .lang {
     gap: 4px;
   }
@@ -1196,7 +1218,7 @@ body,
     padding: 6px 8px;
   }
 
-  .icon-settings {
+  .icon-tool {
     padding: 6px 7px;
   }
 
@@ -1360,6 +1382,77 @@ body,
 @media (max-width: 640px) {
   .dest-field .search {
     font-size: 1rem;
+  }
+}
+
+/* Phones wrap the topbar anyway: keep refresh and settings on the title row, which has room,
+   so the extra button never pushes the language and view links onto another line. */
+@media (max-width: 459px) {
+  .topbar-tools {
+    order: 1;
+    margin-left: auto;
+  }
+
+  .topbar-end {
+    order: 2;
+  }
+
+  /* No taller than the logo, so the title row keeps its height. */
+  .topbar-tools .icon-tool {
+    padding-block: 5px;
+  }
+}
+
+/* Widths where the topbar only just fits on one row: trim a little spacing so the
+   refresh button does not wrap it. */
+@media (min-width: 460px) and (max-width: 499px) {
+  .topbar,
+  .topbar-end,
+  .topbar-tools,
+  .lang {
+    gap: 2px;
+  }
+
+  .logo {
+    padding-inline: 2px;
+  }
+
+  .lang a,
+  .header .donate-btn {
+    padding-inline: 6px;
+  }
+
+  .nav-views .icon-btn,
+  .icon-tool {
+    padding-inline: 5px;
+  }
+}
+
+/* Narrow desktop header (100% - 400px): reuse the tablet sizing until the row fits. */
+@media (min-width: 900px) and (max-width: 979px) {
+  .nav-views .icon-btn {
+    padding: 6px 7px;
+    font-size: 0.78rem;
+  }
+
+  .topbar,
+  .topbar-end,
+  .topbar-tools,
+  .lang {
+    gap: 4px;
+  }
+
+  .header .donate-btn {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+
+  .lang a {
+    padding: 6px 8px;
+  }
+
+  .icon-tool {
+    padding: 6px 7px;
   }
 }
 
