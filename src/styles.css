@@ -216,6 +216,13 @@ body,
   max-width: 100%;
 }
 
+.topbar-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
 .nav-views {
   display: inline-flex;
   align-items: stretch;
@@ -1138,6 +1145,7 @@ body,
 
   .topbar,
   .topbar-end,
+  .topbar-tools,
   .lang {
     gap: 4px;
   }

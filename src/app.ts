@@ -1227,8 +1227,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
               ${DONATE_HEART}
               ${escapeHtml(t("action.donate"))}
             </a>
-            <button type="button" class="icon-btn icon-tool icon-refresh" data-act="refresh" aria-label="${escapeHtml(t("action.refresh"))}">${REFRESH_ICON}</button>
-            <button type="button" class="icon-btn icon-tool icon-settings ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">${SETTINGS_ICON}</button>
+            <div class="topbar-tools">
+              <button type="button" class="icon-btn icon-tool icon-refresh" data-act="refresh" aria-label="${escapeHtml(t("action.refresh"))}">${REFRESH_ICON}</button>
+              <button type="button" class="icon-btn icon-tool icon-settings ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">${SETTINGS_ICON}</button>
+            </div>
           </div>
         </div>
         <div class="fuel-filter" role="group" aria-label="${escapeHtml(t("fuel.filter"))}">

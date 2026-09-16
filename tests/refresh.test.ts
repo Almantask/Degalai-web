@@ -31,4 +31,18 @@ describe("refreshWebsite", () => {
     });
     expect(reload).toHaveBeenCalledOnce();
   });
+
+  it("reloads after a timeout if cache work never finishes", async () => {
+    vi.useFakeTimers();
+    const reload = vi.fn();
+    const done = refreshWebsite({
+      deleteCache: () => new Promise(() => undefined),
+      reload,
+      nowaitMs: 50,
+    });
+    await vi.advanceTimersByTimeAsync(50);
+    await done;
+    expect(reload).toHaveBeenCalledOnce();
+    vi.useRealTimers();
+  });
 });
