@@ -77,15 +77,34 @@ older daily files.
 | `data/prices/YYYY-MM-DD.json`  | Daily snapshot (kept 7 days)       |
 | `data/history.json`            | Provider averages by date and time |
 | `data/overrides/stations.json` | Manual OSM ↔ source matches        |
+| `data/overrides/prices.json`   | Optional 24 h user-report overlay  |
 | `reports/unmatched.json`       | Source rows that still need a home |
 
-Prices: Lithuanian Energy Agency (LEA) public dataset — a **working-day 10:00**
-snapshot of pump prices, not a live feed. Stations (Circle K especially) can
-change the board later the same day; those moves show up on the next LEA file.
-Coordinates: OpenStreetMap. Attribute both, plus the station chains.
+Prices are merged newest-source-wins, with LEA Excel as the floor:
 
-Chain-website adapters can be added under `scripts/adapters/` behind the shared
-`PriceSource` interface. A failing adapter must not fail the build.
+1. **LEA Excel** (`scripts/adapters/lea.ts`) — working-day **10:00** Europe/Vilnius
+   dump from [ena.lt](https://www.ena.lt/dk-pr-pr-duomenys/). This is the lagged
+   daily file; a station can change the board later the same day.
+2. **LEA live map** (`scripts/adapters/lea-live.ts`) — intra-day feed behind the
+   public map at [degalukainos.ena.lt](https://degalukainos.ena.lt/). The pipeline
+   reads `apiBase` and a public read token from that SPA (the token is not
+   committed). Live rows overlay Excel even when `submitted_at` is earlier than
+   the 10:00 stamp, so hourly deploys pick up moves like Circle K Kaunas
+   Karaliaus Mindaugo diesel 2.254 vs a stale 2.284 workbook row.
+3. **User reports** (`scripts/adapters/reports.ts`) — optional JSON in
+   `data/overrides/prices.json`. Bind by OSM `stationId` or address; ignored after
+   `expiresAt` or 24 hours. A later live row still wins. Open a
+   [wrong-price issue](https://github.com/Almantask/Degalai-web/issues/new?template=wrong-price.yml);
+   a maintainer copies a fresh report into that file. GitHub Actions cache
+   restores `data/`, then checks out this folder from git so committed reports
+   apply.
+
+Circle K’s station locator has **no per-station prices** (metadata only), and
+Neste does not publish public pump prices, so there is no chain-website scraper.
+Aggregators that rehost LEA are skipped. A failing adapter must not fail the
+build.
+
+Coordinates: OpenStreetMap. Attribute OSM, LEA, and the station chains.
 
 ## Routing
 
@@ -98,7 +117,7 @@ unavailable.
 
 ```bash
 npm install
-npm run pipeline          # OSM stations + LEA prices (needs network)
+npm run pipeline          # OSM + LEA Excel floor + LEA live + reports (needs network)
 npm run dev
 ```
 

@@ -68,7 +68,7 @@ export interface DataMeta {
   generatedAt: string;
   /** When the pipeline last fetched sources, even if prices did not change. */
   checkedAt?: string;
-  /** When the source snapshot was taken (LEA: working days at 10:00). */
+  /** Newest price observation in the snapshot (LEA Excel 10:00, or later live/report). */
   observedAt?: string;
   stationCount: number;
   pricedStationCount: number;
@@ -87,6 +87,25 @@ export interface Observation {
   fuel: FuelType;
   price: number;
   observedAt: string;
+  /** Adapter that produced this row (`lea`, `lea-live`, `report`, …). */
+  source?: string;
+}
+
+/** Pump price reported by a user; applied on top of fetched sources until it expires. */
+export interface PriceReport {
+  stationId?: string;
+  brand?: string;
+  name?: string;
+  address?: string;
+  city?: string;
+  lat?: number;
+  lon?: number;
+  fuel: FuelType;
+  price: number;
+  observedAt: string;
+  /** ISO time after which the report is ignored. Defaults to 24 h after `observedAt`. */
+  expiresAt?: string;
+  note?: string;
 }
 
 export interface UserSettings {

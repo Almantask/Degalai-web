@@ -41,6 +41,9 @@ jobs:
             reports
           key: pipeline-state-${{ github.run_id }}
           restore-keys: pipeline-state-
+      # Cache restores the whole data/ tree; keep committed station/price overrides on top.
+      - name: Keep committed overrides
+        run: git checkout HEAD -- data/overrides
       - name: Run data pipeline
         run: |
           if [ -z "${{ steps.state.outputs.cache-matched-key }}" ]; then

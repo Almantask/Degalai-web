@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { matchByAddress } from "../scripts/match.ts";
+import { matchByAddress, matchObservations } from "../scripts/match.ts";
 import type { Observation, Station } from "../src/types.ts";
 
 const station = (id: string, brand: string, city: string, address: string): Station => ({
@@ -47,5 +47,29 @@ describe("matchByAddress", () => {
     expect(matchByAddress(stations, observation("Circle K", "Klaipėda", "Taikos pr. 1"))).toBe(
       undefined,
     );
+  });
+});
+
+describe("matchObservations", () => {
+  it("binds osm: source ids directly and keeps the adapter source", () => {
+    const stations = [
+      station("osm:way:138809868", "circle-k", "Kaunas", "Karaliaus Mindaugo pr. 34A"),
+    ];
+    const obs: Observation = {
+      sourceStationId: "osm:way:138809868",
+      brand: "circle-k",
+      fuel: "D",
+      price: 2.254,
+      observedAt: "2026-09-17T09:00:00+03:00",
+      source: "report",
+    };
+    const result = matchObservations(stations, [obs], []);
+    expect(result.observations).toHaveLength(1);
+    expect(result.observations[0]).toMatchObject({
+      sourceStationId: "osm:way:138809868",
+      source: "report",
+      price: 2.254,
+    });
+    expect(result.unmatched).toEqual([]);
   });
 });

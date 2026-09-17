@@ -2,18 +2,17 @@ import { Readable } from "node:stream";
 import ExcelJS from "exceljs";
 import { normalizeBrand } from "../../src/brands.ts";
 import type { Observation } from "../../src/types.ts";
-import { mapLeaFuel, parsePrice, type PriceSource } from "./types.ts";
+import { vilniusOffsetAt } from "../vilnius-time.ts";
+import { FETCH_UA, mapLeaFuel, parsePrice, type PriceSource } from "./types.ts";
 
 const DATA_PAGE = "https://www.ena.lt/dk-pr-pr-duomenys/";
 const ENA_MAP_PAGE = "https://www.ena.lt/degalu-kainos-degalinese/";
-const UA =
-  "KurDegalai/0.1 (https://github.com/Almantask/Degalai-web; fuel-price research; contact via GitHub)";
 
 /** LEA records pump prices each working day at 10:00 Europe/Vilnius. */
 export const LEA_SNAPSHOT_HOUR = 10;
 
 export function leaObservedAt(date: string): string {
-  return `${date}T${String(LEA_SNAPSHOT_HOUR).padStart(2, "0")}:00:00+03:00`;
+  return `${date}T${String(LEA_SNAPSHOT_HOUR).padStart(2, "0")}:00:00${vilniusOffsetAt(date)}`;
 }
 
 export function leaSourceId(company: string, municipality: string, address: string): string {
@@ -57,7 +56,7 @@ async function downloadWithCookies(url: string): Promise<Buffer> {
     const res = await fetch(current, {
       redirect: "manual",
       headers: {
-        "User-Agent": UA,
+        "User-Agent": FETCH_UA,
         ...(cookies.length ? { Cookie: cookies.join("; ") } : {}),
       },
     });
@@ -84,7 +83,7 @@ async function downloadWithCookies(url: string): Promise<Buffer> {
 }
 
 export async function findLeaExcelUrl(): Promise<string> {
-  const html = await (await fetch(DATA_PAGE, { headers: { "User-Agent": UA } })).text();
+  const html = await (await fetch(DATA_PAGE, { headers: { "User-Agent": FETCH_UA } })).text();
   const m = html.match(/https:\/\/ltenergagen\.sharepoint\.com\/:x:\/s\/[^"'\\\s>]+/);
   if (!m) throw new Error("No SharePoint Excel link found on ena.lt data page");
   const url = m[0].replace(/&amp;/g, "&");
@@ -123,6 +122,7 @@ function observationFromRow(
     fuel,
     price,
     observedAt: leaObservedAt(date),
+    source: "lea",
   };
 }
 
@@ -220,6 +220,6 @@ export function leaAdapter(date: string): PriceSource {
 
 /** Kept so CI can still try the Power BI embed if ena.lt puts it back. */
 export async function leaPowerBiAvailable(): Promise<boolean> {
-  const html = await (await fetch(ENA_MAP_PAGE, { headers: { "User-Agent": UA } })).text();
+  const html = await (await fetch(ENA_MAP_PAGE, { headers: { "User-Agent": FETCH_UA } })).text();
   return /app\.powerbi\.com\/view\?r=/.test(html);
 }

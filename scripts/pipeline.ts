@@ -4,13 +4,16 @@ import type { DailyPrices, DataMeta, Observation, Station } from "../src/types.t
 import { HISTORY_KEEP_DAYS } from "../src/types.ts";
 import { cheapestHoursByFuel } from "../src/cheap-hours.ts";
 import { fetchLeaWorkbook } from "./adapters/lea.ts";
+import { fetchLeaLive } from "./adapters/lea-live.ts";
+import { loadPriceReports, reportsToObservations } from "./adapters/reports.ts";
 import { geocodePhoton, loadGeocodeCache, saveGeocodeCache, sleep } from "./geocode.ts";
 import { datesWithinDays, isHistoryFile, prunePriceFiles, recomputeHistory } from "./history.ts";
 import { loadOverrides, matchByAddress, matchObservations } from "./match.ts";
+import { combinePriceObservations } from "./merge-sources.ts";
 import { chooseOsmStations, fetchOsmStations } from "./osm.ts";
 import {
   applyStale,
-  firstObservedAt,
+  latestObservedAt,
   observationsToDaily,
   reuseGeneratedAtIfUnchanged,
 } from "./validate.ts";
@@ -129,6 +132,9 @@ async function main(): Promise<void> {
   if (!existsSync(join(DATA, "overrides", "stations.json"))) {
     writeJson(join(DATA, "overrides", "stations.json"), []);
   }
+  if (!existsSync(join(DATA, "overrides", "prices.json"))) {
+    writeJson(join(DATA, "overrides", "prices.json"), []);
+  }
 
   let stations = await loadOsm(args.has("--osm"));
   if (osmOnly) {
@@ -137,22 +143,41 @@ async function main(): Promise<void> {
   }
 
   const overrides = loadOverrides(join(DATA, "overrides", "stations.json"));
-  const adapterNames: string[] = [];
   let byDate = new Map<string, Observation[]>();
+  let excelFetched = false;
   try {
     console.log("Fetching lea…");
     byDate = await fetchLeaWorkbook();
-    adapterNames.push("lea");
+    excelFetched = true;
     console.log(`  ${byDate.size} days in LEA workbook`);
   } catch (e) {
     console.error("Adapter lea failed:", e);
   }
 
-  const leaDates = [...byDate.keys()].sort();
-  const latestLea = leaDates.at(-1);
+  let live: Observation[] = [];
+  try {
+    console.log("Fetching lea-live…");
+    live = await fetchLeaLive();
+    console.log(`  ${live.length} live observations`);
+  } catch (e) {
+    console.error("Adapter lea-live failed:", e);
+  }
+
+  const reports = reportsToObservations(
+    loadPriceReports(join(DATA, "overrides", "prices.json")),
+    stations,
+  );
   const requested = dateArg ?? todayVilnius();
-  const date = byDate.has(requested) ? requested : (latestLea ?? requested);
-  let observations = byDate.get(date) ?? [];
+  const combined = combinePriceObservations({
+    byDate,
+    live,
+    reports,
+    requested,
+    excelFetched,
+  });
+  const { date, observations: combinedRows, sources: adapterNames } = combined;
+  let observations = combinedRows;
+
   if (observations.length === 0) {
     console.warn("No live observations; keeping previous snapshot if any.");
   } else {
@@ -167,9 +192,9 @@ async function main(): Promise<void> {
       grouped.set(o.sourceStationId, g);
     }
     for (const group of grouped.values()) {
-      const sample = group[0];
+      const sample = group.find((o) => o.lat != null && o.lon != null) ?? group[0];
       if (sample.lat != null && sample.lon != null) {
-        pre.push(...group);
+        for (const o of group) pre.push({ ...o, lat: sample.lat, lon: sample.lon });
         continue;
       }
       const hit = matchByAddress(stations, sample);
@@ -211,7 +236,7 @@ async function main(): Promise<void> {
     date,
     generatedAt: daily.generatedAt,
     checkedAt,
-    observedAt: firstObservedAt(daily),
+    observedAt: latestObservedAt(daily),
     stationCount: stations.length,
     pricedStationCount: priced,
     sources: adapterNames,
@@ -222,7 +247,7 @@ async function main(): Promise<void> {
     `Wrote ${stations.length} stations, ${priced} with prices for ${date}. Checked ${checkedAt}; prices generated ${daily.generatedAt}${meta.observedAt ? `; observed ${meta.observedAt}` : ""}. Unmatched groups: ${matched.unmatched.length}`,
   );
 
-  const otherDates = leaDates.filter((d) => d !== date);
+  const otherDates = [...byDate.keys()].filter((d) => d !== date);
   const backfill = args.has("--backfill");
   if (backfill && otherDates.length && Object.keys(matched.sourceToStation).length) {
     const recent = datesWithinDays(otherDates, date);

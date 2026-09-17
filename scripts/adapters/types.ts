@@ -1,5 +1,8 @@
 import type { FuelType, Observation } from "../../src/types.ts";
 
+export const FETCH_UA =
+  "KurDegalai/0.1 (https://github.com/Almantask/Degalai-web; fuel-price research; contact via GitHub)";
+
 export interface PriceSource {
   name: string;
   enabled: boolean;
@@ -7,9 +10,9 @@ export interface PriceSource {
 }
 
 export function mapLeaFuel(label: string): FuelType | null {
-  const s = label.trim().toLowerCase();
-  if (s === "95 benzinas" || s === "95") return "95";
-  if (s === "98 benzinas" || s === "98") return "98";
+  const s = label.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (s === "95_benzinas" || s === "benzinas_95" || s === "95") return "95";
+  if (s === "98_benzinas" || s === "benzinas_98" || s === "98") return "98";
   if (s === "dyzelinas" || s === "diesel") return "D";
   if (s === "snd" || s === "lpg") return "LPG";
   return null;

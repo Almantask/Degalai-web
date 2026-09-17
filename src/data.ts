@@ -17,7 +17,7 @@ export function lastCheckedAt(data: Pick<AppData, "prices" | "meta">): string | 
   return data.meta?.checkedAt ?? data.prices?.generatedAt ?? data.meta?.generatedAt ?? undefined;
 }
 
-/** LEA (or other source) snapshot time. Distinct from hourly pipeline checks. */
+/** Newest source observation (Excel 10:00, live submit, or report). Distinct from hourly checks. */
 export function pricesObservedAt(data: Pick<AppData, "prices" | "meta">): string | undefined {
   const observed = data.meta?.observedAt;
   if (!observed) return undefined;

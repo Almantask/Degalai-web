@@ -3,12 +3,23 @@ description: Report an incorrect fuel price
 title: "[price] "
 labels: [data]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks. Maintainers can apply a **24-hour overlay** in
+        `data/overrides/prices.json` (OSM `stationId` or address). Live LEA still
+        wins if it updates later the same day.
   - type: input
     id: station
     attributes:
       label: Station name / address
     validations:
       required: true
+  - type: input
+    id: station_id
+    attributes:
+      label: OSM station id (if you know it)
+      description: e.g. osm:way:138809868 — from the station popup URL or stations.json
   - type: dropdown
     id: fuel
     attributes:
@@ -24,6 +35,13 @@ body:
     id: actual
     attributes:
       label: Price at the pump (€/l)
+    validations:
+      required: true
+  - type: input
+    id: seen_at
+    attributes:
+      label: When you saw the pump (Vilnius time)
+      placeholder: 2026-09-17 14:30
     validations:
       required: true
   - type: textarea

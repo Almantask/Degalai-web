@@ -47,6 +47,7 @@ export function matchObservations(
   for (const [sourceId, group] of grouped) {
     const ov = overrideBySource.get(sourceId);
     let station: Station | undefined;
+    if (sourceId.startsWith("osm:")) station = byOsm.get(sourceId);
     if (ov?.osmId) station = byOsm.get(ov.osmId);
 
     const sample = group[0];

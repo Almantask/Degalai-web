@@ -34,7 +34,7 @@ export function observationsToDaily(
     }
     const entry: PriceEntry = {
       price: o.price,
-      source: sourceOf(o.sourceStationId),
+      source: o.source ?? sourceOf(o.sourceStationId),
       observedAt: o.observedAt,
     };
     const prev = previous?.prices[o.sourceStationId]?.[o.fuel];
@@ -52,7 +52,7 @@ export function observationsToDaily(
     }
     const slot = (prices[o.sourceStationId] ??= {});
     const existing = slot[o.fuel];
-    if (!existing || o.observedAt >= existing.observedAt) slot[o.fuel] = entry;
+    if (!existing || takesPrecedence(o, existing)) slot[o.fuel] = entry;
   }
 
   return {
@@ -61,14 +61,19 @@ export function observationsToDaily(
   };
 }
 
-/** First observation time in a daily file; used so the UI can show the source snapshot. */
-export function firstObservedAt(daily: DailyPrices): string | undefined {
+/** Newest observation time in a daily file; used so the UI can show the source snapshot. */
+export function latestObservedAt(daily: DailyPrices): string | undefined {
+  let best: string | undefined;
   for (const fuels of Object.values(daily.prices)) {
     for (const entry of Object.values(fuels)) {
-      if (entry?.observedAt) return entry.observedAt;
+      if (entry?.observedAt && (!best || entry.observedAt > best)) best = entry.observedAt;
     }
   }
+  return best;
 }
+
+/** @deprecated use latestObservedAt */
+export const firstObservedAt = latestObservedAt;
 
 /** Keep the previous snapshot timestamp when this check found the same prices. */
 export function reuseGeneratedAtIfUnchanged(
@@ -113,6 +118,21 @@ function sourceOf(stationId: string): string {
   if (stationId.startsWith("osm:")) return "lea";
   if (stationId.startsWith("lea:")) return "lea";
   return "unknown";
+}
+
+const SOURCE_RANK: Record<string, number> = {
+  lea: 0,
+  "lea-live": 1,
+  report: 2,
+};
+
+/** Live LEA and user reports overlay the lagged Excel dump even when their clocks are earlier. */
+export function takesPrecedence(next: Observation, existing: PriceEntry): boolean {
+  const nextSource = next.source ?? sourceOf(next.sourceStationId);
+  if (existing.source === "lea" && nextSource !== "lea") return true;
+  if (nextSource === "lea" && existing.source !== "lea") return false;
+  if (next.observedAt !== existing.observedAt) return next.observedAt > existing.observedAt;
+  return (SOURCE_RANK[nextSource] ?? 0) >= (SOURCE_RANK[existing.source] ?? 0);
 }
 
 function dayDiff(a: string, b: string): number {
