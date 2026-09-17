@@ -475,6 +475,19 @@ test("station list shows last check even when prices were not updated", async ({
   await expect(page.locator(".list-prices-as-of")).toContainText("10:00");
 });
 
+test("station list credits every source behind the prices", async ({ page }) => {
+  await page.route("**/data/meta.json", async (route) => {
+    const res = await route.fetch();
+    const meta = (await res.json()) as Record<string, unknown>;
+    await route.fulfill({ json: { ...meta, sources: ["lea-live", "lea", "circle-k"] } });
+  });
+  await page.goto("/");
+  await expect(page.locator(".list-source")).toHaveText(
+    "LEA (Lietuvos energetikos agentūra), Circle K",
+    { timeout: 15_000 },
+  );
+});
+
 test("settings include consumption, time value, and provider checkboxes", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Nustatymai" }).click();

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lastCheckedAt, pricesObservedAt } from "../src/data.ts";
+import { lastCheckedAt, pricesObservedAt, sourceLabels } from "../src/data.ts";
 import type { DailyPrices, DataMeta } from "../src/types.ts";
 
 const prices: DailyPrices = {
@@ -62,5 +62,22 @@ describe("pricesObservedAt", () => {
         },
       }),
     ).toBeUndefined();
+  });
+});
+
+describe("sourceLabels", () => {
+  it("merges both LEA feeds and keeps ranked order for other sources", () => {
+    expect(sourceLabels({ ...meta, sources: ["lea-live", "lea", "circle-k", "report"] })).toEqual([
+      "lea",
+      "circle-k",
+      "report",
+    ]);
+    expect(sourceLabels({ ...meta, sources: ["circle-k", "lea"] })).toEqual(["circle-k", "lea"]);
+  });
+
+  it("falls back to LEA when the sources are empty or unknown", () => {
+    expect(sourceLabels({ ...meta, sources: [] })).toEqual(["lea"]);
+    expect(sourceLabels({ ...meta, sources: ["mystery"] })).toEqual(["lea"]);
+    expect(sourceLabels(null)).toEqual(["lea"]);
   });
 });

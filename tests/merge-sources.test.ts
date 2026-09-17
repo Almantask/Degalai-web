@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { combinePriceObservations } from "../scripts/merge-sources.ts";
-import type { Observation } from "../src/types.ts";
+import {
+  combinePriceObservations,
+  excelFloorDate,
+  summarizeSources,
+} from "../scripts/merge-sources.ts";
+import type { DailyPrices, Observation } from "../src/types.ts";
 
 const excel = (date: string, price: number): Observation => ({
   sourceStationId: "lea:mindaugo",
@@ -20,51 +24,91 @@ const live: Observation = {
   source: "lea-live",
 };
 
-describe("combinePriceObservations", () => {
-  it("uses the latest Excel day when there is no live overlay", () => {
+const circleK: Observation = {
+  sourceStationId: "circle-k:19-kaunas-pl-žemaičių",
+  brand: "circle-k",
+  fuel: "98",
+  price: 2.043,
+  observedAt: "2026-09-17T00:00:00+03:00",
+  source: "circle-k",
+};
+
+describe("excelFloorDate", () => {
+  it("uses the requested day when the workbook has it, else the latest day", () => {
     const byDate = new Map([
       ["2026-09-15", [excel("2026-09-15", 2.284)]],
       ["2026-09-16", [excel("2026-09-16", 2.284)]],
     ]);
+    expect(excelFloorDate(byDate, "2026-09-16")).toBe("2026-09-16");
+    expect(excelFloorDate(byDate, "2026-09-17")).toBe("2026-09-16");
+    expect(excelFloorDate(new Map(), "2026-09-17")).toBeNull();
+  });
+});
+
+describe("combinePriceObservations", () => {
+  it("uses the Excel day when no other source has rows", () => {
     expect(
       combinePriceObservations({
-        byDate,
-        live: [],
+        byProvider: { "lea-live": [], lea: [excel("2026-09-16", 2.284)], "circle-k": [] },
         reports: [],
         requested: "2026-09-17",
-        excelFetched: true,
+        excelDate: "2026-09-16",
       }),
-    ).toMatchObject({
-      date: "2026-09-16",
-      sources: ["lea"],
-    });
+    ).toMatchObject({ date: "2026-09-16", sources: ["lea"] });
   });
 
-  it("writes today using yesterday's Excel as floor plus live rows", () => {
-    const byDate = new Map([["2026-09-16", [excel("2026-09-16", 2.284)]]]);
+  it("writes today with yesterday's Excel rows first, then live and Circle K rows", () => {
     const combined = combinePriceObservations({
-      byDate,
-      live: [live],
+      byProvider: {
+        "lea-live": [live],
+        lea: [excel("2026-09-16", 2.284)],
+        "circle-k": [circleK],
+      },
       reports: [],
       requested: "2026-09-17",
-      excelFetched: true,
+      excelDate: "2026-09-16",
     });
     expect(combined.date).toBe("2026-09-17");
-    expect(combined.sources).toEqual(["lea", "lea-live"]);
-    expect(combined.observations.map((o) => o.source)).toEqual(["lea", "lea-live"]);
-    expect(combined.observations[0].price).toBe(2.284);
-    expect(combined.observations[1].price).toBe(2.254);
+    expect(combined.sources).toEqual(["lea-live", "lea", "circle-k"]);
+    expect(combined.observations.map((o) => o.source)).toEqual(["lea", "lea-live", "circle-k"]);
   });
 
-  it("prefers today's Excel when both the workbook and live cover today", () => {
-    const byDate = new Map([["2026-09-17", [excel("2026-09-17", 2.284)]]]);
+  it("moves to today for a fresh user report even when every fetch failed", () => {
+    const report: Observation = { ...live, source: "report", price: 2.199 };
     const combined = combinePriceObservations({
-      byDate,
-      live: [live],
-      reports: [],
+      byProvider: { "lea-live": [], lea: [], "circle-k": [] },
+      reports: [report],
       requested: "2026-09-17",
-      excelFetched: true,
+      excelDate: null,
     });
-    expect(combined.observations[0].observedAt).toBe("2026-09-17T10:00:00+03:00");
+    expect(combined).toMatchObject({ date: "2026-09-17", sources: ["report"] });
+    expect(combined.observations).toEqual([report]);
+  });
+});
+
+describe("summarizeSources", () => {
+  const daily: DailyPrices = {
+    date: "2026-09-17",
+    generatedAt: "2026-09-17T12:00:00.000Z",
+    prices: {
+      a: {
+        D: { price: 2.2, source: "lea", observedAt: "2026-09-17T10:00:00+03:00" },
+        "95": { price: 1.9, source: "report", observedAt: "2026-09-17T11:00:00+03:00" },
+      },
+      b: {
+        D: { price: 2.25, source: "lea-live", observedAt: "2026-09-17T09:00:00+03:00" },
+        LPG: { price: 0.8, source: "lea", observedAt: "2026-09-16T10:00:00+03:00", stale: true },
+      },
+      c: { "98": { price: 2.04, source: "circle-k", observedAt: "2026-09-17T00:00:00+03:00" } },
+    },
+  };
+
+  it("orders sources by ranking, then reports, and counts stale prices separately", () => {
+    expect(summarizeSources(daily, ["lea", "lea-live", "circle-k"])).toEqual([
+      { name: "lea", chosen: 1, stale: 1 },
+      { name: "lea-live", chosen: 1, stale: 0 },
+      { name: "circle-k", chosen: 1, stale: 0 },
+      { name: "report", chosen: 1, stale: 0 },
+    ]);
   });
 });

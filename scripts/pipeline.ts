@@ -3,19 +3,28 @@ import { join } from "node:path";
 import type { DailyPrices, DataMeta, Observation, Station } from "../src/types.ts";
 import { HISTORY_KEEP_DAYS } from "../src/types.ts";
 import { cheapestHoursByFuel } from "../src/cheap-hours.ts";
-import { fetchLeaWorkbook } from "./adapters/lea.ts";
-import { fetchLeaLive } from "./adapters/lea-live.ts";
 import { loadPriceReports, reportsToObservations } from "./adapters/reports.ts";
 import { geocodePhoton, loadGeocodeCache, saveGeocodeCache, sleep } from "./geocode.ts";
 import { datesWithinDays, isHistoryFile, prunePriceFiles, recomputeHistory } from "./history.ts";
 import { loadOverrides, matchByAddress, matchObservations } from "./match.ts";
-import { combinePriceObservations } from "./merge-sources.ts";
+import { combinePriceObservations, summarizeSources } from "./merge-sources.ts";
 import { chooseOsmStations, fetchOsmStations } from "./osm.ts";
+import {
+  loadHealth,
+  rankSources,
+  recordRuns,
+  saveHealth,
+  SOURCE_META,
+  type RankedSource,
+  type SourceRun,
+} from "./source-health.ts";
+import { runProviders, type SourceContext } from "./sources.ts";
 import {
   applyStale,
   latestObservedAt,
   observationsToDaily,
   reuseGeneratedAtIfUnchanged,
+  type SelectionPolicy,
 } from "./validate.ts";
 
 const ROOT = join(import.meta.dirname, "..");
@@ -143,39 +152,34 @@ async function main(): Promise<void> {
   }
 
   const overrides = loadOverrides(join(DATA, "overrides", "stations.json"));
-  let byDate = new Map<string, Observation[]>();
-  let excelFetched = false;
-  try {
-    console.log("Fetching lea…");
-    byDate = await fetchLeaWorkbook();
-    excelFetched = true;
-    console.log(`  ${byDate.size} days in LEA workbook`);
-  } catch (e) {
-    console.error("Adapter lea failed:", e);
-  }
+  const requested = dateArg ?? todayVilnius();
+  const ctx: SourceContext = { requested, leaByDate: new Map(), leaDate: null };
+  console.log(`Fetching sources: ${SOURCE_META.map((m) => m.name).join(", ")}…`);
+  const { byProvider, runs } = await runProviders(ctx);
+  for (const run of runs) logRun(run);
+  if (ctx.leaByDate.size) console.log(`  ${ctx.leaByDate.size} days in LEA workbook`);
 
-  let live: Observation[] = [];
-  try {
-    console.log("Fetching lea-live…");
-    live = await fetchLeaLive();
-    console.log(`  ${live.length} live observations`);
-  } catch (e) {
-    console.error("Adapter lea-live failed:", e);
-  }
+  const healthPath = join(DATA, "cache", "source-health.json");
+  const health = recordRuns(loadHealth(healthPath), runs);
+  saveHealth(healthPath, health);
+  const ranking = rankSources(health);
+  const policy: SelectionPolicy = {
+    order: ranking.map((r) => r.name),
+    maxAgeHours: Object.fromEntries(SOURCE_META.map((m) => [m.name, m.maxAgeHours])),
+    now: new Date(),
+  };
 
   const reports = reportsToObservations(
     loadPriceReports(join(DATA, "overrides", "prices.json")),
     stations,
   );
-  const requested = dateArg ?? todayVilnius();
   const combined = combinePriceObservations({
-    byDate,
-    live,
+    byProvider,
     reports,
     requested,
-    excelFetched,
+    excelDate: ctx.leaDate,
   });
-  const { date, observations: combinedRows, sources: adapterNames } = combined;
+  const { date, observations: combinedRows } = combined;
   let observations = combinedRows;
 
   if (observations.length === 0) {
@@ -214,7 +218,7 @@ async function main(): Promise<void> {
   const previous = prevDate
     ? readJson<DailyPrices | null>(join(PRICES, `${prevDate}.json`), null)
     : null;
-  const { daily: fresh, log } = observationsToDaily(date, matched.observations, previous);
+  const { daily: fresh, log } = observationsToDaily(date, matched.observations, previous, policy);
   applyStale(fresh, previous, prevDate);
   const daily = reuseGeneratedAtIfUnchanged(previous, fresh);
   writeJson(join(PRICES, `${date}.json`), daily);
@@ -232,6 +236,18 @@ async function main(): Promise<void> {
 
   const priced = Object.keys(daily.prices).length;
   const checkedAt = new Date().toISOString();
+  const usage = summarizeSources(daily, policy.order);
+  const sourceRanking = ranking.map((r) => {
+    const run = runs.find((x) => x.name === r.name);
+    return {
+      name: r.name,
+      score: Math.round(r.score * 1000) / 1000,
+      ok: run?.ok ?? false,
+      rows: run?.rows ?? 0,
+      chosen: usage.find((u) => u.name === r.name)?.chosen ?? 0,
+    };
+  });
+  logRanking(ranking, sourceRanking, runs);
   const meta: DataMeta = {
     date,
     generatedAt: daily.generatedAt,
@@ -239,7 +255,8 @@ async function main(): Promise<void> {
     observedAt: latestObservedAt(daily),
     stationCount: stations.length,
     pricedStationCount: priced,
-    sources: adapterNames,
+    sources: usage.map((u) => u.name),
+    sourceRanking,
     cheapestHours: cheapestHoursByFuel(history),
   };
   writeJson(join(DATA, "meta.json"), meta);
@@ -247,6 +264,7 @@ async function main(): Promise<void> {
     `Wrote ${stations.length} stations, ${priced} with prices for ${date}. Checked ${checkedAt}; prices generated ${daily.generatedAt}${meta.observedAt ? `; observed ${meta.observedAt}` : ""}. Unmatched groups: ${matched.unmatched.length}`,
   );
 
+  const byDate = ctx.leaByDate;
   const otherDates = [...byDate.keys()].filter((d) => d !== date);
   const backfill = args.has("--backfill");
   if (backfill && otherDates.length && Object.keys(matched.sourceToStation).length) {
@@ -270,6 +288,32 @@ async function main(): Promise<void> {
     meta.cheapestHours = cheapestHoursByFuel(history);
     writeJson(join(DATA, "meta.json"), meta);
   }
+}
+
+function logRun(run: SourceRun & { name: string }): void {
+  if (run.ok) {
+    const newest = run.newestObservedAt ? `, newest ${run.newestObservedAt}` : "";
+    console.log(`  ${run.name}: ${run.rows} rows in ${run.ms} ms${newest}`);
+    return;
+  }
+  console.error(`  ${run.name} failed after ${run.ms} ms: ${run.error}`);
+  // Surfaces in the Actions run summary without failing the build.
+  if (process.env.GITHUB_ACTIONS) console.log(`::warning::Source ${run.name} failed: ${run.error}`);
+}
+
+function logRanking(
+  ranking: RankedSource[],
+  summary: NonNullable<DataMeta["sourceRanking"]>,
+  runs: Array<SourceRun & { name: string }>,
+): void {
+  console.log("Source ranking (7-day hourly reliability):");
+  ranking.forEach((r, i) => {
+    const s = summary.find((x) => x.name === r.name);
+    const run = runs.find((x) => x.name === r.name);
+    console.log(
+      `  ${i + 1}. ${r.name.padEnd(9)} score ${r.score.toFixed(3)} over ${r.runs} runs · this run ${run?.ok ? "ok" : "failed"}, ${s?.rows ?? 0} rows · chosen ${s?.chosen ?? 0} prices`,
+    );
+  });
 }
 
 main().catch((e) => {

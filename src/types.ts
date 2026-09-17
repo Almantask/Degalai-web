@@ -72,7 +72,10 @@ export interface DataMeta {
   observedAt?: string;
   stationCount: number;
   pricedStationCount: number;
+  /** Sources behind the snapshot's prices, most reliable first (`lea-live`, `lea`, `circle-k`, `report`). */
   sources: string[];
+  /** Ranked sources after this run: 7-day hourly reliability, this run's result, prices chosen. */
+  sourceRanking?: Array<{ name: string; score: number; ok: boolean; rows: number; chosen: number }>;
   cheapestHours?: Partial<Record<FuelType, CheapHourRange[]>>;
 }
 

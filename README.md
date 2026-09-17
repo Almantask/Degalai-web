@@ -71,40 +71,66 @@ The map loads `stations.json`, `meta.json`, and **today’s** price file only.
 `history.json` is fetched when History opens. The published build does not ship
 older daily files.
 
-| Path                           | What                               |
-| ------------------------------ | ---------------------------------- |
-| `data/stations.json`           | OSM stations + unmatched LEA sites |
-| `data/prices/YYYY-MM-DD.json`  | Daily snapshot (kept 7 days)       |
-| `data/history.json`            | Provider averages by date and time |
-| `data/overrides/stations.json` | Manual OSM ↔ source matches        |
-| `data/overrides/prices.json`   | Optional 24 h user-report overlay  |
-| `reports/unmatched.json`       | Source rows that still need a home |
+| Path                            | What                                       |
+| ------------------------------- | ------------------------------------------ |
+| `data/stations.json`            | OSM stations + unmatched LEA sites         |
+| `data/prices/YYYY-MM-DD.json`   | Daily snapshot (kept 7 days)               |
+| `data/history.json`             | Provider averages by date and time         |
+| `data/overrides/stations.json`  | Manual OSM ↔ source matches                |
+| `data/overrides/prices.json`    | Optional 24 h user-report overlay          |
+| `data/cache/source-health.json` | 7 days of hourly source runs (unpublished) |
+| `reports/unmatched.json`        | Source rows that still need a home         |
 
-Prices are merged newest-source-wins, with LEA Excel as the floor:
+### Price sources
 
-1. **LEA Excel** (`scripts/adapters/lea.ts`) — working-day **10:00** Europe/Vilnius
-   dump from [ena.lt](https://www.ena.lt/dk-pr-pr-duomenys/). This is the lagged
-   daily file; a station can change the board later the same day.
-2. **LEA live map** (`scripts/adapters/lea-live.ts`) — intra-day feed behind the
-   public map at [degalukainos.ena.lt](https://degalukainos.ena.lt/). The pipeline
-   reads `apiBase` and a public read token from that SPA (the token is not
-   committed). Live rows overlay Excel even when `submitted_at` is earlier than
-   the 10:00 stamp, so hourly deploys pick up moves like Circle K Kaunas
-   Karaliaus Mindaugo diesel 2.254 vs a stale 2.284 workbook row.
-3. **User reports** (`scripts/adapters/reports.ts`) — optional JSON in
-   `data/overrides/prices.json`. Bind by OSM `stationId` or address; ignored after
-   `expiresAt` or 24 hours. A later live row still wins. Open a
+Every hourly run fetches all sources in parallel (`scripts/sources.ts`). A source
+that throws, times out (180 s) or is skipped is logged as a failed run; it never
+fails the build.
+
+| Source     | Adapter                        | What it covers                                                                                                                                                                                                                                   | Fresh for |
+| ---------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- |
+| `lea-live` | `scripts/adapters/lea-live.ts` | Intra-day submissions behind LEA’s public map at [degalukainos.ena.lt](https://degalukainos.ena.lt/), ~750 stations. The pipeline reads `apiBase` and a public read token from that SPA (the token is not committed).                            | 36 h      |
+| `lea`      | `scripts/adapters/lea.ts`      | Working-day **10:00** Europe/Vilnius workbook from [ena.lt](https://www.ena.lt/dk-pr-pr-duomenys/). Lagged, but also the backfill source.                                                                                                        | 36 h      |
+| `circle-k` | `scripts/adapters/circle-k.ts` | [circlek.lt price page](https://www.circlek.lt/privatiems/degalu-kainos): the network-lowest 95, 98, diesel and LPG price, each with its station. Independent of LEA and the only source of a Circle K 98 price. Stamped 00:00 of the page date. | 36 h      |
+
+**Hourly reliability.** Each run scores a source 1 (fetched at least its minimum
+rows), 0.5 (fetched, too few rows) or 0 (failed). Reliability is the average over
+the last 7 days, smoothed with 24 pseudo-runs of a seed score (`lea-live` 0.95,
+`lea` 0.90, `circle-k` 0.70) so a cold cache or one bad hour does not reorder
+anything. Sources stay in seed order unless one is more than 0.05 ahead of the
+source above it. Freshness does not lower the score (LEA publishes nothing at
+weekends); it is checked per price instead. A source that is down has no rows, so
+the next one fills in that same hour; the ranking decides between sources that
+both have a fresh price. With a full week of runs, `lea-live` drops below `lea`
+after about 11 failed hours in 7 days.
+
+**Which price is published**, per station and fuel (`pickPrice` in
+`scripts/validate.ts`):
+
+1. Among sources whose price is still fresh, the highest-ranked source wins.
+2. If none is fresh, the newest Vilnius day wins, then the higher-ranked source.
+3. A **user report** (`scripts/adapters/reports.ts`, optional JSON in
+   `data/overrides/prices.json`, bound by OSM `stationId` or address, ignored after
+   `expiresAt` or 24 hours) replaces that price unless the winner was observed
+   later. Open a
    [wrong-price issue](https://github.com/Almantask/Degalai-web/issues/new?template=wrong-price.yml);
    a maintainer copies a fresh report into that file. GitHub Actions cache
    restores `data/`, then checks out this folder from git so committed reports
    apply.
+4. With nothing new, the previous snapshot’s price is carried forward as stale.
 
-Circle K’s station locator has **no per-station prices** (metadata only), and
-Neste does not publish public pump prices, so there is no chain-website scraper.
-Aggregators that rehost LEA are skipped. A failing adapter must not fail the
-build.
+`meta.json` lists the sources behind the published prices (`sources`) and this
+run’s ranking with scores and prices chosen (`sourceRanking`). Failed sources show
+as `::warning::` lines in the Actions run. Rehearse a fallback locally with
+`PIPELINE_SKIP_SOURCES=lea-live npm run pipeline`.
 
-Coordinates: OpenStreetMap. Attribute OSM, LEA, and the station chains.
+Sources checked and not used (September 2026): degalu-kaina.lt, degalukaina.lt,
+akcijukas.lt, kurokainoszemelapis.lt, degalukainos24.lt, piguskuras.lt and
+xydata.lt all rehost LEA data. Neste, Viada, Baltic Petroleum, Emsi and Jozita
+publish no per-station pump prices, orlen.lt did not respond, and Circle K’s
+station locator has metadata only.
+
+Coordinates: OpenStreetMap. Attribute OSM, LEA, Circle K, and the station chains.
 
 ## Routing
 
@@ -117,7 +143,7 @@ unavailable.
 
 ```bash
 npm install
-npm run pipeline          # OSM + LEA Excel floor + LEA live + reports (needs network)
+npm run pipeline          # OSM + LEA live + LEA Excel + Circle K + reports (needs network)
 npm run dev
 ```
 

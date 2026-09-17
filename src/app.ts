@@ -2,7 +2,15 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { netBenefit } from "./calc.ts";
 import { cheapestHourRanges, filterSeries, formatCheapRanges } from "./cheap-hours.ts";
-import { loadAppData, lastCheckedAt, loadHistory, pricesObservedAt, type AppData } from "./data.ts";
+import {
+  loadAppData,
+  lastCheckedAt,
+  loadHistory,
+  pricesObservedAt,
+  sourceLabels,
+  type AppData,
+  type SourceLabel,
+} from "./data.ts";
 import {
   formatDate,
   formatDateTime,
@@ -102,6 +110,12 @@ const REFRESH_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height=
   <path d="M21 12a9 9 0 1 1-3.5-7.1"/>
   <path d="M21 3v6h-6"/>
 </svg>`;
+
+function sourceLabelText(label: SourceLabel): string {
+  if (label === "circle-k") return brandLabel("circle-k");
+  if (label === "report") return t("list.sourceReports");
+  return t("list.source");
+}
 
 /** Price-delta savings only — user consumption and time value stay out of ranking. */
 function priceBenefit(baselinePrice: number, stationPrice: number): ReturnType<typeof netBenefit> {
@@ -1145,7 +1159,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         text: t("list.cheapestHour", { range: formatCheapRanges(cheapMeta) }),
       });
     }
-    const sourceText = checkedAt ? t("list.source") : "";
+    const sourceText = checkedAt ? sourceLabels(data.meta).map(sourceLabelText).join(", ") : "";
     const primaryHtml = primary.length
       ? `<span class="list-meta-primary">${primary
           .map((b) => `<span class="${b.className}">${escapeHtml(b.text)}</span>`)

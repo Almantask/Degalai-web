@@ -1,4 +1,7 @@
-import type { Observation } from "../src/types.ts";
+import type { DailyPrices, Observation } from "../src/types.ts";
+import { REPORT_SOURCE } from "./validate.ts";
+
+export const EXCEL_SOURCE = "lea";
 
 export function excelFloorDate(
   byDate: Map<string, Observation[]>,
@@ -10,28 +13,63 @@ export function excelFloorDate(
 }
 
 /**
- * Excel is the lagged daily floor. Live LEA rows and fresh user reports overlay it
- * onto `requested` (usually today) so hourly deploys can move before the next workbook.
+ * Pools every source's rows for one snapshot. Excel is the lagged daily floor
+ * (`excelDate`); any other source or a fresh user report moves the snapshot to `requested`
+ * (usually today) so hourly deploys can move before the next workbook. Which row wins per
+ * station is decided later by `pickPrice`.
  */
 export function combinePriceObservations(opts: {
-  byDate: Map<string, Observation[]>;
-  live: Observation[];
+  byProvider: Record<string, Observation[]>;
   reports: Observation[];
   requested: string;
-  excelFetched: boolean;
+  /** Date of the Excel rows in `byProvider.lea`, or null when the workbook failed. */
+  excelDate: string | null;
 }): { date: string; observations: Observation[]; sources: string[] } {
-  const { byDate, live, reports, requested, excelFetched } = opts;
-  const sources: string[] = [];
-  if (excelFetched) sources.push("lea");
-  if (live.length) sources.push("lea-live");
-  if (reports.length) sources.push("report");
+  const { byProvider, reports, requested, excelDate } = opts;
+  const sources = Object.entries(byProvider)
+    .filter(([, rows]) => rows.length > 0)
+    .map(([name]) => name);
+  if (reports.length) sources.push(REPORT_SOURCE);
 
-  const floor = excelFloorDate(byDate, requested);
-  const overlay = live.length > 0 || reports.length > 0;
-  const date = overlay ? requested : (floor ?? requested);
-  const floorRows = overlay
-    ? (byDate.get(requested) ?? (floor ? (byDate.get(floor) ?? []) : []))
-    : (byDate.get(date) ?? []);
+  const overlay = sources.some((s) => s !== EXCEL_SOURCE);
+  const date = overlay ? requested : (excelDate ?? requested);
+  // Excel rows stay first: address matching samples a group's first row, and exact price ties
+  // keep the later row, so this order keeps station matches as they were before ranking.
+  const observations = [
+    ...(byProvider[EXCEL_SOURCE] ?? []),
+    ...Object.entries(byProvider)
+      .filter(([name]) => name !== EXCEL_SOURCE)
+      .flatMap(([, rows]) => rows),
+    ...reports,
+  ];
+  return { date, observations, sources };
+}
 
-  return { date, observations: [...floorRows, ...live, ...reports], sources };
+export interface SourceUsage {
+  name: string;
+  /** Prices this source supplied in the snapshot, not counting carried-forward stale ones. */
+  chosen: number;
+  stale: number;
+}
+
+/** Sources behind the published snapshot, in ranking order, then reports, then any others. */
+export function summarizeSources(daily: DailyPrices, order: string[]): SourceUsage[] {
+  const usage = new Map<string, SourceUsage>();
+  for (const fuels of Object.values(daily.prices)) {
+    for (const entry of Object.values(fuels)) {
+      if (!entry) continue;
+      const u = usage.get(entry.source) ?? { name: entry.source, chosen: 0, stale: 0 };
+      if (entry.stale) u.stale++;
+      else u.chosen++;
+      usage.set(entry.source, u);
+    }
+  }
+  const position = (name: string): number => {
+    const i = order.indexOf(name);
+    if (i !== -1) return i;
+    return name === REPORT_SOURCE ? order.length : order.length + 1;
+  };
+  return [...usage.values()].sort(
+    (a, b) => position(a.name) - position(b.name) || a.name.localeCompare(b.name),
+  );
 }

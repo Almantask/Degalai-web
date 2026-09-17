@@ -36,6 +36,7 @@
   "list.checked": "Last checked {time}",
   "list.pricesAsOf": "Prices as of {time}",
   "list.source": "LEA (Lithuanian Energy Agency)",
+  "list.sourceReports": "user reports",
   "list.empty": "No stations with the selected fuel in this view.",
   "list.sortPrice": "By price",
   "list.cheapest": "Cheapest",

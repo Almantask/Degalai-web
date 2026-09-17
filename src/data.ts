@@ -26,6 +26,23 @@ export function pricesObservedAt(data: Pick<AppData, "prices" | "meta">): string
   return observed;
 }
 
+export type SourceLabel = "lea" | "circle-k" | "report";
+
+/** Attribution for the list footer. Both LEA feeds read as one source; LEA when unknown. */
+export function sourceLabels(meta: DataMeta | null | undefined): SourceLabel[] {
+  const out: SourceLabel[] = [];
+  for (const source of meta?.sources ?? []) {
+    const label: SourceLabel | null =
+      source === "lea" || source === "lea-live"
+        ? "lea"
+        : source === "circle-k" || source === "report"
+          ? source
+          : null;
+    if (label && !out.includes(label)) out.push(label);
+  }
+  return out.length ? out : ["lea"];
+}
+
 export async function loadAppData(): Promise<AppData> {
   const [stations, meta] = await Promise.all([
     fetchJson<Station[]>(dataUrl("stations.json"), []),

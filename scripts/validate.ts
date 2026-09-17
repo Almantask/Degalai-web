@@ -1,5 +1,7 @@
 import type { DailyPrices, FuelType, Observation, PriceEntry } from "../src/types.ts";
 import { FUEL_TYPES } from "../src/types.ts";
+import { dateInVilnius } from "./history.ts";
+import { DEFAULT_MAX_AGE_HOURS, SOURCE_META } from "./source-health.ts";
 
 export const PRICE_RANGE: Record<FuelType, { min: number; max: number }> = {
   "95": { min: 0.9, max: 2.5 },
@@ -13,14 +15,35 @@ export interface ValidationLog {
   suspicious: Array<{ stationId: string; fuel: FuelType; prev: number; next: number }>;
 }
 
+/** How one station's fuel price is chosen when several sources have it. */
+export interface SelectionPolicy {
+  /** Ranked source names, most reliable first. Unknown sources rank last. */
+  order: string[];
+  maxAgeHours: Record<string, number>;
+  now: Date;
+}
+
+export const REPORT_SOURCE = "report";
+
+export function defaultSelectionPolicy(now = new Date()): SelectionPolicy {
+  return {
+    order: [...SOURCE_META].sort((a, b) => b.seedScore - a.seedScore).map((m) => m.name),
+    maxAgeHours: Object.fromEntries(SOURCE_META.map((m) => [m.name, m.maxAgeHours])),
+    now,
+  };
+}
+
 export function observationsToDaily(
   date: string,
   observations: Observation[],
   previous: DailyPrices | null,
+  policy: SelectionPolicy = defaultSelectionPolicy(),
 ): { daily: DailyPrices; log: ValidationLog } {
   const log: ValidationLog = { dropped: [], suspicious: [] };
   const prices: DailyPrices["prices"] = {};
 
+  // Fuel codes contain no ":", so the key cannot collide across stations.
+  const groups = new Map<string, Observation[]>();
   for (const o of observations) {
     const range = PRICE_RANGE[o.fuel];
     if (o.price < range.min || o.price > range.max) {
@@ -32,9 +55,17 @@ export function observationsToDaily(
       });
       continue;
     }
+    const key = `${o.fuel}:${o.sourceStationId}`;
+    const list = groups.get(key);
+    if (list) list.push(o);
+    else groups.set(key, [o]);
+  }
+
+  for (const candidates of groups.values()) {
+    const o = pickPrice(candidates, policy);
     const entry: PriceEntry = {
       price: o.price,
-      source: o.source ?? sourceOf(o.sourceStationId),
+      source: sourceOfObservation(o),
       observedAt: o.observedAt,
     };
     const prev = previous?.prices[o.sourceStationId]?.[o.fuel];
@@ -50,15 +81,61 @@ export function observationsToDaily(
         });
       }
     }
-    const slot = (prices[o.sourceStationId] ??= {});
-    const existing = slot[o.fuel];
-    if (!existing || takesPrecedence(o, existing)) slot[o.fuel] = entry;
+    (prices[o.sourceStationId] ??= {})[o.fuel] = entry;
   }
 
   return {
     daily: { date, generatedAt: new Date().toISOString(), prices },
     log,
   };
+}
+
+/**
+ * Picks one price for a station and fuel:
+ * 1. among ranked sources whose price is still fresh, the most reliable source wins;
+ * 2. if none is fresh, the newest Vilnius day wins, then the more reliable source;
+ * 3. a user report replaces that winner unless the winner was observed later.
+ * Candidates are compared as a group, so input order only settles exact ties (same source and
+ * time, e.g. two LEA rows matched to one OSM station), where the later row wins as before.
+ */
+export function pickPrice(candidates: Observation[], policy: SelectionPolicy): Observation {
+  if (candidates.length === 0) throw new Error("pickPrice needs at least one candidate");
+  type Candidate = { o: Observation; index: number; source: string; ms: number };
+  const rankOf = (c: Candidate): number => {
+    const i = policy.order.indexOf(c.source);
+    return i === -1 ? policy.order.length : i;
+  };
+  const newestFirst = (a: Candidate, b: Candidate): number => b.ms - a.ms || b.index - a.index;
+
+  const all: Candidate[] = candidates.map((o, index) => ({
+    o,
+    index,
+    source: sourceOfObservation(o),
+    ms: Date.parse(o.observedAt),
+  }));
+  const ranked = all.filter((c) => c.source !== REPORT_SOURCE);
+  const fresh = ranked.filter((c) => isFresh(c.o, policy));
+  let winner: Candidate | undefined;
+  if (fresh.length) {
+    winner = [...fresh].sort((a, b) => rankOf(a) - rankOf(b) || newestFirst(a, b))[0];
+  } else if (ranked.length) {
+    winner = [...ranked].sort(
+      (a, b) =>
+        dateInVilnius(b.o.observedAt).localeCompare(dateInVilnius(a.o.observedAt)) ||
+        rankOf(a) - rankOf(b) ||
+        newestFirst(a, b),
+    )[0];
+  }
+
+  // Reports are filtered for expiry before they reach the pipeline.
+  const report = all.filter((c) => c.source === REPORT_SOURCE).sort(newestFirst)[0];
+  if (report && (!winner || report.ms >= winner.ms)) return report.o;
+  return winner!.o;
+}
+
+function isFresh(o: Observation, policy: SelectionPolicy): boolean {
+  const hours = policy.maxAgeHours[sourceOfObservation(o)] ?? DEFAULT_MAX_AGE_HOURS;
+  return policy.now.getTime() - Date.parse(o.observedAt) <= hours * 3_600_000;
 }
 
 /** Newest observation time in a daily file; used so the UI can show the source snapshot. */
@@ -114,25 +191,14 @@ export function applyStale(
   return daily;
 }
 
+function sourceOfObservation(o: Observation): string {
+  return o.source ?? sourceOf(o.sourceStationId);
+}
+
 function sourceOf(stationId: string): string {
   if (stationId.startsWith("osm:")) return "lea";
   if (stationId.startsWith("lea:")) return "lea";
   return "unknown";
-}
-
-const SOURCE_RANK: Record<string, number> = {
-  lea: 0,
-  "lea-live": 1,
-  report: 2,
-};
-
-/** Live LEA and user reports overlay the lagged Excel dump even when their clocks are earlier. */
-export function takesPrecedence(next: Observation, existing: PriceEntry): boolean {
-  const nextSource = next.source ?? sourceOf(next.sourceStationId);
-  if (existing.source === "lea" && nextSource !== "lea") return true;
-  if (nextSource === "lea" && existing.source !== "lea") return false;
-  if (next.observedAt !== existing.observedAt) return next.observedAt > existing.observedAt;
-  return (SOURCE_RANK[nextSource] ?? 0) >= (SOURCE_RANK[existing.source] ?? 0);
 }
 
 function dayDiff(a: string, b: string): number {
