@@ -96,8 +96,6 @@
   "history.byHour": "Tiekėjų vidutinės kainos per paskutines 7 dienas.",
   "history.empty": "Istorinių kainų dar nėra.",
   "history.loading": "Įkeliama istorija…",
-  "history.cheapest": "Pigiausia {range}",
-  "history.cheapestAvg": "vid. {price}",
   "history.collapse": "Sutraukti istoriją",
   "history.expand": "Išskleisti istoriją",
   "history.scroll": "Kainos pagal datą ir laiką. Slinkite į kairę arba dešinę, kad pamatytumėte kitas dienas.",

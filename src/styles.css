@@ -713,13 +713,6 @@ body,
   letter-spacing: -0.02em;
 }
 
-.history-head-meta {
-  margin: 0;
-  color: var(--green-dark);
-  font-size: 0.75rem;
-  font-weight: 650;
-}
-
 .history-chevron {
   color: var(--muted);
   font-size: 0.85rem;
@@ -884,31 +877,6 @@ body,
   color: var(--muted);
   font-size: 0.78rem;
   flex: 0 0 auto;
-}
-
-.history-cheap {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px 10px;
-  margin: 0;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: rgb(15 138 75 / 10%);
-  border: 1px solid rgb(15 138 75 / 18%);
-  font-size: 0.88rem;
-  flex: 0 0 auto;
-}
-
-.history-cheap strong {
-  font-size: 1.05rem;
-  letter-spacing: -0.02em;
-}
-
-.history-cheap-avg {
-  color: var(--muted);
-  font-size: 0.85rem;
-  font-weight: 500;
 }
 
 .list-cheap-hour {
@@ -1220,10 +1188,6 @@ body,
 
   .icon-tool {
     padding: 6px 7px;
-  }
-
-  .history-cheap {
-    display: none;
   }
 
   #history-legend {

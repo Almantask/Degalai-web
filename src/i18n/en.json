@@ -96,8 +96,6 @@
   "history.byHour": "Provider average prices over the last 7 days.",
   "history.empty": "No historical prices yet.",
   "history.loading": "Loading history…",
-  "history.cheapest": "Cheapest {range}",
-  "history.cheapestAvg": "avg. {price}",
   "history.collapse": "Minimise history",
   "history.expand": "Expand history",
   "history.scroll": "Prices by date and time. Scroll left or right to see other days.",

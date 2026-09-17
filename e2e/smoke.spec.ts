@@ -100,8 +100,8 @@ test("history button opens provider averages by date and time", async ({ page })
   await expect(page).toHaveURL(/istorija/);
   await expect(page.getByRole("heading", { name: "Istorinės kainos" })).toBeVisible();
   await expect(page.locator(".history-caption")).toContainText(/Tiekėjų vidutinės kainos/);
-  await expect(page.locator(".history-cheap")).toContainText(/Pigiausia/);
-  await expect(page.locator(".history-cheap")).toContainText(/09-15 \d{2}:\d{2}/);
+  await expect(page.locator(".history-cheap")).toHaveCount(0);
+  await expect(page.locator(".history-head-meta")).toHaveCount(0);
   await expect.poll(() => historyUrls.length).toBe(1);
   await expect(page.locator("#history-chart .uplot")).toBeVisible();
   expect(priceUrls).toHaveLength(1);
