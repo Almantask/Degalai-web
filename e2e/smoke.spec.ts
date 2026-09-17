@@ -455,12 +455,14 @@ test("station list shows last check even when prices were not updated", async ({
     const meta = (await res.json()) as {
       generatedAt?: string;
       checkedAt?: string;
+      observedAt?: string;
     };
     await route.fulfill({
       json: {
         ...meta,
         generatedAt: "2026-09-15T07:46:15.859Z",
         checkedAt: "2026-09-15T13:17:00.000Z",
+        observedAt: "2026-09-15T10:00:00+03:00",
       },
     });
   });
@@ -469,6 +471,8 @@ test("station list shows last check even when prices were not updated", async ({
   await expect(page.locator(".list-updated")).toContainText(/Tikrinta/);
   await expect(page.locator(".list-updated")).toContainText("16:17");
   await expect(page.locator(".list-updated")).not.toContainText("10:46");
+  await expect(page.locator(".list-prices-as-of")).toContainText(/Kainos/);
+  await expect(page.locator(".list-prices-as-of")).toContainText("10:00");
 });
 
 test("settings include consumption, time value, and provider checkboxes", async ({ page }) => {

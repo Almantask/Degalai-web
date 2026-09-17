@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { reuseGeneratedAtIfUnchanged } from "../scripts/validate.ts";
+import { firstObservedAt, reuseGeneratedAtIfUnchanged } from "../scripts/validate.ts";
 import type { DailyPrices } from "../src/types.ts";
 
 const snapshot: DailyPrices = {
@@ -31,5 +31,15 @@ describe("reuseGeneratedAtIfUnchanged", () => {
       },
     };
     expect(reuseGeneratedAtIfUnchanged(snapshot, next).generatedAt).toBe(next.generatedAt);
+  });
+});
+
+describe("firstObservedAt", () => {
+  it("returns the first price observation in the snapshot", () => {
+    expect(firstObservedAt(snapshot)).toBe("2026-09-15T07:00:00+03:00");
+  });
+
+  it("is undefined when no prices were recorded", () => {
+    expect(firstObservedAt({ ...snapshot, prices: {} })).toBeUndefined();
   });
 });

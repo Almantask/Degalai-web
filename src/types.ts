@@ -68,6 +68,8 @@ export interface DataMeta {
   generatedAt: string;
   /** When the pipeline last fetched sources, even if prices did not change. */
   checkedAt?: string;
+  /** When the source snapshot was taken (LEA: working days at 10:00). */
+  observedAt?: string;
   stationCount: number;
   pricedStationCount: number;
   sources: string[];

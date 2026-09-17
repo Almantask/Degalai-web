@@ -79,8 +79,10 @@ older daily files.
 | `data/overrides/stations.json` | Manual OSM ↔ source matches        |
 | `reports/unmatched.json`       | Source rows that still need a home |
 
-Prices: Lithuanian Energy Agency (LEA) public dataset. Coordinates:
-OpenStreetMap. Attribute both, plus the station chains.
+Prices: Lithuanian Energy Agency (LEA) public dataset — a **working-day 10:00**
+snapshot of pump prices, not a live feed. Stations (Circle K especially) can
+change the board later the same day; those moves show up on the next LEA file.
+Coordinates: OpenStreetMap. Attribute both, plus the station chains.
 
 Chain-website adapters can be added under `scripts/adapters/` behind the shared
 `PriceSource` interface. A failing adapter must not fail the build.

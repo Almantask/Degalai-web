@@ -9,6 +9,13 @@ const ENA_MAP_PAGE = "https://www.ena.lt/degalu-kainos-degalinese/";
 const UA =
   "KurDegalai/0.1 (https://github.com/Almantask/Degalai-web; fuel-price research; contact via GitHub)";
 
+/** LEA records pump prices each working day at 10:00 Europe/Vilnius. */
+export const LEA_SNAPSHOT_HOUR = 10;
+
+export function leaObservedAt(date: string): string {
+  return `${date}T${String(LEA_SNAPSHOT_HOUR).padStart(2, "0")}:00:00+03:00`;
+}
+
 export function leaSourceId(company: string, municipality: string, address: string): string {
   const raw = `${municipality}|${address}|${company}`.toLowerCase().replace(/\u00a0/g, " ");
   const tokens = raw.match(/[0-9a-ząčęėįšųūž]+/gi) ?? [];
@@ -115,7 +122,7 @@ function observationFromRow(
     name: company,
     fuel,
     price,
-    observedAt: `${date}T07:00:00+03:00`,
+    observedAt: leaObservedAt(date),
   };
 }
 

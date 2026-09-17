@@ -17,6 +17,15 @@ export function lastCheckedAt(data: Pick<AppData, "prices" | "meta">): string | 
   return data.meta?.checkedAt ?? data.prices?.generatedAt ?? data.meta?.generatedAt ?? undefined;
 }
 
+/** LEA (or other source) snapshot time. Distinct from hourly pipeline checks. */
+export function pricesObservedAt(data: Pick<AppData, "prices" | "meta">): string | undefined {
+  const observed = data.meta?.observedAt;
+  if (!observed) return undefined;
+  const checked = lastCheckedAt(data);
+  if (checked && Math.abs(Date.parse(observed) - Date.parse(checked)) < 60_000) return undefined;
+  return observed;
+}
+
 export async function loadAppData(): Promise<AppData> {
   const [stations, meta] = await Promise.all([
     fetchJson<Station[]>(dataUrl("stations.json"), []),

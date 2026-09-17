@@ -8,7 +8,12 @@ import { geocodePhoton, loadGeocodeCache, saveGeocodeCache, sleep } from "./geoc
 import { datesWithinDays, isHistoryFile, prunePriceFiles, recomputeHistory } from "./history.ts";
 import { loadOverrides, matchByAddress, matchObservations } from "./match.ts";
 import { chooseOsmStations, fetchOsmStations } from "./osm.ts";
-import { applyStale, observationsToDaily, reuseGeneratedAtIfUnchanged } from "./validate.ts";
+import {
+  applyStale,
+  firstObservedAt,
+  observationsToDaily,
+  reuseGeneratedAtIfUnchanged,
+} from "./validate.ts";
 
 const ROOT = join(import.meta.dirname, "..");
 const DATA = join(ROOT, "data");
@@ -206,6 +211,7 @@ async function main(): Promise<void> {
     date,
     generatedAt: daily.generatedAt,
     checkedAt,
+    observedAt: firstObservedAt(daily),
     stationCount: stations.length,
     pricedStationCount: priced,
     sources: adapterNames,
@@ -213,7 +219,7 @@ async function main(): Promise<void> {
   };
   writeJson(join(DATA, "meta.json"), meta);
   console.log(
-    `Wrote ${stations.length} stations, ${priced} with prices for ${date}. Checked ${checkedAt}; prices generated ${daily.generatedAt}. Unmatched groups: ${matched.unmatched.length}`,
+    `Wrote ${stations.length} stations, ${priced} with prices for ${date}. Checked ${checkedAt}; prices generated ${daily.generatedAt}${meta.observedAt ? `; observed ${meta.observedAt}` : ""}. Unmatched groups: ${matched.unmatched.length}`,
   );
 
   const otherDates = leaDates.filter((d) => d !== date);

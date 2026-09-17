@@ -61,6 +61,15 @@ export function observationsToDaily(
   };
 }
 
+/** First observation time in a daily file; used so the UI can show the source snapshot. */
+export function firstObservedAt(daily: DailyPrices): string | undefined {
+  for (const fuels of Object.values(daily.prices)) {
+    for (const entry of Object.values(fuels)) {
+      if (entry?.observedAt) return entry.observedAt;
+    }
+  }
+}
+
 /** Keep the previous snapshot timestamp when this check found the same prices. */
 export function reuseGeneratedAtIfUnchanged(
   previous: DailyPrices | null,

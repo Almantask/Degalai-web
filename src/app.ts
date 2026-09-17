@@ -2,7 +2,7 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { netBenefit } from "./calc.ts";
 import { cheapestHourRanges, filterSeries, formatCheapRanges } from "./cheap-hours.ts";
-import { loadAppData, lastCheckedAt, loadHistory, type AppData } from "./data.ts";
+import { loadAppData, lastCheckedAt, loadHistory, pricesObservedAt, type AppData } from "./data.ts";
 import {
   formatDate,
   formatDateTime,
@@ -1143,8 +1143,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const count = items.length;
     const title = count ? `${t("list.title")} · ${tPlural("stations", count)}` : t("list.title");
     const checkedAt = lastCheckedAt(data);
+    const observedAt = pricesObservedAt(data);
     const cheapMeta = data.meta?.cheapestHours?.[settings.fuel] ?? [];
     const primary: Array<{ className: string; text: string }> = [];
+    if (observedAt) {
+      primary.push({
+        className: "list-prices-as-of",
+        text: t("list.pricesAsOf", { time: formatDateTime(observedAt) }),
+      });
+    }
     if (checkedAt) {
       primary.push({
         className: "list-updated",
