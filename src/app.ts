@@ -930,18 +930,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function historyHtml(): string {
-    const cheapSeries = historyFile?.byFuel[settings.fuel];
-    const filtered = cheapSeries ? filterSeries(cheapSeries, settings.excludedBrands) : undefined;
-    const cheap = filtered ? cheapestHourRanges(filtered) : [];
-    const cheapLine =
-      cheap.length > 0
-        ? `<p class="history-head-meta">${escapeHtml(t("list.cheapestHour", { range: formatCheapRanges(cheap) }))}</p>`
-        : "";
+    const series = historyFile?.byFuel[settings.fuel];
+    const filtered = series ? filterSeries(series, settings.excludedBrands) : undefined;
     const toggle = `<button type="button" class="history-head" data-act="toggle-history" aria-expanded="${historyMinimized ? "false" : "true"}" aria-label="${escapeHtml(historyMinimized ? t("history.expand") : t("history.collapse"))}">
         <span class="history-handle" aria-hidden="true"></span>
         <span class="history-head-copy">
           <h2>${escapeHtml(t("history.title"))}</h2>
-          ${cheapLine}
         </span>
         <span class="history-chevron" aria-hidden="true">${historyMinimized ? "▴" : "▾"}</span>
       </button>`;
@@ -957,22 +951,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       filtered && Object.values(filtered.brands).some((row) => row.some((v) => v != null)),
     );
     const caption = hasPoints ? t("history.byHour") : t("history.empty");
-    const cheapHtml =
-      cheap.length > 0
-        ? `<p class="history-cheap" role="status" aria-label="${escapeHtml(t("history.cheapest", { range: formatCheapRanges(cheap) }))}">
-            <span class="badge">${escapeHtml(t("list.cheapest"))}</span>
-            <strong>${escapeHtml(formatCheapRanges(cheap))}</strong>
-            <span class="history-cheap-avg">${escapeHtml(
-              t("history.cheapestAvg", {
-                price: formatPrice(Math.min(...cheap.map((r) => r.price))),
-              }),
-            )}</span>
-          </p>`
-        : "";
     return `<section class="history-panel${historyMinimized ? " is-min" : ""}" aria-label="${escapeHtml(t("history.title"))}">
       ${toggle}
       <div class="history-body">
-        ${cheapHtml}
         <div class="history-chart-stack">
           <div id="history-chart"></div>
           ${historyLegendHtml(filtered)}
