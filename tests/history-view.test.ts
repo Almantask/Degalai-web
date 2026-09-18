@@ -101,10 +101,9 @@ describe("historyChartWheelDelta", () => {
 });
 
 describe("historyChartInitialHour", () => {
-  it("uses the cheapest sample index when given, otherwise the first with prices", () => {
+  it("starts at the first sample with prices", () => {
     const hours = [...Array(24).keys()];
     const values = [Array.from({ length: 24 }, (_, h) => (h === 8 ? 1.5 : null))];
-    expect(historyChartInitialHour(hours, values, 7)).toBe(7);
     expect(historyChartInitialHour(hours, values)).toBe(8);
     expect(historyChartInitialHour(hours, [Array(24).fill(null)])).toBe(0);
   });
