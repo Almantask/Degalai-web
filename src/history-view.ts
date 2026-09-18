@@ -1,6 +1,6 @@
 import uPlot from "uplot";
 import "uplot/dist/uPlot.min.css";
-import type { CheapHourRange, FuelType, HistoryFile, HistoryHourSeries } from "./types.ts";
+import type { FuelType, HistoryFile, HistoryHourSeries } from "./types.ts";
 import { formatChartDate, formatPrice } from "./format.ts";
 import { brandColor, chartBrands, isHistoryBrandOn } from "./history-series.ts";
 import { formatHourClock } from "./cheap-hours.ts";
@@ -70,9 +70,7 @@ export function historyChartWheelDelta(deltaX: number, deltaY: number, shiftKey:
 export function historyChartInitialHour(
   hours: number[],
   valuesByBrand: Array<Array<number | null>>,
-  cheapStart?: number,
 ): number {
-  if (cheapStart != null && Number.isFinite(cheapStart)) return cheapStart;
   for (let i = 0; i < hours.length; i++) {
     if (valuesByBrand.some((vals) => vals[i] != null)) return i;
   }
@@ -97,7 +95,6 @@ export type HistoryPlot = {
 export function mountHistoryChart(
   el: HTMLElement,
   series: HistoryHourSeries | undefined,
-  cheapRanges: CheapHourRange[] = [],
   hiddenBrands: ReadonlySet<string> = new Set(),
 ): HistoryPlot | null {
   if (!series) return null;
@@ -129,7 +126,6 @@ export function mountHistoryChart(
   const initialHour = historyChartInitialHour(
     xs,
     brands.map((b) => b.values),
-    cheapRanges[0]?.start,
   );
   const plot = new uPlot(
     {
@@ -182,20 +178,6 @@ export function mountHistoryChart(
       hooks: {
         draw: [
           (u) => {
-            if (cheapRanges.length > 0) {
-              const { ctx } = u;
-              ctx.save();
-              ctx.fillStyle = "rgb(15 138 75 / 12%)";
-              for (const range of cheapRanges) {
-                for (const [from, to] of hourBands(range, lastX)) {
-                  const x0 = u.valToPos(from, "x", true);
-                  const x1 = u.valToPos(to, "x", true);
-                  const top = u.bbox.top;
-                  ctx.fillRect(x0, top, Math.max(1, x1 - x0), u.bbox.height);
-                }
-              }
-              ctx.restore();
-            }
             syncYAxisOverlay(u, yAxis);
           },
         ],
@@ -278,10 +260,3 @@ function syncYAxisOverlay(plot: uPlot, overlay: HTMLCanvasElement): void {
   ctx.drawImage(src, 0, 0, slice, sliceH, 0, 0, slice, sliceH);
 }
 
-function hourBands(range: CheapHourRange, lastX: number): Array<[number, number]> {
-  if (range.start <= range.end) return [[range.start - 0.45, range.end + 0.45]];
-  return [
-    [range.start - 0.45, lastX + 0.45],
-    [-0.45, range.end + 0.45],
-  ];
-}

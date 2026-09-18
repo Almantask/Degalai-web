@@ -1,7 +1,7 @@
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { netBenefit } from "./calc.ts";
-import { cheapestHourRanges, filterSeries, formatCheapRanges } from "./cheap-hours.ts";
+import { filterSeries, formatCheapRanges } from "./cheap-hours.ts";
 import {
   loadAppData,
   lastCheckedAt,
@@ -1025,10 +1025,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (!el || !historyFile) return;
     const series = historyFile.byFuel[settings.fuel];
     const filtered = series ? filterSeries(series, settings.excludedBrands) : undefined;
-    const cheap = filtered ? cheapestHourRanges(filtered) : [];
     const { mountHistoryChart } = await import("./history-view.ts");
     if (view !== "history" || historyMinimized) return;
-    historyPlot = mountHistoryChart(el, filtered, cheap, hiddenHistoryBrands);
+    historyPlot = mountHistoryChart(el, filtered, hiddenHistoryBrands);
   }
 
   function applyHistoryMinimized(): void {
