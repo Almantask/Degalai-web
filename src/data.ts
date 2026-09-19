@@ -12,17 +12,17 @@ export interface AppData {
   meta: DataMeta | null;
 }
 
-/** Last source fetch, falling back to snapshot times from older data files. */
-export function lastCheckedAt(data: Pick<AppData, "prices" | "meta">): string | undefined {
-  return data.meta?.checkedAt ?? data.prices?.generatedAt ?? data.meta?.generatedAt ?? undefined;
+/** Last time published prices changed. Unchanged source checks do not move this. */
+export function lastUpdatedAt(data: Pick<AppData, "prices" | "meta">): string | undefined {
+  return data.prices?.generatedAt ?? data.meta?.generatedAt ?? undefined;
 }
 
-/** Newest source observation (Excel 10:00, live submit, or report). Distinct from hourly checks. */
+/** Newest source observation (Excel 10:00, live submit, or report). Distinct from last updated. */
 export function pricesObservedAt(data: Pick<AppData, "prices" | "meta">): string | undefined {
   const observed = data.meta?.observedAt;
   if (!observed) return undefined;
-  const checked = lastCheckedAt(data);
-  if (checked && Math.abs(Date.parse(observed) - Date.parse(checked)) < 60_000) return undefined;
+  const updated = lastUpdatedAt(data);
+  if (updated && Math.abs(Date.parse(observed) - Date.parse(updated)) < 60_000) return undefined;
   return observed;
 }
 

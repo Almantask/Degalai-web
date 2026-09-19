@@ -33,7 +33,7 @@
   "dest.clear": "Išvalyti tikslą",
   "dest.pickStart": "Bakstelėkite žemėlapį pradžios vietai",
   "list.title": "Degalinės",
-  "list.checked": "Tikrinta {time}",
+  "list.updated": "Atnaujinta {time}",
   "list.pricesAsOf": "Kainos {time}",
   "list.source": "LEA (Lietuvos energetikos agentūra)",
   "list.sourceReports": "vartotojų pranešimai",

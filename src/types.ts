@@ -66,7 +66,7 @@ export interface HistoryFile {
 export interface DataMeta {
   date: string | null;
   generatedAt: string;
-  /** When the pipeline last fetched sources, even if prices did not change. */
+  /** When the pipeline last fetched sources, even if prices did not change. Not shown in the UI. */
   checkedAt?: string;
   /** Newest price observation in the snapshot (LEA Excel 10:00, or later live/report). */
   observedAt?: string;

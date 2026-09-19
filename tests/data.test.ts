@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lastCheckedAt, pricesObservedAt, sourceLabels } from "../src/data.ts";
+import { lastUpdatedAt, pricesObservedAt, sourceLabels } from "../src/data.ts";
 import type { DailyPrices, DataMeta } from "../src/types.ts";
 
 const prices: DailyPrices = {
@@ -16,20 +16,20 @@ const meta: DataMeta = {
   sources: ["lea"],
 };
 
-describe("lastCheckedAt", () => {
-  it("prefers the pipeline check time over the last price snapshot", () => {
+describe("lastUpdatedAt", () => {
+  it("uses the price snapshot time, not a later unchanged check", () => {
     expect(
-      lastCheckedAt({
+      lastUpdatedAt({
         prices,
         meta: { ...meta, checkedAt: "2026-09-15T12:17:00.000Z" },
       }),
-    ).toBe("2026-09-15T12:17:00.000Z");
+    ).toBe(prices.generatedAt);
   });
 
-  it("falls back to snapshot times when a check has not been recorded", () => {
-    expect(lastCheckedAt({ prices, meta })).toBe(prices.generatedAt);
-    expect(lastCheckedAt({ prices: null, meta })).toBe(meta.generatedAt);
-    expect(lastCheckedAt({ prices: null, meta: null })).toBeUndefined();
+  it("falls back to meta when a price file is missing", () => {
+    expect(lastUpdatedAt({ prices, meta })).toBe(prices.generatedAt);
+    expect(lastUpdatedAt({ prices: null, meta })).toBe(meta.generatedAt);
+    expect(lastUpdatedAt({ prices: null, meta: null })).toBeUndefined();
   });
 });
 
@@ -38,7 +38,7 @@ describe("pricesObservedAt", () => {
     expect(pricesObservedAt({ prices, meta })).toBeUndefined();
   });
 
-  it("returns the LEA snapshot when it differs from the hourly check", () => {
+  it("returns the LEA snapshot when it differs from last updated", () => {
     expect(
       pricesObservedAt({
         prices,
@@ -51,14 +51,15 @@ describe("pricesObservedAt", () => {
     ).toBe("2026-09-16T10:00:00+03:00");
   });
 
-  it("hides a duplicate when the check landed on the same minute as the snapshot", () => {
+  it("hides a duplicate when last updated landed on the same minute as the snapshot", () => {
     expect(
       pricesObservedAt({
-        prices,
+        prices: { ...prices, generatedAt: "2026-09-16T07:00:20.000Z" },
         meta: {
           ...meta,
+          generatedAt: "2026-09-16T07:00:20.000Z",
           observedAt: "2026-09-16T10:00:00+03:00",
-          checkedAt: "2026-09-16T07:00:20.000Z",
+          checkedAt: "2026-09-16T12:00:00.000Z",
         },
       }),
     ).toBeUndefined();

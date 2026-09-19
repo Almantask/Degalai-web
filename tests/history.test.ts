@@ -69,12 +69,6 @@ describe("sampleFromDaily", () => {
     expect(sampleKey(sample)).toBe("2026-09-14-08");
   });
 
-  it("stamps the check hour when prices were reused from an earlier snapshot", () => {
-    const sample = sampleFromDaily(daily, stations, new Date("2026-09-14T14:00:00.000Z"));
-    expect(sample.hour).toBe(17);
-    expect(sampleKey(sample)).toBe("2026-09-14-17");
-  });
-
   it("keys by the file date when generatedAt is from a later backfill", () => {
     const backfilled: DailyPrices = {
       date: "2026-09-07",
@@ -126,6 +120,27 @@ describe("mergeSamples", () => {
     expect(merged).toHaveLength(1);
     expect(merged[0].byFuel.D?.neste).toBe(1.55);
   });
+
+  it("drops later hours when brand averages did not change", () => {
+    const morning: HistorySample = {
+      at: "2026-09-15T10:00:00.000Z",
+      hour: 10,
+      byFuel: { D: { neste: 1.6, viada: 1.4 } },
+    };
+    const evening: HistorySample = {
+      at: "2026-09-15T21:00:00.000Z",
+      hour: 21,
+      byFuel: { D: { viada: 1.4, neste: 1.6 } },
+    };
+    const changed: HistorySample = {
+      at: "2026-09-16T07:00:00.000Z",
+      hour: 7,
+      byFuel: { D: { neste: 1.62, viada: 1.4 } },
+    };
+    const merged = mergeSamples([morning, evening], [changed], new Date("2026-09-16T12:00:00Z"), 7);
+    expect(merged.map((s) => s.hour)).toEqual([10, 7]);
+    expect(merged[1].byFuel.D?.neste).toBe(1.62);
+  });
 });
 
 describe("rollupHourAverages", () => {
@@ -139,6 +154,23 @@ describe("rollupHourAverages", () => {
     expect(rolled.hours).toEqual([8, 8]);
     expect(rolled.brands.neste).toEqual([1.5, 1.7]);
     expect(rolled.brands.viada).toEqual([1.4, 1.4]);
+  });
+
+  it("omits a fuel's point when that fuel's averages did not change", () => {
+    const samples: HistorySample[] = [
+      {
+        at: "2026-09-15T10:00:00Z",
+        hour: 10,
+        byFuel: { D: { neste: 1.5 }, "95": { neste: 1.8 } },
+      },
+      {
+        at: "2026-09-15T16:00:00Z",
+        hour: 16,
+        byFuel: { D: { neste: 1.5 }, "95": { neste: 1.82 } },
+      },
+    ];
+    expect(rollupHourAverages(samples).D?.hours).toEqual([10]);
+    expect(rollupHourAverages(samples)["95"]?.hours).toEqual([10, 16]);
   });
 });
 

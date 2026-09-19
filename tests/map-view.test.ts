@@ -107,6 +107,7 @@ describe("stationPopupHtml", () => {
     expect(html).toContain("Test station");
     expect(html).not.toContain("Updated");
     expect(html).not.toContain("Last checked");
+    expect(html).not.toContain("Last updated");
     expect(html).not.toContain("Navigate");
     expect(html).not.toContain("openstreetmap.org/directions");
   });

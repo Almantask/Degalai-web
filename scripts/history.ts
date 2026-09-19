@@ -123,6 +123,37 @@ export function sampleKey(sample: HistorySample): string {
   return `${sample.at.slice(0, 10)}-${String(sample.hour).padStart(2, "0")}`;
 }
 
+export function fuelPricesEqual(
+  a: Record<string, number> | undefined,
+  b: Record<string, number> | undefined,
+): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  return keysA.every((k) => Object.hasOwn(b, k) && a[k] === b[k]);
+}
+
+export function samplePricesEqual(a: HistorySample, b: HistorySample): boolean {
+  const fuels = new Set([...Object.keys(a.byFuel), ...Object.keys(b.byFuel)]);
+  for (const fuel of fuels) {
+    if (!fuelPricesEqual(a.byFuel[fuel as FuelType], b.byFuel[fuel as FuelType])) return false;
+  }
+  return true;
+}
+
+/** Keep the first sample of an unchanged run so the chart only moves when prices move. */
+export function dropUnchangedSamples(samples: HistorySample[]): HistorySample[] {
+  const out: HistorySample[] = [];
+  for (const s of samples) {
+    const prev = out.at(-1);
+    if (prev && samplePricesEqual(prev, s)) continue;
+    out.push(s);
+  }
+  return out;
+}
+
 export function mergeSamples(
   existing: HistorySample[],
   next: HistorySample[],
@@ -134,10 +165,25 @@ export function mergeSamples(
   for (const s of [...existing, ...next]) {
     if (dayDiff(s.at.slice(0, 10), today) <= keepDays) byKey.set(sampleKey(s), s);
   }
-  return [...byKey.values()].sort((a, b) => a.at.localeCompare(b.at) || a.hour - b.hour);
+  const merged = [...byKey.values()].sort((a, b) => a.at.localeCompare(b.at) || a.hour - b.hour);
+  return dropUnchangedSamples(merged);
 }
 
-/** One chart point per snapshot so the timeline can show date and time. */
+function appendChangedPoint(
+  points: Array<{ date: string; hour: number; prices: Record<string, number> }>,
+  brands: Set<string>,
+  sample: HistorySample,
+  fuel: FuelType,
+): void {
+  const row = sample.byFuel[fuel];
+  if (!row) return;
+  const prev = points.at(-1);
+  if (prev && fuelPricesEqual(prev.prices, row)) return;
+  for (const b of Object.keys(row)) brands.add(b);
+  points.push({ date: sample.at.slice(0, 10), hour: sample.hour, prices: row });
+}
+
+/** One chart point per price change so the timeline can show date and time. */
 export function rollupHourAverages(
   samples: HistorySample[],
 ): Partial<Record<FuelType, HistoryHourSeries>> {
@@ -145,15 +191,10 @@ export function rollupHourAverages(
   for (const fuel of FUEL_TYPES) {
     const brands = new Set<string>();
     const points: Array<{ date: string; hour: number; prices: Record<string, number> }> = [];
-    for (const s of samples) {
-      const row = s.byFuel[fuel];
-      if (!row) continue;
-      for (const b of Object.keys(row)) brands.add(b);
-      points.push({ date: s.at.slice(0, 10), hour: s.hour, prices: row });
-    }
+    for (const s of samples) appendChangedPoint(points, brands, s, fuel);
     if (brands.size === 0 || points.length === 0) continue;
     const series: Record<string, Array<number | null>> = {};
-    for (const b of [...brands].sort()) {
+    for (const b of [...brands].sort((x, y) => x.localeCompare(y))) {
       series[b] = points.map((p) => (p.prices[b] != null ? p.prices[b] : null));
     }
     out[fuel] = {
@@ -203,11 +244,10 @@ export function recomputeHistory(
   now = new Date(),
 ): HistoryFile {
   const byId = new Map(stations.map((s) => [s.id, s]));
-  const today = dateInVilnius(now.toISOString());
   const fromFiles: HistorySample[] = [];
   for (const date of listPriceDates(pricesDir)) {
     const daily = JSON.parse(readFileSync(join(pricesDir, `${date}.json`), "utf8")) as DailyPrices;
-    fromFiles.push(sampleFromDaily(daily, byId, date === today ? now : undefined));
+    fromFiles.push(sampleFromDaily(daily, byId));
   }
   const samples = mergeSamples(previous?.samples ?? [], fromFiles, now);
   const next = buildHistoryFile(samples, now.toISOString());
