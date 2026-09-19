@@ -468,6 +468,11 @@ test("station list keeps last updated when a later check found the same prices",
       },
     });
   });
+  await page.route("**/data/prices/*.json", async (route) => {
+    const res = await route.fetch();
+    const prices = (await res.json()) as { generatedAt?: string };
+    await route.fulfill({ json: { ...prices, generatedAt: "2026-09-15T07:46:15.859Z" } });
+  });
   await page.goto("/");
   await expect(page.locator(".list-updated")).toBeVisible({ timeout: 15_000 });
   await expect(page.locator(".list-updated")).toContainText(/Atnaujinta/);
