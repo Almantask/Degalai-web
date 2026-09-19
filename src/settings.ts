@@ -1,7 +1,9 @@
 import {
   DEFAULT_SETTINGS,
   FUEL_TYPES,
+  HISTORY_STATS,
   type FuelType,
+  type HistoryStat,
   type Station,
   type UserSettings,
 } from "./types.ts";
@@ -13,6 +15,7 @@ export const AROUND_RADIUS_KM = [5, 15, 30] as const;
 export type AroundRadiusKm = (typeof AROUND_RADIUS_KM)[number];
 
 const FUEL_SET = new Set<string>(FUEL_TYPES);
+const HISTORY_STAT_SET = new Set<string>(HISTORY_STATS);
 const LOCALE_SET = new Set<string>(["lt", "en"]);
 const PREFERENCE_SET = new Set<string>(["shortest", "fastest"]);
 const RADIUS_SET = new Set<number>(AROUND_RADIUS_KM);
@@ -41,6 +44,9 @@ export function sanitizeSettings(raw: unknown): UserSettings {
   const radius = Number(parsed.aroundRadiusKm);
   const aroundRadiusKm = RADIUS_SET.has(radius) ? radius : DEFAULT_SETTINGS.aroundRadiusKm;
   const locale = LOCALE_SET.has(parsed.locale as string) ? (parsed.locale as Locale) : undefined;
+  const historyStat = HISTORY_STAT_SET.has(parsed.historyStat as string)
+    ? (parsed.historyStat as HistoryStat)
+    : DEFAULT_SETTINGS.historyStat;
 
   return {
     fuel,
@@ -58,6 +64,7 @@ export function sanitizeSettings(raw: unknown): UserSettings {
       DEFAULT_SETTINGS.highAccuracyLocation,
     ),
     excludedBrands: sanitizeExcludedBrands(parsed.excludedBrands),
+    historyStat,
     ...(locale ? { locale } : {}),
   };
 }

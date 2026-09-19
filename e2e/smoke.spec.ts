@@ -157,6 +157,33 @@ test("history chart scrolls left and right on a phone", async ({ page }) => {
   await expectHistoryFitsScreen(page);
 });
 
+test("history chart switches min max avg and median modes", async ({ page }) => {
+  await page.goto("/istorija");
+  await expect(page.locator("#history-chart .uplot")).toBeVisible({ timeout: 15_000 });
+  const modes = page.locator(".history-stat button");
+  await expect(modes).toHaveCount(4);
+  await expect(page.getByRole("button", { name: "Vidurkis", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(page.locator(".history-caption")).toContainText(/vidutinės kainos/);
+  await page.getByRole("button", { name: "Min", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Min", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(page.getByRole("button", { name: "Vidurkis", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await expect(page.locator(".history-caption")).toContainText(/mažiausios kainos/);
+  await expect(page.locator("#history-chart .uplot")).toBeVisible();
+  await page.getByRole("button", { name: "Max", exact: true }).click();
+  await expect(page.locator(".history-caption")).toContainText(/didžiausios kainos/);
+  await page.getByRole("button", { name: "Mediana", exact: true }).click();
+  await expect(page.locator(".history-caption")).toContainText(/mediana/i);
+});
+
 test("history legend toggles all providers then a single line", async ({ page }) => {
   await page.goto("/istorija");
   await expect(page.locator("#history-chart .uplot")).toBeVisible({ timeout: 15_000 });
@@ -322,6 +349,7 @@ async function expectHistoryFitsScreen(page: Page): Promise<void> {
         const chart = el.querySelector("#history-chart");
         const legend = el.querySelector("#history-legend");
         const caption = el.querySelector(".history-caption");
+        const stat = el.querySelector(".history-stat");
         return (
           r.top >= -1 &&
           r.left <= 1 &&
@@ -330,7 +358,8 @@ async function expectHistoryFitsScreen(page: Page): Promise<void> {
           r.bottom <= vh + 1 &&
           (!chart || inside(chart)) &&
           (!legend || inside(legend)) &&
-          (!caption || inside(caption))
+          (!caption || inside(caption)) &&
+          (!stat || inside(stat))
         );
       });
     })

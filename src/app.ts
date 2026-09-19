@@ -67,6 +67,7 @@ import {
   allHistoryBrandsOn,
   brandColor,
   chartBrands,
+  seriesForStat,
   toggleAllHistoryBrands,
   toggleHistoryBrand,
 } from "./history-series.ts";
@@ -85,8 +86,8 @@ import {
   sheetFromDrag,
   type MinimizeSign,
 } from "./sheet-gesture.ts";
-import type { HistoryFile, HistoryHourSeries, Station } from "./types.ts";
-import { DEFAULT_SETTINGS } from "./types.ts";
+import type { HistoryFile, HistoryHourSeries, HistoryStat, Station } from "./types.ts";
+import { DEFAULT_SETTINGS, HISTORY_STATS } from "./types.ts";
 
 const DONATE_URL = "https://almantask.github.io/donate-me/";
 
@@ -410,6 +411,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
       } else if (act === "history-brand" && tEl.dataset.brand) {
         hiddenHistoryBrands = toggleHistoryBrand(hiddenHistoryBrands, tEl.dataset.brand);
         applyHistoryVisibility();
+      } else if (act === "history-stat" && tEl.dataset.stat) {
+        const next = tEl.dataset.stat as HistoryStat;
+        if (HISTORY_STATS.includes(next) && next !== settings.historyStat) {
+          settings.historyStat = next;
+          saveSettings(settings);
+          render();
+        }
       }
     });
 
@@ -943,9 +951,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (view === "history") render();
   }
 
-  function historyHtml(): string {
+  function historyViewSeries(): HistoryHourSeries | undefined {
     const series = historyFile?.byFuel[settings.fuel];
-    const filtered = series ? filterSeries(series, settings.excludedBrands) : undefined;
+    const forStat = seriesForStat(series, settings.historyStat);
+    return forStat ? filterSeries(forStat, settings.excludedBrands) : undefined;
+  }
+
+  function historyHtml(): string {
+    const filtered = historyViewSeries();
     const toggle = `<button type="button" class="history-head" data-act="toggle-history" aria-expanded="${historyMinimized ? "false" : "true"}" aria-label="${escapeHtml(historyMinimized ? t("history.expand") : t("history.collapse"))}">
         <span class="history-handle" aria-hidden="true"></span>
         <span class="history-head-copy">
@@ -964,10 +977,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const hasPoints = Boolean(
       filtered && Object.values(filtered.brands).some((row) => row.some((v) => v != null)),
     );
-    const caption = hasPoints ? t("history.byHour") : t("history.empty");
+    const captionKey = `history.byHour.${settings.historyStat}` as MessageKey;
+    const caption = hasPoints ? t(captionKey) : t("history.empty");
     return `<section class="history-panel${historyMinimized ? " is-min" : ""}" aria-label="${escapeHtml(t("history.title"))}">
       ${toggle}
       <div class="history-body">
+        ${historyStatHtml()}
         <div class="history-chart-stack">
           <div id="history-chart"></div>
           ${historyLegendHtml(filtered)}
@@ -977,10 +992,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
     </section>`;
   }
 
+  function historyStatHtml(): string {
+    const buttons = HISTORY_STATS.map((stat) => {
+      const on = settings.historyStat === stat;
+      return `<button type="button" class="${on ? "on" : ""}" data-act="history-stat" data-stat="${stat}" aria-pressed="${on ? "true" : "false"}">${escapeHtml(t(`history.mode.${stat}` as MessageKey))}</button>`;
+    }).join("");
+    return `<div class="history-stat" role="group" aria-label="${escapeHtml(t("history.stat"))}">${buttons}</div>`;
+  }
+
   function historyBrandIds(): string[] {
-    const series = historyFile?.byFuel[settings.fuel];
-    const filtered = series ? filterSeries(series, settings.excludedBrands) : undefined;
-    return chartBrands(filtered).map((b) => b.id);
+    return chartBrands(historyViewSeries()).map((b) => b.id);
   }
 
   function historyLegendHtml(filtered: HistoryHourSeries | undefined): string {
@@ -1005,8 +1026,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function applyHistoryVisibility(): void {
     const legend = root.querySelector("#history-legend");
-    const series = historyFile?.byFuel[settings.fuel];
-    const filtered = series ? filterSeries(series, settings.excludedBrands) : undefined;
+    const filtered = historyViewSeries();
     if (legend) {
       const next = document.createElement("div");
       next.innerHTML = historyLegendHtml(filtered);
@@ -1023,8 +1043,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (view !== "history" || historyMinimized) return;
     const el = root.querySelector<HTMLElement>("#history-chart");
     if (!el || !historyFile) return;
-    const series = historyFile.byFuel[settings.fuel];
-    const filtered = series ? filterSeries(series, settings.excludedBrands) : undefined;
+    const filtered = historyViewSeries();
     const { mountHistoryChart } = await import("./history-view.ts");
     if (view !== "history" || historyMinimized) return;
     historyPlot = mountHistoryChart(el, filtered, hiddenHistoryBrands);

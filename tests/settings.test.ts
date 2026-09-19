@@ -45,6 +45,7 @@ describe("sanitizeSettings", () => {
       hideUnpriced: false,
       highAccuracyLocation: false,
       excludedBrands: ["viada"],
+      historyStat: "avg",
       locale: "en",
     });
   });
@@ -78,6 +79,12 @@ describe("sanitizeSettings", () => {
     expect(
       sanitizeSettings({ excludedBrands: ["neste", "neste", "<b>", ""] }).excludedBrands,
     ).toEqual(["neste"]);
+  });
+
+  it("keeps a valid history statistic and defaults the rest", () => {
+    expect(sanitizeSettings({}).historyStat).toBe("avg");
+    expect(sanitizeSettings({ historyStat: "median" }).historyStat).toBe("median");
+    expect(sanitizeSettings({ historyStat: "nope" }).historyStat).toBe("avg");
   });
 
   it("clamps numbers to the settings form range", () => {

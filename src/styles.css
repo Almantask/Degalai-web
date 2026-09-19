@@ -185,18 +185,21 @@ body,
 .topbar-end,
 .topbar-tools,
 .fuel-filter,
+.history-stat,
 .lang {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.fuel-filter {
+.fuel-filter,
+.history-stat {
   width: 100%;
   align-items: stretch;
 }
 
-.fuel-filter button {
+.fuel-filter button,
+.history-stat button {
   flex: 1 1 0;
   min-width: 0;
   text-align: center;
@@ -281,6 +284,7 @@ body,
 }
 
 .fuel-filter button,
+.history-stat button,
 .icon-btn,
 .lang a,
 .panel button:not(.primary) {
@@ -296,6 +300,7 @@ body,
 }
 
 .fuel-filter button.on,
+.history-stat button.on,
 .icon-btn.on,
 .lang a.on {
   background: var(--green-dark);
@@ -726,6 +731,15 @@ body,
   gap: 8px;
   overflow: auto;
   overscroll-behavior: contain;
+}
+
+.history-stat {
+  flex: 0 0 auto;
+}
+
+.history-stat button {
+  padding: 5px 8px;
+  font-size: 0.8rem;
 }
 
 .history-chart-stack {

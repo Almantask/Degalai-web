@@ -1,4 +1,4 @@
-import type { HistoryHourSeries } from "./types.ts";
+import type { HistoryHourSeries, HistoryStat } from "./types.ts";
 
 const BRAND_COLORS: Record<string, string> = {
   "circle-k": "#c81e1e",
@@ -19,6 +19,16 @@ const FALLBACK_COLORS = ["#ea580c", "#2563eb", "#9333ea", "#0d9488", "#ca8a04", 
 
 export function brandColor(brand: string, index: number): string {
   return BRAND_COLORS[brand] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+}
+
+export function seriesForStat(
+  series: HistoryHourSeries | undefined,
+  stat: HistoryStat,
+): HistoryHourSeries | undefined {
+  if (!series) return undefined;
+  const brands = stat === "avg" ? undefined : series.stats?.[stat];
+  if (!brands) return series;
+  return { dates: series.dates, hours: series.hours, brands };
 }
 
 export function chartBrands(
