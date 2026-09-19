@@ -995,7 +995,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function historyStatHtml(): string {
     const buttons = HISTORY_STATS.map((stat) => {
       const on = settings.historyStat === stat;
-      return `<button type="button" class="${on ? "on" : ""}" data-act="history-stat" data-stat="${stat}" aria-pressed="${on ? "true" : "false"}">${escapeHtml(t(`history.mode.${stat}` as MessageKey))}</button>`;
+      return `<button type="button" class="history-chip${on ? " is-on" : ""}" data-act="history-stat" data-stat="${stat}" aria-pressed="${on ? "true" : "false"}">${escapeHtml(t(`history.mode.${stat}` as MessageKey))}</button>`;
     }).join("");
     return `<div class="history-stat" role="group" aria-label="${escapeHtml(t("history.stat"))}">${buttons}</div>`;
   }

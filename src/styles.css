@@ -185,21 +185,18 @@ body,
 .topbar-end,
 .topbar-tools,
 .fuel-filter,
-.history-stat,
 .lang {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.fuel-filter,
-.history-stat {
+.fuel-filter {
   width: 100%;
   align-items: stretch;
 }
 
-.fuel-filter button,
-.history-stat button {
+.fuel-filter button {
   flex: 1 1 0;
   min-width: 0;
   text-align: center;
@@ -284,7 +281,6 @@ body,
 }
 
 .fuel-filter button,
-.history-stat button,
 .icon-btn,
 .lang a,
 .panel button:not(.primary) {
@@ -300,7 +296,6 @@ body,
 }
 
 .fuel-filter button.on,
-.history-stat button.on,
 .icon-btn.on,
 .lang a.on {
   background: var(--green-dark);
@@ -734,17 +729,15 @@ body,
 }
 
 .history-stat {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   flex: 0 0 auto;
-}
-
-.history-stat button {
-  padding: 5px 8px;
-  font-size: 0.8rem;
 }
 
 .history-chart-stack {
   --history-legend-row: 1.75rem;
-  flex: 1 1 auto;
+  flex: 1 0 auto;
   /* Chart plus one row of provider chips; shorter screens scroll the panel body instead. */
   min-height: calc(var(--history-chart-min, 111px) + 6px + var(--history-legend-row));
   display: flex;
