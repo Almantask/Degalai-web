@@ -7,43 +7,208 @@
       "hour": 7,
       "byFuel": {
         "95": {
-          "orlen": 1.918,
-          "independent": 1.907,
-          "stateta": 1.898,
-          "circle-k": 1.989,
-          "alausa": 1.927,
-          "viada": 1.996,
-          "baltic-petroleum": 1.981,
-          "emsi": 1.91,
-          "kvistija": 1.851,
-          "jozita": 1.95,
-          "neste": 1.961
+          "orlen": {
+            "min": 1.899,
+            "max": 1.929,
+            "avg": 1.918,
+            "median": 1.919
+          },
+          "independent": {
+            "min": 1.769,
+            "max": 2.029,
+            "avg": 1.907,
+            "median": 1.899
+          },
+          "stateta": {
+            "min": 1.879,
+            "max": 1.9,
+            "avg": 1.898,
+            "median": 1.899
+          },
+          "circle-k": {
+            "min": 1.896,
+            "max": 1.999,
+            "avg": 1.989,
+            "median": 1.999
+          },
+          "alausa": {
+            "min": 1.799,
+            "max": 1.969,
+            "avg": 1.927,
+            "median": 1.944
+          },
+          "viada": {
+            "min": 1.959,
+            "max": 1.999,
+            "avg": 1.996,
+            "median": 1.999
+          },
+          "baltic-petroleum": {
+            "min": 1.829,
+            "max": 2.019,
+            "avg": 1.981,
+            "median": 1.989
+          },
+          "emsi": {
+            "min": 1.829,
+            "max": 2.039,
+            "avg": 1.91,
+            "median": 1.91
+          },
+          "kvistija": {
+            "min": 1.799,
+            "max": 1.98,
+            "avg": 1.851,
+            "median": 1.82
+          },
+          "jozita": {
+            "min": 1.95,
+            "max": 1.95,
+            "avg": 1.95,
+            "median": 1.95
+          },
+          "neste": {
+            "min": 1.929,
+            "max": 1.979,
+            "avg": 1.961,
+            "median": 1.959
+          }
         },
         "D": {
-          "orlen": 2.175,
-          "independent": 2.154,
-          "stateta": 2.136,
-          "circle-k": 2.246,
-          "alausa": 2.156,
-          "viada": 2.26,
-          "baltic-petroleum": 2.225,
-          "emsi": 2.151,
-          "kvistija": 2.112,
-          "jozita": 2.15,
-          "neste": 2.207
+          "orlen": {
+            "min": 2.139,
+            "max": 2.189,
+            "avg": 2.175,
+            "median": 2.179
+          },
+          "independent": {
+            "min": 2,
+            "max": 2.299,
+            "avg": 2.154,
+            "median": 2.145
+          },
+          "stateta": {
+            "min": 2.089,
+            "max": 2.15,
+            "avg": 2.136,
+            "median": 2.139
+          },
+          "circle-k": {
+            "min": 2.185,
+            "max": 2.299,
+            "avg": 2.246,
+            "median": 2.249
+          },
+          "alausa": {
+            "min": 1.999,
+            "max": 2.199,
+            "avg": 2.156,
+            "median": 2.174
+          },
+          "viada": {
+            "min": 2.189,
+            "max": 2.299,
+            "avg": 2.26,
+            "median": 2.259
+          },
+          "baltic-petroleum": {
+            "min": 2.079,
+            "max": 2.259,
+            "avg": 2.225,
+            "median": 2.229
+          },
+          "emsi": {
+            "min": 2.079,
+            "max": 2.259,
+            "avg": 2.151,
+            "median": 2.154
+          },
+          "kvistija": {
+            "min": 2.029,
+            "max": 2.22,
+            "avg": 2.112,
+            "median": 2.094
+          },
+          "jozita": {
+            "min": 2.15,
+            "max": 2.15,
+            "avg": 2.15,
+            "median": 2.15
+          },
+          "neste": {
+            "min": 2.169,
+            "max": 2.229,
+            "avg": 2.207,
+            "median": 2.209
+          }
         },
         "LPG": {
-          "orlen": 0.752,
-          "independent": 0.772,
-          "circle-k": 0.844,
-          "alausa": 0.767,
-          "viada": 0.855,
-          "baltic-petroleum": 0.79,
-          "emsi": 0.776,
-          "kvistija": 0.768,
-          "jozita": 0.749,
-          "neste": 0.74,
-          "stateta": 0.759
+          "orlen": {
+            "min": 0.73,
+            "max": 0.769,
+            "avg": 0.752,
+            "median": 0.749
+          },
+          "independent": {
+            "min": 0.67,
+            "max": 0.94,
+            "avg": 0.772,
+            "median": 0.75
+          },
+          "circle-k": {
+            "min": 0.759,
+            "max": 0.949,
+            "avg": 0.844,
+            "median": 0.83
+          },
+          "alausa": {
+            "min": 0.699,
+            "max": 0.869,
+            "avg": 0.767,
+            "median": 0.754
+          },
+          "viada": {
+            "min": 0.759,
+            "max": 0.949,
+            "avg": 0.855,
+            "median": 0.839
+          },
+          "baltic-petroleum": {
+            "min": 0.709,
+            "max": 0.869,
+            "avg": 0.79,
+            "median": 0.79
+          },
+          "emsi": {
+            "min": 0.74,
+            "max": 0.829,
+            "avg": 0.776,
+            "median": 0.77
+          },
+          "kvistija": {
+            "min": 0.739,
+            "max": 0.81,
+            "avg": 0.768,
+            "median": 0.76
+          },
+          "jozita": {
+            "min": 0.709,
+            "max": 0.75,
+            "avg": 0.749,
+            "median": 0.75
+          },
+          "neste": {
+            "min": 0.74,
+            "max": 0.74,
+            "avg": 0.74,
+            "median": 0.74
+          },
+          "stateta": {
+            "min": 0.759,
+            "max": 0.759,
+            "avg": 0.759,
+            "median": 0.759
+          }
         }
       }
     },
@@ -52,40 +217,190 @@
       "hour": 7,
       "byFuel": {
         "95": {
-          "independent": 1.911,
-          "orlen": 1.918,
-          "stateta": 1.864,
-          "circle-k": 1.966,
-          "alausa": 1.848,
-          "viada": 1.984,
-          "baltic-petroleum": 1.957,
-          "emsi": 1.864,
-          "kvistija": 1.899,
-          "neste": 1.925
+          "independent": {
+            "min": 1.81,
+            "max": 2.017,
+            "avg": 1.911,
+            "median": 1.9
+          },
+          "orlen": {
+            "min": 1.899,
+            "max": 1.929,
+            "avg": 1.918,
+            "median": 1.919
+          },
+          "stateta": {
+            "min": 1.859,
+            "max": 1.93,
+            "avg": 1.864,
+            "median": 1.859
+          },
+          "circle-k": {
+            "min": 1.904,
+            "max": 1.999,
+            "avg": 1.966,
+            "median": 1.969
+          },
+          "alausa": {
+            "min": 1.799,
+            "max": 1.969,
+            "avg": 1.848,
+            "median": 1.859
+          },
+          "viada": {
+            "min": 1.939,
+            "max": 1.999,
+            "avg": 1.984,
+            "median": 1.999
+          },
+          "baltic-petroleum": {
+            "min": 1.799,
+            "max": 2.019,
+            "avg": 1.957,
+            "median": 1.959
+          },
+          "emsi": {
+            "min": 1.85,
+            "max": 1.959,
+            "avg": 1.864,
+            "median": 1.859
+          },
+          "kvistija": {
+            "min": 1.859,
+            "max": 1.98,
+            "avg": 1.899,
+            "median": 1.899
+          },
+          "neste": {
+            "min": 1.879,
+            "max": 1.959,
+            "avg": 1.925,
+            "median": 1.929
+          }
         },
         "D": {
-          "independent": 2.158,
-          "orlen": 2.175,
-          "stateta": 2.084,
-          "circle-k": 2.211,
-          "alausa": 2.08,
-          "viada": 2.243,
-          "baltic-petroleum": 2.206,
-          "emsi": 2.104,
-          "kvistija": 2.137,
-          "neste": 2.145
+          "independent": {
+            "min": 2.069,
+            "max": 2.299,
+            "avg": 2.158,
+            "median": 2.15
+          },
+          "orlen": {
+            "min": 2.139,
+            "max": 2.189,
+            "avg": 2.175,
+            "median": 2.179
+          },
+          "stateta": {
+            "min": 2.079,
+            "max": 2.15,
+            "avg": 2.084,
+            "median": 2.079
+          },
+          "circle-k": {
+            "min": 2.119,
+            "max": 2.299,
+            "avg": 2.211,
+            "median": 2.209
+          },
+          "alausa": {
+            "min": 1.999,
+            "max": 2.199,
+            "avg": 2.08,
+            "median": 2.079
+          },
+          "viada": {
+            "min": 2.159,
+            "max": 2.299,
+            "avg": 2.243,
+            "median": 2.239
+          },
+          "baltic-petroleum": {
+            "min": 1.999,
+            "max": 2.259,
+            "avg": 2.206,
+            "median": 2.229
+          },
+          "emsi": {
+            "min": 2.09,
+            "max": 2.199,
+            "avg": 2.104,
+            "median": 2.099
+          },
+          "kvistija": {
+            "min": 2.099,
+            "max": 2.22,
+            "avg": 2.137,
+            "median": 2.125
+          },
+          "neste": {
+            "min": 2.099,
+            "max": 2.199,
+            "avg": 2.145,
+            "median": 2.149
+          }
         },
         "LPG": {
-          "independent": 0.773,
-          "orlen": 0.752,
-          "circle-k": 0.844,
-          "alausa": 0.738,
-          "viada": 0.857,
-          "baltic-petroleum": 0.788,
-          "emsi": 0.755,
-          "kvistija": 0.768,
-          "neste": 0.77,
-          "stateta": 0.759
+          "independent": {
+            "min": 0.67,
+            "max": 0.94,
+            "avg": 0.773,
+            "median": 0.755
+          },
+          "orlen": {
+            "min": 0.73,
+            "max": 0.769,
+            "avg": 0.752,
+            "median": 0.749
+          },
+          "circle-k": {
+            "min": 0.759,
+            "max": 0.949,
+            "avg": 0.844,
+            "median": 0.829
+          },
+          "alausa": {
+            "min": 0.699,
+            "max": 0.799,
+            "avg": 0.737,
+            "median": 0.719
+          },
+          "viada": {
+            "min": 0.799,
+            "max": 0.949,
+            "avg": 0.857,
+            "median": 0.839
+          },
+          "baltic-petroleum": {
+            "min": 0.699,
+            "max": 0.869,
+            "avg": 0.788,
+            "median": 0.789
+          },
+          "emsi": {
+            "min": 0.73,
+            "max": 0.779,
+            "avg": 0.755,
+            "median": 0.759
+          },
+          "kvistija": {
+            "min": 0.739,
+            "max": 0.81,
+            "avg": 0.768,
+            "median": 0.76
+          },
+          "neste": {
+            "min": 0.74,
+            "max": 0.829,
+            "avg": 0.77,
+            "median": 0.74
+          },
+          "stateta": {
+            "min": 0.759,
+            "max": 0.759,
+            "avg": 0.759,
+            "median": 0.759
+          }
         }
       }
     },
@@ -94,43 +409,208 @@
       "hour": 7,
       "byFuel": {
         "95": {
-          "orlen": 1.874,
-          "independent": 1.917,
-          "stateta": 1.882,
-          "circle-k": 1.943,
-          "alausa": 1.902,
-          "viada": 1.97,
-          "baltic-petroleum": 1.952,
-          "emsi": 1.895,
-          "kvistija": 1.891,
-          "jozita": 1.945,
-          "neste": 1.9
+          "orlen": {
+            "min": 1.839,
+            "max": 1.919,
+            "avg": 1.874,
+            "median": 1.879
+          },
+          "independent": {
+            "min": 1.839,
+            "max": 2.017,
+            "avg": 1.917,
+            "median": 1.91
+          },
+          "stateta": {
+            "min": 1.867,
+            "max": 1.93,
+            "avg": 1.882,
+            "median": 1.879
+          },
+          "circle-k": {
+            "min": 1.859,
+            "max": 1.999,
+            "avg": 1.943,
+            "median": 1.939
+          },
+          "alausa": {
+            "min": 1.82,
+            "max": 1.969,
+            "avg": 1.902,
+            "median": 1.899
+          },
+          "viada": {
+            "min": 1.899,
+            "max": 1.999,
+            "avg": 1.97,
+            "median": 1.969
+          },
+          "baltic-petroleum": {
+            "min": 1.859,
+            "max": 2.019,
+            "avg": 1.952,
+            "median": 1.949
+          },
+          "emsi": {
+            "min": 1.839,
+            "max": 1.999,
+            "avg": 1.895,
+            "median": 1.899
+          },
+          "kvistija": {
+            "min": 1.829,
+            "max": 1.98,
+            "avg": 1.891,
+            "median": 1.88
+          },
+          "jozita": {
+            "min": 1.89,
+            "max": 1.95,
+            "avg": 1.945,
+            "median": 1.95
+          },
+          "neste": {
+            "min": 1.839,
+            "max": 1.959,
+            "avg": 1.9,
+            "median": 1.899
+          }
         },
         "D": {
-          "orlen": 2.118,
-          "independent": 2.16,
-          "stateta": 2.137,
-          "circle-k": 2.182,
-          "alausa": 2.14,
-          "viada": 2.214,
-          "baltic-petroleum": 2.195,
-          "emsi": 2.152,
-          "kvistija": 2.134,
-          "jozita": 2.148,
-          "neste": 2.127
+          "orlen": {
+            "min": 2.099,
+            "max": 2.189,
+            "avg": 2.118,
+            "median": 2.119
+          },
+          "independent": {
+            "min": 2.08,
+            "max": 2.27,
+            "avg": 2.16,
+            "median": 2.15
+          },
+          "stateta": {
+            "min": 2.097,
+            "max": 2.15,
+            "avg": 2.137,
+            "median": 2.139
+          },
+          "circle-k": {
+            "min": 2.059,
+            "max": 2.299,
+            "avg": 2.182,
+            "median": 2.169
+          },
+          "alausa": {
+            "min": 2.029,
+            "max": 2.199,
+            "avg": 2.14,
+            "median": 2.139
+          },
+          "viada": {
+            "min": 2.119,
+            "max": 2.299,
+            "avg": 2.214,
+            "median": 2.199
+          },
+          "baltic-petroleum": {
+            "min": 2.099,
+            "max": 2.259,
+            "avg": 2.195,
+            "median": 2.199
+          },
+          "emsi": {
+            "min": 2.079,
+            "max": 2.259,
+            "avg": 2.152,
+            "median": 2.159
+          },
+          "kvistija": {
+            "min": 2.059,
+            "max": 2.22,
+            "avg": 2.134,
+            "median": 2.125
+          },
+          "jozita": {
+            "min": 2.11,
+            "max": 2.15,
+            "avg": 2.148,
+            "median": 2.15
+          },
+          "neste": {
+            "min": 1.999,
+            "max": 2.199,
+            "avg": 2.127,
+            "median": 2.129
+          }
         },
         "LPG": {
-          "orlen": 0.762,
-          "independent": 0.777,
-          "circle-k": 0.846,
-          "alausa": 0.767,
-          "viada": 0.857,
-          "baltic-petroleum": 0.794,
-          "emsi": 0.765,
-          "kvistija": 0.768,
-          "jozita": 0.747,
-          "neste": 0.79,
-          "stateta": 0.759
+          "orlen": {
+            "min": 0.74,
+            "max": 0.779,
+            "avg": 0.762,
+            "median": 0.759
+          },
+          "independent": {
+            "min": 0.67,
+            "max": 0.94,
+            "avg": 0.777,
+            "median": 0.76
+          },
+          "circle-k": {
+            "min": 0.759,
+            "max": 0.949,
+            "avg": 0.846,
+            "median": 0.839
+          },
+          "alausa": {
+            "min": 0.719,
+            "max": 0.839,
+            "avg": 0.767,
+            "median": 0.759
+          },
+          "viada": {
+            "min": 0.799,
+            "max": 0.949,
+            "avg": 0.857,
+            "median": 0.839
+          },
+          "baltic-petroleum": {
+            "min": 0.729,
+            "max": 0.889,
+            "avg": 0.794,
+            "median": 0.799
+          },
+          "emsi": {
+            "min": 0.73,
+            "max": 0.799,
+            "avg": 0.765,
+            "median": 0.77
+          },
+          "kvistija": {
+            "min": 0.739,
+            "max": 0.81,
+            "avg": 0.768,
+            "median": 0.76
+          },
+          "jozita": {
+            "min": 0.69,
+            "max": 0.75,
+            "avg": 0.747,
+            "median": 0.75
+          },
+          "neste": {
+            "min": 0.77,
+            "max": 0.829,
+            "avg": 0.79,
+            "median": 0.77
+          },
+          "stateta": {
+            "min": 0.759,
+            "max": 0.759,
+            "avg": 0.759,
+            "median": 0.759
+          }
         }
       }
     },
@@ -139,41 +619,196 @@
       "hour": 7,
       "byFuel": {
         "95": {
-          "independent": 1.908,
-          "stateta": 1.808,
-          "circle-k": 1.939,
-          "alausa": 1.856,
-          "viada": 1.967,
-          "baltic-petroleum": 1.949,
-          "emsi": 1.891,
-          "kvistija": 1.883,
-          "jozita": 1.863,
-          "neste": 1.877
+          "independent": {
+            "min": 1.799,
+            "max": 2.017,
+            "avg": 1.908,
+            "median": 1.9
+          },
+          "stateta": {
+            "min": 1.797,
+            "max": 1.95,
+            "avg": 1.808,
+            "median": 1.797
+          },
+          "circle-k": {
+            "min": 1.849,
+            "max": 1.999,
+            "avg": 1.939,
+            "median": 1.935
+          },
+          "alausa": {
+            "min": 1.779,
+            "max": 1.899,
+            "avg": 1.856,
+            "median": 1.859
+          },
+          "viada": {
+            "min": 1.899,
+            "max": 1.999,
+            "avg": 1.967,
+            "median": 1.979
+          },
+          "baltic-petroleum": {
+            "min": 1.779,
+            "max": 2.019,
+            "avg": 1.949,
+            "median": 1.949
+          },
+          "emsi": {
+            "min": 1.839,
+            "max": 1.999,
+            "avg": 1.891,
+            "median": 1.899
+          },
+          "kvistija": {
+            "min": 1.829,
+            "max": 1.94,
+            "avg": 1.883,
+            "median": 1.889
+          },
+          "jozita": {
+            "min": 1.77,
+            "max": 1.88,
+            "avg": 1.863,
+            "median": 1.88
+          },
+          "neste": {
+            "min": 1.799,
+            "max": 1.949,
+            "avg": 1.877,
+            "median": 1.879
+          }
         },
         "D": {
-          "independent": 2.158,
-          "stateta": 2.103,
-          "circle-k": 2.186,
-          "alausa": 2.11,
-          "viada": 2.22,
-          "baltic-petroleum": 2.205,
-          "emsi": 2.141,
-          "kvistija": 2.133,
-          "jozita": 2.075,
-          "neste": 2.125
+          "independent": {
+            "min": 2.029,
+            "max": 2.289,
+            "avg": 2.158,
+            "median": 2.15
+          },
+          "stateta": {
+            "min": 2.097,
+            "max": 2.18,
+            "avg": 2.103,
+            "median": 2.097
+          },
+          "circle-k": {
+            "min": 2.079,
+            "max": 2.299,
+            "avg": 2.186,
+            "median": 2.179
+          },
+          "alausa": {
+            "min": 1.999,
+            "max": 2.199,
+            "avg": 2.11,
+            "median": 2.099
+          },
+          "viada": {
+            "min": 2.109,
+            "max": 2.299,
+            "avg": 2.22,
+            "median": 2.199
+          },
+          "baltic-petroleum": {
+            "min": 1.999,
+            "max": 2.269,
+            "avg": 2.205,
+            "median": 2.209
+          },
+          "emsi": {
+            "min": 2.079,
+            "max": 2.259,
+            "avg": 2.141,
+            "median": 2.139
+          },
+          "kvistija": {
+            "min": 2.059,
+            "max": 2.17,
+            "avg": 2.133,
+            "median": 2.149
+          },
+          "jozita": {
+            "min": 1.99,
+            "max": 2.09,
+            "avg": 2.075,
+            "median": 2.09
+          },
+          "neste": {
+            "min": 1.999,
+            "max": 2.199,
+            "avg": 2.125,
+            "median": 2.129
+          }
         },
         "LPG": {
-          "independent": 0.779,
-          "circle-k": 0.848,
-          "alausa": 0.749,
-          "viada": 0.858,
-          "baltic-petroleum": 0.794,
-          "emsi": 0.762,
-          "kvistija": 0.768,
-          "jozita": 0.733,
-          "orlen": 0.75,
-          "neste": 0.796,
-          "stateta": 0.759
+          "independent": {
+            "min": 0.67,
+            "max": 0.94,
+            "avg": 0.779,
+            "median": 0.77
+          },
+          "circle-k": {
+            "min": 0.759,
+            "max": 0.949,
+            "avg": 0.848,
+            "median": 0.839
+          },
+          "alausa": {
+            "min": 0.699,
+            "max": 0.799,
+            "avg": 0.748,
+            "median": 0.749
+          },
+          "viada": {
+            "min": 0.799,
+            "max": 0.949,
+            "avg": 0.858,
+            "median": 0.849
+          },
+          "baltic-petroleum": {
+            "min": 0.699,
+            "max": 0.869,
+            "avg": 0.794,
+            "median": 0.799
+          },
+          "emsi": {
+            "min": 0.73,
+            "max": 0.799,
+            "avg": 0.762,
+            "median": 0.77
+          },
+          "kvistija": {
+            "min": 0.739,
+            "max": 0.81,
+            "avg": 0.768,
+            "median": 0.759
+          },
+          "jozita": {
+            "min": 0.69,
+            "max": 0.74,
+            "avg": 0.733,
+            "median": 0.74
+          },
+          "orlen": {
+            "min": 0.75,
+            "max": 0.75,
+            "avg": 0.75,
+            "median": 0.75
+          },
+          "neste": {
+            "min": 0.78,
+            "max": 0.829,
+            "avg": 0.796,
+            "median": 0.78
+          },
+          "stateta": {
+            "min": 0.759,
+            "max": 0.759,
+            "avg": 0.759,
+            "median": 0.759
+          }
         }
       }
     },
@@ -182,43 +817,208 @@
       "hour": 7,
       "byFuel": {
         "95": {
-          "orlen": 1.889,
-          "alausa": 1.887,
-          "baltic-petroleum": 1.938,
-          "independent": 1.915,
-          "circle-k": 1.924,
-          "emsi": 1.886,
-          "jozita": 1.95,
-          "neste": 1.861,
-          "viada": 1.958,
-          "stateta": 1.875,
-          "kvistija": 1.888
+          "orlen": {
+            "min": 1.859,
+            "max": 1.919,
+            "avg": 1.889,
+            "median": 1.899
+          },
+          "alausa": {
+            "min": 1.799,
+            "max": 1.969,
+            "avg": 1.887,
+            "median": 1.879
+          },
+          "baltic-petroleum": {
+            "min": 1.839,
+            "max": 2.019,
+            "avg": 1.938,
+            "median": 1.939
+          },
+          "independent": {
+            "min": 1.823,
+            "max": 2.017,
+            "avg": 1.915,
+            "median": 1.9
+          },
+          "circle-k": {
+            "min": 1.819,
+            "max": 1.999,
+            "avg": 1.924,
+            "median": 1.919
+          },
+          "emsi": {
+            "min": 1.85,
+            "max": 1.999,
+            "avg": 1.886,
+            "median": 1.879
+          },
+          "jozita": {
+            "min": 1.94,
+            "max": 1.95,
+            "avg": 1.95,
+            "median": 1.95
+          },
+          "neste": {
+            "min": 1.799,
+            "max": 1.919,
+            "avg": 1.861,
+            "median": 1.859
+          },
+          "viada": {
+            "min": 1.879,
+            "max": 1.999,
+            "avg": 1.958,
+            "median": 1.959
+          },
+          "stateta": {
+            "min": 1.869,
+            "max": 1.95,
+            "avg": 1.875,
+            "median": 1.869
+          },
+          "kvistija": {
+            "min": 1.829,
+            "max": 1.94,
+            "avg": 1.888,
+            "median": 1.889
+          }
         },
         "D": {
-          "orlen": 2.177,
-          "alausa": 2.145,
-          "baltic-petroleum": 2.203,
-          "independent": 2.177,
-          "circle-k": 2.191,
-          "emsi": 2.147,
-          "jozita": 2.188,
-          "neste": 2.113,
-          "viada": 2.223,
-          "stateta": 2.16,
-          "kvistija": 2.144
+          "orlen": {
+            "min": 2.149,
+            "max": 2.199,
+            "avg": 2.177,
+            "median": 2.179
+          },
+          "alausa": {
+            "min": 1.999,
+            "max": 2.229,
+            "avg": 2.145,
+            "median": 2.149
+          },
+          "baltic-petroleum": {
+            "min": 2.089,
+            "max": 2.269,
+            "avg": 2.203,
+            "median": 2.209
+          },
+          "independent": {
+            "min": 2.084,
+            "max": 2.3,
+            "avg": 2.177,
+            "median": 2.17
+          },
+          "circle-k": {
+            "min": 2.092,
+            "max": 2.307,
+            "avg": 2.191,
+            "median": 2.183
+          },
+          "emsi": {
+            "min": 2.09,
+            "max": 2.259,
+            "avg": 2.147,
+            "median": 2.149
+          },
+          "jozita": {
+            "min": 2.15,
+            "max": 2.19,
+            "avg": 2.188,
+            "median": 2.19
+          },
+          "neste": {
+            "min": 1.999,
+            "max": 2.199,
+            "avg": 2.113,
+            "median": 2.109
+          },
+          "viada": {
+            "min": 2.099,
+            "max": 2.299,
+            "avg": 2.223,
+            "median": 2.199
+          },
+          "stateta": {
+            "min": 2.139,
+            "max": 2.2,
+            "avg": 2.16,
+            "median": 2.159
+          },
+          "kvistija": {
+            "min": 2.079,
+            "max": 2.18,
+            "avg": 2.144,
+            "median": 2.155
+          }
         },
         "LPG": {
-          "orlen": 0.78,
-          "baltic-petroleum": 0.813,
-          "independent": 0.782,
-          "circle-k": 0.852,
-          "emsi": 0.767,
-          "jozita": 0.75,
-          "viada": 0.861,
-          "alausa": 0.774,
-          "kvistija": 0.773,
-          "neste": 0.796,
-          "stateta": 0.759
+          "orlen": {
+            "min": 0.76,
+            "max": 0.799,
+            "avg": 0.78,
+            "median": 0.779
+          },
+          "baltic-petroleum": {
+            "min": 0.729,
+            "max": 0.869,
+            "avg": 0.813,
+            "median": 0.819
+          },
+          "independent": {
+            "min": 0.67,
+            "max": 0.94,
+            "avg": 0.782,
+            "median": 0.779
+          },
+          "circle-k": {
+            "min": 0.759,
+            "max": 0.949,
+            "avg": 0.852,
+            "median": 0.839
+          },
+          "emsi": {
+            "min": 0.73,
+            "max": 0.799,
+            "avg": 0.767,
+            "median": 0.77
+          },
+          "jozita": {
+            "min": 0.75,
+            "max": 0.75,
+            "avg": 0.75,
+            "median": 0.75
+          },
+          "viada": {
+            "min": 0.799,
+            "max": 0.949,
+            "avg": 0.861,
+            "median": 0.849
+          },
+          "alausa": {
+            "min": 0.719,
+            "max": 0.869,
+            "avg": 0.774,
+            "median": 0.769
+          },
+          "kvistija": {
+            "min": 0.739,
+            "max": 0.81,
+            "avg": 0.773,
+            "median": 0.779
+          },
+          "neste": {
+            "min": 0.78,
+            "max": 0.829,
+            "avg": 0.796,
+            "median": 0.78
+          },
+          "stateta": {
+            "min": 0.759,
+            "max": 0.759,
+            "avg": 0.759,
+            "median": 0.759
+          }
         }
       }
     },
@@ -227,43 +1027,208 @@
       "hour": 11,
       "byFuel": {
         "95": {
-          "orlen": 1.892,
-          "alausa": 1.887,
-          "baltic-petroleum": 1.937,
-          "independent": 1.916,
-          "circle-k": 1.924,
-          "emsi": 1.886,
-          "jozita": 1.95,
-          "neste": 1.861,
-          "viada": 1.958,
-          "stateta": 1.875,
-          "kvistija": 1.888
+          "orlen": {
+            "min": 1.892,
+            "max": 1.892,
+            "avg": 1.892,
+            "median": 1.892
+          },
+          "alausa": {
+            "min": 1.887,
+            "max": 1.887,
+            "avg": 1.887,
+            "median": 1.887
+          },
+          "baltic-petroleum": {
+            "min": 1.937,
+            "max": 1.937,
+            "avg": 1.937,
+            "median": 1.937
+          },
+          "independent": {
+            "min": 1.916,
+            "max": 1.916,
+            "avg": 1.916,
+            "median": 1.916
+          },
+          "circle-k": {
+            "min": 1.924,
+            "max": 1.924,
+            "avg": 1.924,
+            "median": 1.924
+          },
+          "emsi": {
+            "min": 1.886,
+            "max": 1.886,
+            "avg": 1.886,
+            "median": 1.886
+          },
+          "jozita": {
+            "min": 1.95,
+            "max": 1.95,
+            "avg": 1.95,
+            "median": 1.95
+          },
+          "neste": {
+            "min": 1.861,
+            "max": 1.861,
+            "avg": 1.861,
+            "median": 1.861
+          },
+          "viada": {
+            "min": 1.958,
+            "max": 1.958,
+            "avg": 1.958,
+            "median": 1.958
+          },
+          "stateta": {
+            "min": 1.875,
+            "max": 1.875,
+            "avg": 1.875,
+            "median": 1.875
+          },
+          "kvistija": {
+            "min": 1.888,
+            "max": 1.888,
+            "avg": 1.888,
+            "median": 1.888
+          }
         },
         "D": {
-          "orlen": 2.183,
-          "alausa": 2.145,
-          "baltic-petroleum": 2.203,
-          "independent": 2.176,
-          "circle-k": 2.191,
-          "emsi": 2.147,
-          "jozita": 2.188,
-          "neste": 2.113,
-          "viada": 2.223,
-          "stateta": 2.16,
-          "kvistija": 2.144
+          "orlen": {
+            "min": 2.183,
+            "max": 2.183,
+            "avg": 2.183,
+            "median": 2.183
+          },
+          "alausa": {
+            "min": 2.145,
+            "max": 2.145,
+            "avg": 2.145,
+            "median": 2.145
+          },
+          "baltic-petroleum": {
+            "min": 2.203,
+            "max": 2.203,
+            "avg": 2.203,
+            "median": 2.203
+          },
+          "independent": {
+            "min": 2.176,
+            "max": 2.176,
+            "avg": 2.176,
+            "median": 2.176
+          },
+          "circle-k": {
+            "min": 2.191,
+            "max": 2.191,
+            "avg": 2.191,
+            "median": 2.191
+          },
+          "emsi": {
+            "min": 2.147,
+            "max": 2.147,
+            "avg": 2.147,
+            "median": 2.147
+          },
+          "jozita": {
+            "min": 2.188,
+            "max": 2.188,
+            "avg": 2.188,
+            "median": 2.188
+          },
+          "neste": {
+            "min": 2.113,
+            "max": 2.113,
+            "avg": 2.113,
+            "median": 2.113
+          },
+          "viada": {
+            "min": 2.223,
+            "max": 2.223,
+            "avg": 2.223,
+            "median": 2.223
+          },
+          "stateta": {
+            "min": 2.16,
+            "max": 2.16,
+            "avg": 2.16,
+            "median": 2.16
+          },
+          "kvistija": {
+            "min": 2.144,
+            "max": 2.144,
+            "avg": 2.144,
+            "median": 2.144
+          }
         },
         "LPG": {
-          "orlen": 0.788,
-          "baltic-petroleum": 0.814,
-          "independent": 0.78,
-          "circle-k": 0.852,
-          "emsi": 0.767,
-          "jozita": 0.75,
-          "viada": 0.86,
-          "alausa": 0.774,
-          "kvistija": 0.773,
-          "neste": 0.796,
-          "stateta": 0.759
+          "orlen": {
+            "min": 0.788,
+            "max": 0.788,
+            "avg": 0.788,
+            "median": 0.788
+          },
+          "baltic-petroleum": {
+            "min": 0.814,
+            "max": 0.814,
+            "avg": 0.814,
+            "median": 0.814
+          },
+          "independent": {
+            "min": 0.78,
+            "max": 0.78,
+            "avg": 0.78,
+            "median": 0.78
+          },
+          "circle-k": {
+            "min": 0.852,
+            "max": 0.852,
+            "avg": 0.852,
+            "median": 0.852
+          },
+          "emsi": {
+            "min": 0.767,
+            "max": 0.767,
+            "avg": 0.767,
+            "median": 0.767
+          },
+          "jozita": {
+            "min": 0.75,
+            "max": 0.75,
+            "avg": 0.75,
+            "median": 0.75
+          },
+          "viada": {
+            "min": 0.86,
+            "max": 0.86,
+            "avg": 0.86,
+            "median": 0.86
+          },
+          "alausa": {
+            "min": 0.774,
+            "max": 0.774,
+            "avg": 0.774,
+            "median": 0.774
+          },
+          "kvistija": {
+            "min": 0.773,
+            "max": 0.773,
+            "avg": 0.773,
+            "median": 0.773
+          },
+          "neste": {
+            "min": 0.796,
+            "max": 0.796,
+            "avg": 0.796,
+            "median": 0.796
+          },
+          "stateta": {
+            "min": 0.759,
+            "max": 0.759,
+            "avg": 0.759,
+            "median": 0.759
+          }
         }
       }
     },
@@ -272,41 +1237,394 @@
       "hour": 10,
       "byFuel": {
         "95": {
-          "alausa": 1.939,
-          "baltic-petroleum": 1.931,
-          "independent": 1.932,
-          "circle-k": 1.983,
-          "emsi": 1.915,
-          "jozita": 1.979,
-          "neste": 1.944,
-          "viada": 1.994,
-          "stateta": 1.903,
-          "kvistija": 1.899
+          "alausa": {
+            "min": 1.939,
+            "max": 1.939,
+            "avg": 1.939,
+            "median": 1.939
+          },
+          "baltic-petroleum": {
+            "min": 1.931,
+            "max": 1.931,
+            "avg": 1.931,
+            "median": 1.931
+          },
+          "independent": {
+            "min": 1.932,
+            "max": 1.932,
+            "avg": 1.932,
+            "median": 1.932
+          },
+          "circle-k": {
+            "min": 1.983,
+            "max": 1.983,
+            "avg": 1.983,
+            "median": 1.983
+          },
+          "emsi": {
+            "min": 1.915,
+            "max": 1.915,
+            "avg": 1.915,
+            "median": 1.915
+          },
+          "jozita": {
+            "min": 1.979,
+            "max": 1.979,
+            "avg": 1.979,
+            "median": 1.979
+          },
+          "neste": {
+            "min": 1.944,
+            "max": 1.944,
+            "avg": 1.944,
+            "median": 1.944
+          },
+          "viada": {
+            "min": 1.994,
+            "max": 1.994,
+            "avg": 1.994,
+            "median": 1.994
+          },
+          "stateta": {
+            "min": 1.903,
+            "max": 1.903,
+            "avg": 1.903,
+            "median": 1.903
+          },
+          "kvistija": {
+            "min": 1.899,
+            "max": 1.899,
+            "avg": 1.899,
+            "median": 1.899
+          }
         },
         "D": {
-          "alausa": 2.225,
-          "baltic-petroleum": 2.205,
-          "independent": 2.203,
-          "circle-k": 2.275,
-          "emsi": 2.198,
-          "jozita": 2.186,
-          "neste": 2.228,
-          "viada": 2.292,
-          "stateta": 2.195,
-          "kvistija": 2.166
+          "alausa": {
+            "min": 2.225,
+            "max": 2.225,
+            "avg": 2.225,
+            "median": 2.225
+          },
+          "baltic-petroleum": {
+            "min": 2.205,
+            "max": 2.205,
+            "avg": 2.205,
+            "median": 2.205
+          },
+          "independent": {
+            "min": 2.203,
+            "max": 2.203,
+            "avg": 2.203,
+            "median": 2.203
+          },
+          "circle-k": {
+            "min": 2.275,
+            "max": 2.275,
+            "avg": 2.275,
+            "median": 2.275
+          },
+          "emsi": {
+            "min": 2.198,
+            "max": 2.198,
+            "avg": 2.198,
+            "median": 2.198
+          },
+          "jozita": {
+            "min": 2.186,
+            "max": 2.186,
+            "avg": 2.186,
+            "median": 2.186
+          },
+          "neste": {
+            "min": 2.228,
+            "max": 2.228,
+            "avg": 2.228,
+            "median": 2.228
+          },
+          "viada": {
+            "min": 2.292,
+            "max": 2.292,
+            "avg": 2.292,
+            "median": 2.292
+          },
+          "stateta": {
+            "min": 2.195,
+            "max": 2.195,
+            "avg": 2.195,
+            "median": 2.195
+          },
+          "kvistija": {
+            "min": 2.166,
+            "max": 2.166,
+            "avg": 2.166,
+            "median": 2.166
+          }
         },
         "LPG": {
-          "baltic-petroleum": 0.775,
-          "independent": 0.786,
-          "circle-k": 0.869,
-          "emsi": 0.791,
-          "jozita": 0.75,
-          "viada": 0.887,
-          "alausa": 0.793,
-          "kvistija": 0.776,
-          "orlen": 0.78,
-          "neste": 0.796,
-          "stateta": 0.799
+          "baltic-petroleum": {
+            "min": 0.775,
+            "max": 0.775,
+            "avg": 0.775,
+            "median": 0.775
+          },
+          "independent": {
+            "min": 0.786,
+            "max": 0.786,
+            "avg": 0.786,
+            "median": 0.786
+          },
+          "circle-k": {
+            "min": 0.869,
+            "max": 0.869,
+            "avg": 0.869,
+            "median": 0.869
+          },
+          "emsi": {
+            "min": 0.791,
+            "max": 0.791,
+            "avg": 0.791,
+            "median": 0.791
+          },
+          "jozita": {
+            "min": 0.75,
+            "max": 0.75,
+            "avg": 0.75,
+            "median": 0.75
+          },
+          "viada": {
+            "min": 0.887,
+            "max": 0.887,
+            "avg": 0.887,
+            "median": 0.887
+          },
+          "alausa": {
+            "min": 0.793,
+            "max": 0.793,
+            "avg": 0.793,
+            "median": 0.793
+          },
+          "kvistija": {
+            "min": 0.776,
+            "max": 0.776,
+            "avg": 0.776,
+            "median": 0.776
+          },
+          "orlen": {
+            "min": 0.78,
+            "max": 0.78,
+            "avg": 0.78,
+            "median": 0.78
+          },
+          "neste": {
+            "min": 0.796,
+            "max": 0.796,
+            "avg": 0.796,
+            "median": 0.796
+          },
+          "stateta": {
+            "min": 0.799,
+            "max": 0.799,
+            "avg": 0.799,
+            "median": 0.799
+          }
+        }
+      }
+    },
+    {
+      "at": "2026-09-15T16:00:00.000Z",
+      "hour": 16,
+      "byFuel": {
+        "95": {
+          "alausa": {
+            "min": 1.879,
+            "max": 1.989,
+            "avg": 1.939,
+            "median": 1.939
+          },
+          "baltic-petroleum": {
+            "min": 1.849,
+            "max": 2.019,
+            "avg": 1.931,
+            "median": 1.919
+          },
+          "independent": {
+            "min": 1.85,
+            "max": 2.017,
+            "avg": 1.932,
+            "median": 1.93
+          },
+          "circle-k": {
+            "min": 1.929,
+            "max": 2.019,
+            "avg": 1.983,
+            "median": 1.979
+          },
+          "emsi": {
+            "min": 1.869,
+            "max": 2.019,
+            "avg": 1.915,
+            "median": 1.919
+          },
+          "jozita": {
+            "min": 1.89,
+            "max": 1.99,
+            "avg": 1.979,
+            "median": 1.99
+          },
+          "neste": {
+            "min": 1.919,
+            "max": 1.979,
+            "avg": 1.944,
+            "median": 1.939
+          },
+          "viada": {
+            "min": 1.943,
+            "max": 1.999,
+            "avg": 1.994,
+            "median": 1.999
+          },
+          "stateta": {
+            "min": 1.87,
+            "max": 2,
+            "avg": 1.903,
+            "median": 1.899
+          },
+          "kvistija": {
+            "min": 1.829,
+            "max": 1.98,
+            "avg": 1.899,
+            "median": 1.889
+          }
+        },
+        "D": {
+          "alausa": {
+            "min": 2.179,
+            "max": 2.269,
+            "avg": 2.225,
+            "median": 2.219
+          },
+          "baltic-petroleum": {
+            "min": 2.129,
+            "max": 2.299,
+            "avg": 2.205,
+            "median": 2.199
+          },
+          "independent": {
+            "min": 2.12,
+            "max": 2.3,
+            "avg": 2.203,
+            "median": 2.19
+          },
+          "circle-k": {
+            "min": 2.199,
+            "max": 2.299,
+            "avg": 2.275,
+            "median": 2.279
+          },
+          "emsi": {
+            "min": 2.139,
+            "max": 2.299,
+            "avg": 2.198,
+            "median": 2.199
+          },
+          "jozita": {
+            "min": 2.15,
+            "max": 2.19,
+            "avg": 2.186,
+            "median": 2.19
+          },
+          "neste": {
+            "min": 1.999,
+            "max": 2.269,
+            "avg": 2.228,
+            "median": 2.229
+          },
+          "viada": {
+            "min": 2.243,
+            "max": 2.299,
+            "avg": 2.292,
+            "median": 2.299
+          },
+          "stateta": {
+            "min": 2.16,
+            "max": 2.2,
+            "avg": 2.195,
+            "median": 2.199
+          },
+          "kvistija": {
+            "min": 2.079,
+            "max": 2.26,
+            "avg": 2.166,
+            "median": 2.17
+          }
+        },
+        "LPG": {
+          "baltic-petroleum": {
+            "min": 0.729,
+            "max": 0.839,
+            "avg": 0.775,
+            "median": 0.77
+          },
+          "independent": {
+            "min": 0.67,
+            "max": 0.94,
+            "avg": 0.786,
+            "median": 0.78
+          },
+          "circle-k": {
+            "min": 0.759,
+            "max": 0.979,
+            "avg": 0.869,
+            "median": 0.859
+          },
+          "emsi": {
+            "min": 0.75,
+            "max": 0.819,
+            "avg": 0.791,
+            "median": 0.79
+          },
+          "jozita": {
+            "min": 0.75,
+            "max": 0.75,
+            "avg": 0.75,
+            "median": 0.75
+          },
+          "viada": {
+            "min": 0.799,
+            "max": 0.979,
+            "avg": 0.887,
+            "median": 0.869
+          },
+          "alausa": {
+            "min": 0.729,
+            "max": 0.869,
+            "avg": 0.792,
+            "median": 0.794
+          },
+          "kvistija": {
+            "min": 0.739,
+            "max": 0.81,
+            "avg": 0.776,
+            "median": 0.779
+          },
+          "orlen": {
+            "min": 0.78,
+            "max": 0.78,
+            "avg": 0.78,
+            "median": 0.78
+          },
+          "neste": {
+            "min": 0.78,
+            "max": 0.829,
+            "avg": 0.796,
+            "median": 0.78
+          },
+          "stateta": {
+            "min": 0.799,
+            "max": 0.799,
+            "avg": 0.799,
+            "median": 0.799
+          }
         }
       }
     }
@@ -320,6 +1638,7 @@
         "2026-09-11",
         "2026-09-14",
         "2026-09-14",
+        "2026-09-15",
         "2026-09-15"
       ],
       "hours": [
@@ -329,7 +1648,8 @@
         7,
         7,
         11,
-        10
+        10,
+        16
       ],
       "brands": {
         "alausa": [
@@ -339,6 +1659,7 @@
           1.856,
           1.887,
           1.887,
+          1.939,
           1.939
         ],
         "baltic-petroleum": [
@@ -348,6 +1669,7 @@
           1.949,
           1.938,
           1.937,
+          1.931,
           1.931
         ],
         "circle-k": [
@@ -357,6 +1679,7 @@
           1.939,
           1.924,
           1.924,
+          1.983,
           1.983
         ],
         "emsi": [
@@ -366,6 +1689,7 @@
           1.891,
           1.886,
           1.886,
+          1.915,
           1.915
         ],
         "independent": [
@@ -375,6 +1699,7 @@
           1.908,
           1.915,
           1.916,
+          1.932,
           1.932
         ],
         "jozita": [
@@ -384,6 +1709,7 @@
           1.863,
           1.95,
           1.95,
+          1.979,
           1.979
         ],
         "kvistija": [
@@ -393,6 +1719,7 @@
           1.883,
           1.888,
           1.888,
+          1.899,
           1.899
         ],
         "neste": [
@@ -402,6 +1729,7 @@
           1.877,
           1.861,
           1.861,
+          1.944,
           1.944
         ],
         "orlen": [
@@ -411,6 +1739,7 @@
           null,
           1.889,
           1.892,
+          null,
           null
         ],
         "stateta": [
@@ -420,6 +1749,7 @@
           1.808,
           1.875,
           1.875,
+          1.903,
           1.903
         ],
         "viada": [
@@ -429,8 +1759,459 @@
           1.967,
           1.958,
           1.958,
+          1.994,
           1.994
         ]
+      },
+      "stats": {
+        "avg": {
+          "alausa": [
+            1.927,
+            1.848,
+            1.902,
+            1.856,
+            1.887,
+            1.887,
+            1.939,
+            1.939
+          ],
+          "baltic-petroleum": [
+            1.981,
+            1.957,
+            1.952,
+            1.949,
+            1.938,
+            1.937,
+            1.931,
+            1.931
+          ],
+          "circle-k": [
+            1.989,
+            1.966,
+            1.943,
+            1.939,
+            1.924,
+            1.924,
+            1.983,
+            1.983
+          ],
+          "emsi": [
+            1.91,
+            1.864,
+            1.895,
+            1.891,
+            1.886,
+            1.886,
+            1.915,
+            1.915
+          ],
+          "independent": [
+            1.907,
+            1.911,
+            1.917,
+            1.908,
+            1.915,
+            1.916,
+            1.932,
+            1.932
+          ],
+          "jozita": [
+            1.95,
+            null,
+            1.945,
+            1.863,
+            1.95,
+            1.95,
+            1.979,
+            1.979
+          ],
+          "kvistija": [
+            1.851,
+            1.899,
+            1.891,
+            1.883,
+            1.888,
+            1.888,
+            1.899,
+            1.899
+          ],
+          "neste": [
+            1.961,
+            1.925,
+            1.9,
+            1.877,
+            1.861,
+            1.861,
+            1.944,
+            1.944
+          ],
+          "orlen": [
+            1.918,
+            1.918,
+            1.874,
+            null,
+            1.889,
+            1.892,
+            null,
+            null
+          ],
+          "stateta": [
+            1.898,
+            1.864,
+            1.882,
+            1.808,
+            1.875,
+            1.875,
+            1.903,
+            1.903
+          ],
+          "viada": [
+            1.996,
+            1.984,
+            1.97,
+            1.967,
+            1.958,
+            1.958,
+            1.994,
+            1.994
+          ]
+        },
+        "min": {
+          "alausa": [
+            1.799,
+            1.799,
+            1.82,
+            1.779,
+            1.799,
+            1.887,
+            1.939,
+            1.879
+          ],
+          "baltic-petroleum": [
+            1.829,
+            1.799,
+            1.859,
+            1.779,
+            1.839,
+            1.937,
+            1.931,
+            1.849
+          ],
+          "circle-k": [
+            1.896,
+            1.904,
+            1.859,
+            1.849,
+            1.819,
+            1.924,
+            1.983,
+            1.929
+          ],
+          "emsi": [
+            1.829,
+            1.85,
+            1.839,
+            1.839,
+            1.85,
+            1.886,
+            1.915,
+            1.869
+          ],
+          "independent": [
+            1.769,
+            1.81,
+            1.839,
+            1.799,
+            1.823,
+            1.916,
+            1.932,
+            1.85
+          ],
+          "jozita": [
+            1.95,
+            null,
+            1.89,
+            1.77,
+            1.94,
+            1.95,
+            1.979,
+            1.89
+          ],
+          "kvistija": [
+            1.799,
+            1.859,
+            1.829,
+            1.829,
+            1.829,
+            1.888,
+            1.899,
+            1.829
+          ],
+          "neste": [
+            1.929,
+            1.879,
+            1.839,
+            1.799,
+            1.799,
+            1.861,
+            1.944,
+            1.919
+          ],
+          "orlen": [
+            1.899,
+            1.899,
+            1.839,
+            null,
+            1.859,
+            1.892,
+            null,
+            null
+          ],
+          "stateta": [
+            1.879,
+            1.859,
+            1.867,
+            1.797,
+            1.869,
+            1.875,
+            1.903,
+            1.87
+          ],
+          "viada": [
+            1.959,
+            1.939,
+            1.899,
+            1.899,
+            1.879,
+            1.958,
+            1.994,
+            1.943
+          ]
+        },
+        "max": {
+          "alausa": [
+            1.969,
+            1.969,
+            1.969,
+            1.899,
+            1.969,
+            1.887,
+            1.939,
+            1.989
+          ],
+          "baltic-petroleum": [
+            2.019,
+            2.019,
+            2.019,
+            2.019,
+            2.019,
+            1.937,
+            1.931,
+            2.019
+          ],
+          "circle-k": [
+            1.999,
+            1.999,
+            1.999,
+            1.999,
+            1.999,
+            1.924,
+            1.983,
+            2.019
+          ],
+          "emsi": [
+            2.039,
+            1.959,
+            1.999,
+            1.999,
+            1.999,
+            1.886,
+            1.915,
+            2.019
+          ],
+          "independent": [
+            2.029,
+            2.017,
+            2.017,
+            2.017,
+            2.017,
+            1.916,
+            1.932,
+            2.017
+          ],
+          "jozita": [
+            1.95,
+            null,
+            1.95,
+            1.88,
+            1.95,
+            1.95,
+            1.979,
+            1.99
+          ],
+          "kvistija": [
+            1.98,
+            1.98,
+            1.98,
+            1.94,
+            1.94,
+            1.888,
+            1.899,
+            1.98
+          ],
+          "neste": [
+            1.979,
+            1.959,
+            1.959,
+            1.949,
+            1.919,
+            1.861,
+            1.944,
+            1.979
+          ],
+          "orlen": [
+            1.929,
+            1.929,
+            1.919,
+            null,
+            1.919,
+            1.892,
+            null,
+            null
+          ],
+          "stateta": [
+            1.9,
+            1.93,
+            1.93,
+            1.95,
+            1.95,
+            1.875,
+            1.903,
+            2
+          ],
+          "viada": [
+            1.999,
+            1.999,
+            1.999,
+            1.999,
+            1.999,
+            1.958,
+            1.994,
+            1.999
+          ]
+        },
+        "median": {
+          "alausa": [
+            1.944,
+            1.859,
+            1.899,
+            1.859,
+            1.879,
+            1.887,
+            1.939,
+            1.939
+          ],
+          "baltic-petroleum": [
+            1.989,
+            1.959,
+            1.949,
+            1.949,
+            1.939,
+            1.937,
+            1.931,
+            1.919
+          ],
+          "circle-k": [
+            1.999,
+            1.969,
+            1.939,
+            1.935,
+            1.919,
+            1.924,
+            1.983,
+            1.979
+          ],
+          "emsi": [
+            1.91,
+            1.859,
+            1.899,
+            1.899,
+            1.879,
+            1.886,
+            1.915,
+            1.919
+          ],
+          "independent": [
+            1.899,
+            1.9,
+            1.91,
+            1.9,
+            1.9,
+            1.916,
+            1.932,
+            1.93
+          ],
+          "jozita": [
+            1.95,
+            null,
+            1.95,
+            1.88,
+            1.95,
+            1.95,
+            1.979,
+            1.99
+          ],
+          "kvistija": [
+            1.82,
+            1.899,
+            1.88,
+            1.889,
+            1.889,
+            1.888,
+            1.899,
+            1.889
+          ],
+          "neste": [
+            1.959,
+            1.929,
+            1.899,
+            1.879,
+            1.859,
+            1.861,
+            1.944,
+            1.939
+          ],
+          "orlen": [
+            1.919,
+            1.919,
+            1.879,
+            null,
+            1.899,
+            1.892,
+            null,
+            null
+          ],
+          "stateta": [
+            1.899,
+            1.859,
+            1.879,
+            1.797,
+            1.869,
+            1.875,
+            1.903,
+            1.899
+          ],
+          "viada": [
+            1.999,
+            1.999,
+            1.969,
+            1.979,
+            1.959,
+            1.958,
+            1.994,
+            1.999
+          ]
+        }
       }
     },
     "D": {
@@ -441,6 +2222,7 @@
         "2026-09-11",
         "2026-09-14",
         "2026-09-14",
+        "2026-09-15",
         "2026-09-15"
       ],
       "hours": [
@@ -450,7 +2232,8 @@
         7,
         7,
         11,
-        10
+        10,
+        16
       ],
       "brands": {
         "alausa": [
@@ -460,6 +2243,7 @@
           2.11,
           2.145,
           2.145,
+          2.225,
           2.225
         ],
         "baltic-petroleum": [
@@ -469,6 +2253,7 @@
           2.205,
           2.203,
           2.203,
+          2.205,
           2.205
         ],
         "circle-k": [
@@ -478,6 +2263,7 @@
           2.186,
           2.191,
           2.191,
+          2.275,
           2.275
         ],
         "emsi": [
@@ -487,6 +2273,7 @@
           2.141,
           2.147,
           2.147,
+          2.198,
           2.198
         ],
         "independent": [
@@ -496,6 +2283,7 @@
           2.158,
           2.177,
           2.176,
+          2.203,
           2.203
         ],
         "jozita": [
@@ -505,6 +2293,7 @@
           2.075,
           2.188,
           2.188,
+          2.186,
           2.186
         ],
         "kvistija": [
@@ -514,6 +2303,7 @@
           2.133,
           2.144,
           2.144,
+          2.166,
           2.166
         ],
         "neste": [
@@ -523,6 +2313,7 @@
           2.125,
           2.113,
           2.113,
+          2.228,
           2.228
         ],
         "orlen": [
@@ -532,6 +2323,7 @@
           null,
           2.177,
           2.183,
+          null,
           null
         ],
         "stateta": [
@@ -541,6 +2333,7 @@
           2.103,
           2.16,
           2.16,
+          2.195,
           2.195
         ],
         "viada": [
@@ -550,8 +2343,459 @@
           2.22,
           2.223,
           2.223,
+          2.292,
           2.292
         ]
+      },
+      "stats": {
+        "avg": {
+          "alausa": [
+            2.156,
+            2.08,
+            2.14,
+            2.11,
+            2.145,
+            2.145,
+            2.225,
+            2.225
+          ],
+          "baltic-petroleum": [
+            2.225,
+            2.206,
+            2.195,
+            2.205,
+            2.203,
+            2.203,
+            2.205,
+            2.205
+          ],
+          "circle-k": [
+            2.246,
+            2.211,
+            2.182,
+            2.186,
+            2.191,
+            2.191,
+            2.275,
+            2.275
+          ],
+          "emsi": [
+            2.151,
+            2.104,
+            2.152,
+            2.141,
+            2.147,
+            2.147,
+            2.198,
+            2.198
+          ],
+          "independent": [
+            2.154,
+            2.158,
+            2.16,
+            2.158,
+            2.177,
+            2.176,
+            2.203,
+            2.203
+          ],
+          "jozita": [
+            2.15,
+            null,
+            2.148,
+            2.075,
+            2.188,
+            2.188,
+            2.186,
+            2.186
+          ],
+          "kvistija": [
+            2.112,
+            2.137,
+            2.134,
+            2.133,
+            2.144,
+            2.144,
+            2.166,
+            2.166
+          ],
+          "neste": [
+            2.207,
+            2.145,
+            2.127,
+            2.125,
+            2.113,
+            2.113,
+            2.228,
+            2.228
+          ],
+          "orlen": [
+            2.175,
+            2.175,
+            2.118,
+            null,
+            2.177,
+            2.183,
+            null,
+            null
+          ],
+          "stateta": [
+            2.136,
+            2.084,
+            2.137,
+            2.103,
+            2.16,
+            2.16,
+            2.195,
+            2.195
+          ],
+          "viada": [
+            2.26,
+            2.243,
+            2.214,
+            2.22,
+            2.223,
+            2.223,
+            2.292,
+            2.292
+          ]
+        },
+        "min": {
+          "alausa": [
+            1.999,
+            1.999,
+            2.029,
+            1.999,
+            1.999,
+            2.145,
+            2.225,
+            2.179
+          ],
+          "baltic-petroleum": [
+            2.079,
+            1.999,
+            2.099,
+            1.999,
+            2.089,
+            2.203,
+            2.205,
+            2.129
+          ],
+          "circle-k": [
+            2.185,
+            2.119,
+            2.059,
+            2.079,
+            2.092,
+            2.191,
+            2.275,
+            2.199
+          ],
+          "emsi": [
+            2.079,
+            2.09,
+            2.079,
+            2.079,
+            2.09,
+            2.147,
+            2.198,
+            2.139
+          ],
+          "independent": [
+            2,
+            2.069,
+            2.08,
+            2.029,
+            2.084,
+            2.176,
+            2.203,
+            2.12
+          ],
+          "jozita": [
+            2.15,
+            null,
+            2.11,
+            1.99,
+            2.15,
+            2.188,
+            2.186,
+            2.15
+          ],
+          "kvistija": [
+            2.029,
+            2.099,
+            2.059,
+            2.059,
+            2.079,
+            2.144,
+            2.166,
+            2.079
+          ],
+          "neste": [
+            2.169,
+            2.099,
+            1.999,
+            1.999,
+            1.999,
+            2.113,
+            2.228,
+            1.999
+          ],
+          "orlen": [
+            2.139,
+            2.139,
+            2.099,
+            null,
+            2.149,
+            2.183,
+            null,
+            null
+          ],
+          "stateta": [
+            2.089,
+            2.079,
+            2.097,
+            2.097,
+            2.139,
+            2.16,
+            2.195,
+            2.16
+          ],
+          "viada": [
+            2.189,
+            2.159,
+            2.119,
+            2.109,
+            2.099,
+            2.223,
+            2.292,
+            2.243
+          ]
+        },
+        "max": {
+          "alausa": [
+            2.199,
+            2.199,
+            2.199,
+            2.199,
+            2.229,
+            2.145,
+            2.225,
+            2.269
+          ],
+          "baltic-petroleum": [
+            2.259,
+            2.259,
+            2.259,
+            2.269,
+            2.269,
+            2.203,
+            2.205,
+            2.299
+          ],
+          "circle-k": [
+            2.299,
+            2.299,
+            2.299,
+            2.299,
+            2.307,
+            2.191,
+            2.275,
+            2.299
+          ],
+          "emsi": [
+            2.259,
+            2.199,
+            2.259,
+            2.259,
+            2.259,
+            2.147,
+            2.198,
+            2.299
+          ],
+          "independent": [
+            2.299,
+            2.299,
+            2.27,
+            2.289,
+            2.3,
+            2.176,
+            2.203,
+            2.3
+          ],
+          "jozita": [
+            2.15,
+            null,
+            2.15,
+            2.09,
+            2.19,
+            2.188,
+            2.186,
+            2.19
+          ],
+          "kvistija": [
+            2.22,
+            2.22,
+            2.22,
+            2.17,
+            2.18,
+            2.144,
+            2.166,
+            2.26
+          ],
+          "neste": [
+            2.229,
+            2.199,
+            2.199,
+            2.199,
+            2.199,
+            2.113,
+            2.228,
+            2.269
+          ],
+          "orlen": [
+            2.189,
+            2.189,
+            2.189,
+            null,
+            2.199,
+            2.183,
+            null,
+            null
+          ],
+          "stateta": [
+            2.15,
+            2.15,
+            2.15,
+            2.18,
+            2.2,
+            2.16,
+            2.195,
+            2.2
+          ],
+          "viada": [
+            2.299,
+            2.299,
+            2.299,
+            2.299,
+            2.299,
+            2.223,
+            2.292,
+            2.299
+          ]
+        },
+        "median": {
+          "alausa": [
+            2.174,
+            2.079,
+            2.139,
+            2.099,
+            2.149,
+            2.145,
+            2.225,
+            2.219
+          ],
+          "baltic-petroleum": [
+            2.229,
+            2.229,
+            2.199,
+            2.209,
+            2.209,
+            2.203,
+            2.205,
+            2.199
+          ],
+          "circle-k": [
+            2.249,
+            2.209,
+            2.169,
+            2.179,
+            2.183,
+            2.191,
+            2.275,
+            2.279
+          ],
+          "emsi": [
+            2.154,
+            2.099,
+            2.159,
+            2.139,
+            2.149,
+            2.147,
+            2.198,
+            2.199
+          ],
+          "independent": [
+            2.145,
+            2.15,
+            2.15,
+            2.15,
+            2.17,
+            2.176,
+            2.203,
+            2.19
+          ],
+          "jozita": [
+            2.15,
+            null,
+            2.15,
+            2.09,
+            2.19,
+            2.188,
+            2.186,
+            2.19
+          ],
+          "kvistija": [
+            2.094,
+            2.125,
+            2.125,
+            2.149,
+            2.155,
+            2.144,
+            2.166,
+            2.17
+          ],
+          "neste": [
+            2.209,
+            2.149,
+            2.129,
+            2.129,
+            2.109,
+            2.113,
+            2.228,
+            2.229
+          ],
+          "orlen": [
+            2.179,
+            2.179,
+            2.119,
+            null,
+            2.179,
+            2.183,
+            null,
+            null
+          ],
+          "stateta": [
+            2.139,
+            2.079,
+            2.139,
+            2.097,
+            2.159,
+            2.16,
+            2.195,
+            2.199
+          ],
+          "viada": [
+            2.259,
+            2.239,
+            2.199,
+            2.199,
+            2.199,
+            2.223,
+            2.292,
+            2.299
+          ]
+        }
       }
     },
     "LPG": {
@@ -562,6 +2806,7 @@
         "2026-09-11",
         "2026-09-14",
         "2026-09-14",
+        "2026-09-15",
         "2026-09-15"
       ],
       "hours": [
@@ -571,17 +2816,19 @@
         7,
         7,
         11,
-        10
+        10,
+        16
       ],
       "brands": {
         "alausa": [
           0.767,
-          0.738,
+          0.737,
           0.767,
-          0.749,
+          0.748,
           0.774,
           0.774,
-          0.793
+          0.793,
+          0.792
         ],
         "baltic-petroleum": [
           0.79,
@@ -590,6 +2837,7 @@
           0.794,
           0.813,
           0.814,
+          0.775,
           0.775
         ],
         "circle-k": [
@@ -599,6 +2847,7 @@
           0.848,
           0.852,
           0.852,
+          0.869,
           0.869
         ],
         "emsi": [
@@ -608,6 +2857,7 @@
           0.762,
           0.767,
           0.767,
+          0.791,
           0.791
         ],
         "independent": [
@@ -617,6 +2867,7 @@
           0.779,
           0.782,
           0.78,
+          0.786,
           0.786
         ],
         "jozita": [
@@ -624,6 +2875,7 @@
           null,
           0.747,
           0.733,
+          0.75,
           0.75,
           0.75,
           0.75
@@ -635,12 +2887,14 @@
           0.768,
           0.773,
           0.773,
+          0.776,
           0.776
         ],
         "neste": [
           0.74,
           0.77,
           0.79,
+          0.796,
           0.796,
           0.796,
           0.796,
@@ -653,6 +2907,7 @@
           0.75,
           0.78,
           0.788,
+          0.78,
           0.78
         ],
         "stateta": [
@@ -662,6 +2917,7 @@
           0.759,
           0.759,
           0.759,
+          0.799,
           0.799
         ],
         "viada": [
@@ -671,8 +2927,459 @@
           0.858,
           0.861,
           0.86,
+          0.887,
           0.887
         ]
+      },
+      "stats": {
+        "avg": {
+          "alausa": [
+            0.767,
+            0.737,
+            0.767,
+            0.748,
+            0.774,
+            0.774,
+            0.793,
+            0.792
+          ],
+          "baltic-petroleum": [
+            0.79,
+            0.788,
+            0.794,
+            0.794,
+            0.813,
+            0.814,
+            0.775,
+            0.775
+          ],
+          "circle-k": [
+            0.844,
+            0.844,
+            0.846,
+            0.848,
+            0.852,
+            0.852,
+            0.869,
+            0.869
+          ],
+          "emsi": [
+            0.776,
+            0.755,
+            0.765,
+            0.762,
+            0.767,
+            0.767,
+            0.791,
+            0.791
+          ],
+          "independent": [
+            0.772,
+            0.773,
+            0.777,
+            0.779,
+            0.782,
+            0.78,
+            0.786,
+            0.786
+          ],
+          "jozita": [
+            0.749,
+            null,
+            0.747,
+            0.733,
+            0.75,
+            0.75,
+            0.75,
+            0.75
+          ],
+          "kvistija": [
+            0.768,
+            0.768,
+            0.768,
+            0.768,
+            0.773,
+            0.773,
+            0.776,
+            0.776
+          ],
+          "neste": [
+            0.74,
+            0.77,
+            0.79,
+            0.796,
+            0.796,
+            0.796,
+            0.796,
+            0.796
+          ],
+          "orlen": [
+            0.752,
+            0.752,
+            0.762,
+            0.75,
+            0.78,
+            0.788,
+            0.78,
+            0.78
+          ],
+          "stateta": [
+            0.759,
+            0.759,
+            0.759,
+            0.759,
+            0.759,
+            0.759,
+            0.799,
+            0.799
+          ],
+          "viada": [
+            0.855,
+            0.857,
+            0.857,
+            0.858,
+            0.861,
+            0.86,
+            0.887,
+            0.887
+          ]
+        },
+        "min": {
+          "alausa": [
+            0.699,
+            0.699,
+            0.719,
+            0.699,
+            0.719,
+            0.774,
+            0.793,
+            0.729
+          ],
+          "baltic-petroleum": [
+            0.709,
+            0.699,
+            0.729,
+            0.699,
+            0.729,
+            0.814,
+            0.775,
+            0.729
+          ],
+          "circle-k": [
+            0.759,
+            0.759,
+            0.759,
+            0.759,
+            0.759,
+            0.852,
+            0.869,
+            0.759
+          ],
+          "emsi": [
+            0.74,
+            0.73,
+            0.73,
+            0.73,
+            0.73,
+            0.767,
+            0.791,
+            0.75
+          ],
+          "independent": [
+            0.67,
+            0.67,
+            0.67,
+            0.67,
+            0.67,
+            0.78,
+            0.786,
+            0.67
+          ],
+          "jozita": [
+            0.709,
+            null,
+            0.69,
+            0.69,
+            0.75,
+            0.75,
+            0.75,
+            0.75
+          ],
+          "kvistija": [
+            0.739,
+            0.739,
+            0.739,
+            0.739,
+            0.739,
+            0.773,
+            0.776,
+            0.739
+          ],
+          "neste": [
+            0.74,
+            0.74,
+            0.77,
+            0.78,
+            0.78,
+            0.796,
+            0.796,
+            0.78
+          ],
+          "orlen": [
+            0.73,
+            0.73,
+            0.74,
+            0.75,
+            0.76,
+            0.788,
+            0.78,
+            0.78
+          ],
+          "stateta": [
+            0.759,
+            0.759,
+            0.759,
+            0.759,
+            0.759,
+            0.759,
+            0.799,
+            0.799
+          ],
+          "viada": [
+            0.759,
+            0.799,
+            0.799,
+            0.799,
+            0.799,
+            0.86,
+            0.887,
+            0.799
+          ]
+        },
+        "max": {
+          "alausa": [
+            0.869,
+            0.799,
+            0.839,
+            0.799,
+            0.869,
+            0.774,
+            0.793,
+            0.869
+          ],
+          "baltic-petroleum": [
+            0.869,
+            0.869,
+            0.889,
+            0.869,
+            0.869,
+            0.814,
+            0.775,
+            0.839
+          ],
+          "circle-k": [
+            0.949,
+            0.949,
+            0.949,
+            0.949,
+            0.949,
+            0.852,
+            0.869,
+            0.979
+          ],
+          "emsi": [
+            0.829,
+            0.779,
+            0.799,
+            0.799,
+            0.799,
+            0.767,
+            0.791,
+            0.819
+          ],
+          "independent": [
+            0.94,
+            0.94,
+            0.94,
+            0.94,
+            0.94,
+            0.78,
+            0.786,
+            0.94
+          ],
+          "jozita": [
+            0.75,
+            null,
+            0.75,
+            0.74,
+            0.75,
+            0.75,
+            0.75,
+            0.75
+          ],
+          "kvistija": [
+            0.81,
+            0.81,
+            0.81,
+            0.81,
+            0.81,
+            0.773,
+            0.776,
+            0.81
+          ],
+          "neste": [
+            0.74,
+            0.829,
+            0.829,
+            0.829,
+            0.829,
+            0.796,
+            0.796,
+            0.829
+          ],
+          "orlen": [
+            0.769,
+            0.769,
+            0.779,
+            0.75,
+            0.799,
+            0.788,
+            0.78,
+            0.78
+          ],
+          "stateta": [
+            0.759,
+            0.759,
+            0.759,
+            0.759,
+            0.759,
+            0.759,
+            0.799,
+            0.799
+          ],
+          "viada": [
+            0.949,
+            0.949,
+            0.949,
+            0.949,
+            0.949,
+            0.86,
+            0.887,
+            0.979
+          ]
+        },
+        "median": {
+          "alausa": [
+            0.754,
+            0.719,
+            0.759,
+            0.749,
+            0.769,
+            0.774,
+            0.793,
+            0.794
+          ],
+          "baltic-petroleum": [
+            0.79,
+            0.789,
+            0.799,
+            0.799,
+            0.819,
+            0.814,
+            0.775,
+            0.77
+          ],
+          "circle-k": [
+            0.83,
+            0.829,
+            0.839,
+            0.839,
+            0.839,
+            0.852,
+            0.869,
+            0.859
+          ],
+          "emsi": [
+            0.77,
+            0.759,
+            0.77,
+            0.77,
+            0.77,
+            0.767,
+            0.791,
+            0.79
+          ],
+          "independent": [
+            0.75,
+            0.755,
+            0.76,
+            0.77,
+            0.779,
+            0.78,
+            0.786,
+            0.78
+          ],
+          "jozita": [
+            0.75,
+            null,
+            0.75,
+            0.74,
+            0.75,
+            0.75,
+            0.75,
+            0.75
+          ],
+          "kvistija": [
+            0.76,
+            0.76,
+            0.76,
+            0.759,
+            0.779,
+            0.773,
+            0.776,
+            0.779
+          ],
+          "neste": [
+            0.74,
+            0.74,
+            0.77,
+            0.78,
+            0.78,
+            0.796,
+            0.796,
+            0.78
+          ],
+          "orlen": [
+            0.749,
+            0.749,
+            0.759,
+            0.75,
+            0.779,
+            0.788,
+            0.78,
+            0.78
+          ],
+          "stateta": [
+            0.759,
+            0.759,
+            0.759,
+            0.759,
+            0.759,
+            0.759,
+            0.799,
+            0.799
+          ],
+          "viada": [
+            0.839,
+            0.839,
+            0.839,
+            0.849,
+            0.849,
+            0.86,
+            0.887,
+            0.869
+          ]
+        }
       }
     }
   }

@@ -20,6 +20,7 @@ import {
 import {
   allHistoryBrandsOn,
   chartBrands,
+  seriesForStat,
   toggleAllHistoryBrands,
   toggleHistoryBrand,
 } from "../src/history-series.ts";
@@ -137,6 +138,21 @@ describe("chartBrands", () => {
     };
     expect(chartBrands(series).map((b) => b.id)).toEqual(["viada"]);
     expect(chartBrands(undefined)).toEqual([]);
+  });
+});
+
+describe("seriesForStat", () => {
+  it("swaps in min prices when that mode is selected", () => {
+    const series: HistoryHourSeries = {
+      dates: ["2026-09-15"],
+      hours: [10],
+      brands: { neste: [1.5] },
+      stats: { min: { neste: [1.2] }, max: { neste: [1.8] } },
+    };
+    expect(seriesForStat(series, "avg")?.brands.neste).toEqual([1.5]);
+    expect(seriesForStat(series, "min")?.brands.neste).toEqual([1.2]);
+    expect(seriesForStat(series, "max")?.brands.neste).toEqual([1.8]);
+    expect(seriesForStat(series, "median")?.brands.neste).toEqual([1.5]);
   });
 });
 

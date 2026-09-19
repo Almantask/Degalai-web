@@ -1,14 +1,16 @@
 import { existsSync, readdirSync, readFileSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import type {
+  BrandStat,
   DailyPrices,
   FuelType,
   HistoryFile,
   HistoryHourSeries,
   HistorySample,
+  HistoryStat,
   Station,
 } from "../src/types.ts";
-import { FUEL_TYPES, HISTORY_KEEP_DAYS } from "../src/types.ts";
+import { FUEL_TYPES, HISTORY_KEEP_DAYS, HISTORY_STATS } from "../src/types.ts";
 import { round3 } from "../src/calc.ts";
 
 export function median(sorted: number[]): number {
@@ -82,28 +84,71 @@ export function sampleHour(daily: DailyPrices): number {
   return daily.generatedAt ? hourInVilnius(daily.generatedAt) : 12;
 }
 
-export function brandAverages(
+export function brandStats(
   daily: DailyPrices,
   stations: Map<string, Station>,
-): Partial<Record<FuelType, Record<string, number>>> {
-  const out: Partial<Record<FuelType, Record<string, number>>> = {};
+): Partial<Record<FuelType, Record<string, BrandStat>>> {
+  const out: Partial<Record<FuelType, Record<string, BrandStat>>> = {};
   for (const fuel of FUEL_TYPES) {
-    const sums = new Map<string, { sum: number; n: number }>();
+    const bags = new Map<string, number[]>();
     for (const [sid, fuels] of Object.entries(daily.prices)) {
       const e = fuels[fuel];
       if (!e || e.stale) continue;
       const brand = stations.get(sid)?.brand ?? "independent";
-      const cur = sums.get(brand) ?? { sum: 0, n: 0 };
-      cur.sum += e.price;
-      cur.n += 1;
-      sums.set(brand, cur);
+      const list = bags.get(brand) ?? [];
+      list.push(e.price);
+      bags.set(brand, list);
     }
-    if (sums.size === 0) continue;
-    const brands: Record<string, number> = {};
-    for (const [brand, { sum, n }] of sums) brands[brand] = round3(sum / n);
+    if (bags.size === 0) continue;
+    const brands: Record<string, BrandStat> = {};
+    for (const [brand, prices] of bags) brands[brand] = statFromPrices(prices);
     out[fuel] = brands;
   }
   return out;
+}
+
+/** @deprecated use brandStats */
+export const brandAverages = brandStats;
+
+function statFromPrices(prices: number[]): BrandStat {
+  const sorted = [...prices].sort((a, b) => a - b);
+  const sum = sorted.reduce((s, p) => s + p, 0);
+  return {
+    min: round3(sorted[0]),
+    max: round3(sorted[sorted.length - 1]),
+    avg: round3(sum / sorted.length),
+    median: round3(median(sorted)),
+  };
+}
+
+export function toBrandStat(value: unknown): BrandStat | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const n = round3(value);
+    return { min: n, max: n, avg: n, median: n };
+  }
+  if (!value || typeof value !== "object") return undefined;
+  const v = value as Record<string, unknown>;
+  const min = Number(v.min);
+  const max = Number(v.max);
+  const avg = Number(v.avg);
+  const medianValue = Number(v.median);
+  if (![min, max, avg, medianValue].every(Number.isFinite)) return undefined;
+  return { min, max, avg, median: medianValue };
+}
+
+export function normalizeSample(sample: HistorySample): HistorySample {
+  const byFuel: HistorySample["byFuel"] = {};
+  for (const fuel of FUEL_TYPES) {
+    const row = sample.byFuel[fuel] as Record<string, unknown> | undefined;
+    if (!row) continue;
+    const next: Record<string, BrandStat> = {};
+    for (const [brand, value] of Object.entries(row)) {
+      const stat = toBrandStat(value);
+      if (stat) next[brand] = stat;
+    }
+    if (Object.keys(next).length) byFuel[fuel] = next;
+  }
+  return { at: sample.at, hour: sample.hour, byFuel };
 }
 
 export function sampleFromDaily(
@@ -115,7 +160,7 @@ export function sampleFromDaily(
   return {
     at: `${daily.date}T${String(hour).padStart(2, "0")}:00:00.000Z`,
     hour,
-    byFuel: brandAverages(daily, stations),
+    byFuel: brandStats(daily, stations),
   };
 }
 
@@ -123,16 +168,22 @@ export function sampleKey(sample: HistorySample): string {
   return `${sample.at.slice(0, 10)}-${String(sample.hour).padStart(2, "0")}`;
 }
 
+export function brandStatEqual(a: BrandStat | undefined, b: BrandStat | undefined): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return a.min === b.min && a.max === b.max && a.avg === b.avg && a.median === b.median;
+}
+
 export function fuelPricesEqual(
-  a: Record<string, number> | undefined,
-  b: Record<string, number> | undefined,
+  a: Record<string, BrandStat> | undefined,
+  b: Record<string, BrandStat> | undefined,
 ): boolean {
   if (a === b) return true;
   if (!a || !b) return false;
   const keysA = Object.keys(a);
   const keysB = Object.keys(b);
   if (keysA.length !== keysB.length) return false;
-  return keysA.every((k) => Object.hasOwn(b, k) && a[k] === b[k]);
+  return keysA.every((k) => Object.hasOwn(b, k) && brandStatEqual(a[k], b[k]));
 }
 
 export function samplePricesEqual(a: HistorySample, b: HistorySample): boolean {
@@ -163,14 +214,15 @@ export function mergeSamples(
   const today = dateInVilnius(now.toISOString());
   const byKey = new Map<string, HistorySample>();
   for (const s of [...existing, ...next]) {
-    if (dayDiff(s.at.slice(0, 10), today) <= keepDays) byKey.set(sampleKey(s), s);
+    const sample = normalizeSample(s);
+    if (dayDiff(sample.at.slice(0, 10), today) <= keepDays) byKey.set(sampleKey(sample), sample);
   }
   const merged = [...byKey.values()].sort((a, b) => a.at.localeCompare(b.at) || a.hour - b.hour);
   return dropUnchangedSamples(merged);
 }
 
 function appendChangedPoint(
-  points: Array<{ date: string; hour: number; prices: Record<string, number> }>,
+  points: Array<{ date: string; hour: number; prices: Record<string, BrandStat> }>,
   brands: Set<string>,
   sample: HistorySample,
   fuel: FuelType,
@@ -183,6 +235,18 @@ function appendChangedPoint(
   points.push({ date: sample.at.slice(0, 10), hour: sample.hour, prices: row });
 }
 
+function seriesForBrands(
+  brands: string[],
+  points: Array<{ prices: Record<string, BrandStat> }>,
+  stat: HistoryStat,
+): Record<string, Array<number | null>> {
+  const series: Record<string, Array<number | null>> = {};
+  for (const b of brands) {
+    series[b] = points.map((p) => (p.prices[b] != null ? p.prices[b][stat] : null));
+  }
+  return series;
+}
+
 /** One chart point per price change so the timeline can show date and time. */
 export function rollupHourAverages(
   samples: HistorySample[],
@@ -190,17 +254,18 @@ export function rollupHourAverages(
   const out: Partial<Record<FuelType, HistoryHourSeries>> = {};
   for (const fuel of FUEL_TYPES) {
     const brands = new Set<string>();
-    const points: Array<{ date: string; hour: number; prices: Record<string, number> }> = [];
-    for (const s of samples) appendChangedPoint(points, brands, s, fuel);
+    const points: Array<{ date: string; hour: number; prices: Record<string, BrandStat> }> = [];
+    for (const s of samples) appendChangedPoint(points, brands, normalizeSample(s), fuel);
     if (brands.size === 0 || points.length === 0) continue;
-    const series: Record<string, Array<number | null>> = {};
-    for (const b of [...brands].sort((x, y) => x.localeCompare(y))) {
-      series[b] = points.map((p) => (p.prices[b] != null ? p.prices[b] : null));
-    }
+    const ids = [...brands].sort((x, y) => x.localeCompare(y));
+    const stats = Object.fromEntries(
+      HISTORY_STATS.map((stat) => [stat, seriesForBrands(ids, points, stat)]),
+    ) as NonNullable<HistoryHourSeries["stats"]>;
     out[fuel] = {
       dates: points.map((p) => p.date),
       hours: points.map((p) => p.hour),
-      brands: series,
+      brands: stats.avg ?? {},
+      stats,
     };
   }
   return out;

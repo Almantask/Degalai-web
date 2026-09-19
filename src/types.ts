@@ -3,6 +3,16 @@ export type FuelType = (typeof FUEL_TYPES)[number];
 
 export const HISTORY_KEEP_DAYS = 7;
 
+export const HISTORY_STATS = ["avg", "min", "max", "median"] as const;
+export type HistoryStat = (typeof HISTORY_STATS)[number];
+
+export interface BrandStat {
+  min: number;
+  max: number;
+  avg: number;
+  median: number;
+}
+
 export const FUEL_GROUPS = ["diesel", "petrol", "gas"] as const;
 export type FuelGroup = (typeof FUEL_GROUPS)[number];
 
@@ -35,7 +45,7 @@ export interface DailyPrices {
 export interface HistorySample {
   at: string;
   hour: number;
-  byFuel: Partial<Record<FuelType, Record<string, number>>>;
+  byFuel: Partial<Record<FuelType, Record<string, BrandStat>>>;
 }
 
 export interface HistoryHourSeries {
@@ -43,7 +53,10 @@ export interface HistoryHourSeries {
   dates?: string[];
   /** Hour of day in Europe/Vilnius for each sample (not a 24-hour clock profile). */
   hours: number[];
+  /** Average prices; used by cheap-hours and as the default chart series. */
   brands: Record<string, Array<number | null>>;
+  /** Per-stat brand series. Missing stats fall back to `brands`. */
+  stats?: Partial<Record<HistoryStat, Record<string, Array<number | null>>>>;
 }
 
 export interface CheapHourRange {
@@ -126,6 +139,8 @@ export interface UserSettings {
   highAccuracyLocation: boolean;
   /** Brand ids the user turned off. Empty means every provider is included. */
   excludedBrands: string[];
+  /** Statistic plotted on the history chart. */
+  historyStat: HistoryStat;
   locale?: "lt" | "en";
 }
 
@@ -142,6 +157,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   hideUnpriced: true,
   highAccuracyLocation: true,
   excludedBrands: [],
+  historyStat: "avg",
 };
 
 export const LT_BOUNDS = {

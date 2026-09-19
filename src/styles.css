@@ -728,9 +728,16 @@ body,
   overscroll-behavior: contain;
 }
 
+.history-stat {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
 .history-chart-stack {
   --history-legend-row: 1.75rem;
-  flex: 1 1 auto;
+  flex: 1 0 auto;
   /* Chart plus one row of provider chips; shorter screens scroll the panel body instead. */
   min-height: calc(var(--history-chart-min, 111px) + 6px + var(--history-legend-row));
   display: flex;
