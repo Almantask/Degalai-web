@@ -69,7 +69,7 @@ test("English locale loads without about", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Stations" })).toBeVisible();
   await expect(page.getByRole("link", { name: "History" })).toBeVisible();
   await expect(page.getByRole("link", { name: "About" })).toHaveCount(0);
-  await expect(page.locator(".list-updated")).toContainText(/Last checked/);
+  await expect(page.locator(".list-updated")).toContainText(/Last updated/);
 });
 
 test("settings button stays inside the header when switching language", async ({ page }) => {
@@ -432,11 +432,11 @@ test("zoom and locate controls sit together in the top-right", async ({ page }) 
   );
 });
 
-test("station list shows last checked time", async ({ page }) => {
+test("station list shows last updated time", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await expect(page.locator(".list-updated")).toBeVisible({ timeout: 15_000 });
-  await expect(page.locator(".list-updated")).toContainText(/Tikrinta/);
+  await expect(page.locator(".list-updated")).toContainText(/Atnaujinta/);
   await expect(page.locator(".list-updated")).toContainText(/\d{1,2}:\d{2}/);
   await expect(page.locator(".list-source")).toHaveText("LEA (Lietuvos energetikos agentūra)");
   await expect(page.locator(".list-cheap-hour")).toContainText(/Pigiausia/);
@@ -449,7 +449,9 @@ test("station list shows last checked time", async ({ page }) => {
   expect(metaLines).toBeLessThanOrEqual(1.15);
 });
 
-test("station list shows last check even when prices were not updated", async ({ page }) => {
+test("station list keeps last updated when a later check found the same prices", async ({
+  page,
+}) => {
   await page.route("**/data/meta.json", async (route) => {
     const res = await route.fetch();
     const meta = (await res.json()) as {
@@ -468,9 +470,9 @@ test("station list shows last check even when prices were not updated", async ({
   });
   await page.goto("/");
   await expect(page.locator(".list-updated")).toBeVisible({ timeout: 15_000 });
-  await expect(page.locator(".list-updated")).toContainText(/Tikrinta/);
-  await expect(page.locator(".list-updated")).toContainText("16:17");
-  await expect(page.locator(".list-updated")).not.toContainText("10:46");
+  await expect(page.locator(".list-updated")).toContainText(/Atnaujinta/);
+  await expect(page.locator(".list-updated")).toContainText("10:46");
+  await expect(page.locator(".list-updated")).not.toContainText("16:17");
   await expect(page.locator(".list-prices-as-of")).toContainText(/Kainos/);
   await expect(page.locator(".list-prices-as-of")).toContainText("10:00");
 });
@@ -597,7 +599,7 @@ test("station popup has no navigate or updated text", async ({ page }) => {
     .locator(".maplibregl-popup .popup-row > span:first-child")
     .allTextContents();
   expect(fuelLabels).not.toContain("98");
-  await expect(page.locator(".list-updated")).toContainText(/Tikrinta/);
+  await expect(page.locator(".list-updated")).toContainText(/Atnaujinta/);
   const addr = page.locator(".popup-addr");
   await expect(addr).toBeVisible();
   const fit = await page.evaluate(() => {

@@ -125,6 +125,15 @@ describe("indicesInLastHours", () => {
     expect(indicesInLastHours(s)).toEqual([1, 2, 3]);
     expect(indicesInLastHours(series({ 7: 1.4 }))).toBeUndefined();
   });
+
+  it("windows from generatedAt so dropped unchanged hours do not pull in an older day", () => {
+    const s = dated([
+      { date: "2026-09-14", hour: 11, price: 1.3 },
+      { date: "2026-09-15", hour: 10, price: 1.5 },
+    ]);
+    expect(indicesInLastHours(s)).toEqual([0, 1]);
+    expect(indicesInLastHours(s, 24, "2026-09-15T18:12:54.580Z")).toEqual([1]);
+  });
 });
 
 describe("formatHourSpan", () => {

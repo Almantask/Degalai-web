@@ -24,14 +24,38 @@ export function sampleOrdinalHours(date: string | undefined, hour: number): numb
   return utc / 3_600_000 + hour;
 }
 
-/** Indices in the trailing window ending at the latest sample; `undefined` means the whole series. */
+/** Vilnius calendar hour of an ISO timestamp, on the same ordinal scale as samples. */
+export function isoOrdinalHours(iso: string | undefined): number | null {
+  if (!iso) return null;
+  const at = new Date(iso);
+  if (!Number.isFinite(at.getTime())) return null;
+  const date = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Vilnius",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(at);
+  const hour = Number(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Vilnius",
+      hour: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(at)
+      .find((p) => p.type === "hour")?.value ?? "0",
+  );
+  return sampleOrdinalHours(date, hour);
+}
+
+/** Indices in the trailing window ending at `endAt` or the latest sample; `undefined` means the whole series. */
 export function indicesInLastHours(
   series: HistoryHourSeries,
   hours = CHEAP_WINDOW_HOURS,
+  endAt?: string,
 ): number[] | undefined {
   if (!series.dates?.length) return undefined;
   const ords = series.hours.map((h, i) => sampleOrdinalHours(series.dates?.[i], h));
-  let max = -Infinity;
+  let max = isoOrdinalHours(endAt) ?? -Infinity;
   for (const o of ords) {
     if (o != null && o > max) max = o;
   }
@@ -71,9 +95,10 @@ export function hourAverages(series: HistoryHourSeries): Array<number | null> {
 export function cheapestHourRanges(
   series: HistoryHourSeries,
   epsilon = CHEAP_HOUR_EPS,
+  endAt?: string,
 ): CheapHourRange[] {
   const avgs = hourAverages(series);
-  const windowIdx = indicesInLastHours(series);
+  const windowIdx = indicesInLastHours(series, CHEAP_WINDOW_HOURS, endAt);
   const allowed = windowIdx ? new Set(windowIdx) : null;
   const cheapHours: number[] = [];
   let min = Infinity;
@@ -177,7 +202,11 @@ export function cheapestHoursByFuel(
   for (const fuel of FUEL_TYPES) {
     const series = file.byFuel[fuel];
     if (!series) continue;
-    const ranges = cheapestHourRanges(filterSeries(series, excluded));
+    const ranges = cheapestHourRanges(
+      filterSeries(series, excluded),
+      CHEAP_HOUR_EPS,
+      file.generatedAt,
+    );
     if (ranges.length) out[fuel] = ranges;
   }
   return out;

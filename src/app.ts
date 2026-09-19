@@ -4,7 +4,7 @@ import { netBenefit } from "./calc.ts";
 import { filterSeries, formatCheapRanges } from "./cheap-hours.ts";
 import {
   loadAppData,
-  lastCheckedAt,
+  lastUpdatedAt,
   loadHistory,
   pricesObservedAt,
   sourceLabels,
@@ -1136,7 +1136,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function listWrap(items: string[], empty?: string): string {
     const count = items.length;
     const title = count ? `${t("list.title")} · ${tPlural("stations", count)}` : t("list.title");
-    const checkedAt = lastCheckedAt(data);
+    const updatedAt = lastUpdatedAt(data);
     const observedAt = pricesObservedAt(data);
     const cheapMeta = data.meta?.cheapestHours?.[settings.fuel] ?? [];
     const primary: Array<{ className: string; text: string }> = [];
@@ -1146,10 +1146,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
         text: t("list.pricesAsOf", { time: formatDateTime(observedAt) }),
       });
     }
-    if (checkedAt) {
+    if (updatedAt) {
       primary.push({
         className: "list-updated",
-        text: t("list.checked", { time: formatDateTime(checkedAt) }),
+        text: t("list.updated", { time: formatDateTime(updatedAt) }),
       });
     }
     if (cheapMeta.length > 0) {
@@ -1158,7 +1158,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         text: t("list.cheapestHour", { range: formatCheapRanges(cheapMeta) }),
       });
     }
-    const sourceText = checkedAt ? sourceLabels(data.meta).map(sourceLabelText).join(", ") : "";
+    const sourceText = updatedAt ? sourceLabels(data.meta).map(sourceLabelText).join(", ") : "";
     const primaryHtml = primary.length
       ? `<span class="list-meta-primary">${primary
           .map((b) => `<span class="${b.className}">${escapeHtml(b.text)}</span>`)
