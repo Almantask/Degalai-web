@@ -129,10 +129,10 @@ export function fuelPricesEqual(
 ): boolean {
   if (a === b) return true;
   if (!a || !b) return false;
-  const keysA = Object.keys(a).sort();
-  const keysB = Object.keys(b).sort();
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
   if (keysA.length !== keysB.length) return false;
-  return keysA.every((k, i) => keysB[i] === k && a[k] === b[k]);
+  return keysA.every((k) => Object.hasOwn(b, k) && a[k] === b[k]);
 }
 
 export function samplePricesEqual(a: HistorySample, b: HistorySample): boolean {
@@ -147,7 +147,7 @@ export function samplePricesEqual(a: HistorySample, b: HistorySample): boolean {
 export function dropUnchangedSamples(samples: HistorySample[]): HistorySample[] {
   const out: HistorySample[] = [];
   for (const s of samples) {
-    const prev = out[out.length - 1];
+    const prev = out.at(-1);
     if (prev && samplePricesEqual(prev, s)) continue;
     out.push(s);
   }
@@ -169,6 +169,20 @@ export function mergeSamples(
   return dropUnchangedSamples(merged);
 }
 
+function appendChangedPoint(
+  points: Array<{ date: string; hour: number; prices: Record<string, number> }>,
+  brands: Set<string>,
+  sample: HistorySample,
+  fuel: FuelType,
+): void {
+  const row = sample.byFuel[fuel];
+  if (!row) return;
+  const prev = points.at(-1);
+  if (prev && fuelPricesEqual(prev.prices, row)) return;
+  for (const b of Object.keys(row)) brands.add(b);
+  points.push({ date: sample.at.slice(0, 10), hour: sample.hour, prices: row });
+}
+
 /** One chart point per price change so the timeline can show date and time. */
 export function rollupHourAverages(
   samples: HistorySample[],
@@ -177,17 +191,10 @@ export function rollupHourAverages(
   for (const fuel of FUEL_TYPES) {
     const brands = new Set<string>();
     const points: Array<{ date: string; hour: number; prices: Record<string, number> }> = [];
-    for (const s of samples) {
-      const row = s.byFuel[fuel];
-      if (!row) continue;
-      const prev = points[points.length - 1];
-      if (prev && fuelPricesEqual(prev.prices, row)) continue;
-      for (const b of Object.keys(row)) brands.add(b);
-      points.push({ date: s.at.slice(0, 10), hour: s.hour, prices: row });
-    }
+    for (const s of samples) appendChangedPoint(points, brands, s, fuel);
     if (brands.size === 0 || points.length === 0) continue;
     const series: Record<string, Array<number | null>> = {};
-    for (const b of [...brands].sort()) {
+    for (const b of [...brands].sort((x, y) => x.localeCompare(y))) {
       series[b] = points.map((p) => (p.prices[b] != null ? p.prices[b] : null));
     }
     out[fuel] = {
