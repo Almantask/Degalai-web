@@ -77,10 +77,10 @@ test("settings button stays inside the header when switching language", async ({
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Nustatymai" })).toBeVisible();
   await expectSettingsInsideHeader(page);
-  await page.getByRole("link", { name: "EN" }).click();
+  await page.getByRole("link", { name: "EN", exact: true }).click();
   await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
   await expectSettingsInsideHeader(page);
-  await page.getByRole("link", { name: "LT" }).click();
+  await page.getByRole("link", { name: "LT", exact: true }).click();
   await expect(page.getByRole("button", { name: "Nustatymai" })).toBeVisible();
   await expectSettingsInsideHeader(page);
 });
@@ -528,18 +528,19 @@ test("settings include consumption, time value, and provider checkboxes", async 
   await expect(boxes.first()).toBeChecked();
   expect(await boxes.count()).toBeGreaterThan(3);
   await expect(page.getByRole("group", { name: "Duomenų šaltiniai" })).toBeVisible();
+  const sources = page.locator(".data-sources");
   await expect(
-    page.getByRole("link", { name: "LEA (Lietuvos energetikos agentūra)" }),
+    sources.getByRole("link", { name: "LEA (Lietuvos energetikos agentūra)" }),
   ).toHaveAttribute("href", "https://degalukainos.ena.lt/");
-  await expect(page.getByRole("link", { name: "Circle K" })).toHaveAttribute(
+  await expect(sources.getByRole("link", { name: "Circle K" })).toHaveAttribute(
     "href",
     "https://www.circlek.lt/privatiems/degalu-kainos",
   );
-  await expect(page.getByRole("link", { name: "OpenStreetMap" })).toHaveAttribute(
+  await expect(sources.getByRole("link", { name: "OpenStreetMap" })).toHaveAttribute(
     "href",
     "https://www.openstreetmap.org/copyright",
   );
-  await expect(page.getByRole("link", { name: "Vartotojų pranešimai" })).toHaveAttribute(
+  await expect(sources.getByRole("link", { name: "Vartotojų pranešimai" })).toHaveAttribute(
     "href",
     "https://github.com/Almantask/Degalai-web/issues/new?template=wrong-price.yml",
   );
