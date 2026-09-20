@@ -77,10 +77,10 @@ test("settings button stays inside the header when switching language", async ({
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Nustatymai" })).toBeVisible();
   await expectSettingsInsideHeader(page);
-  await page.getByRole("link", { name: "EN" }).click();
+  await page.getByRole("link", { name: "EN", exact: true }).click();
   await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
   await expectSettingsInsideHeader(page);
-  await page.getByRole("link", { name: "LT" }).click();
+  await page.getByRole("link", { name: "LT", exact: true }).click();
   await expect(page.getByRole("button", { name: "Nustatymai" })).toBeVisible();
   await expectSettingsInsideHeader(page);
 });
@@ -99,9 +99,9 @@ test("history button opens provider averages by date and time", async ({ page })
   await page.getByRole("link", { name: "Istorija" }).click();
   await expect(page).toHaveURL(/istorija/);
   await expect(page.getByRole("heading", { name: "Istorinės kainos" })).toBeVisible();
-  await expect(page.locator(".history-caption")).toContainText(/Tiekėjų vidutinės kainos/);
+  await expect(page.locator(".history-head .list-updated")).toContainText(/Atnaujinta/);
+  await expect(page.locator(".history-caption")).toHaveCount(0);
   await expect(page.locator(".history-cheap")).toHaveCount(0);
-  await expect(page.locator(".history-head-meta")).toHaveCount(0);
   await expect.poll(() => historyUrls.length).toBe(1);
   await expect(page.locator("#history-chart .uplot")).toBeVisible();
   expect(priceUrls).toHaveLength(1);
@@ -166,7 +166,6 @@ test("history chart switches min max avg and median modes", async ({ page }) => 
     "aria-pressed",
     "true",
   );
-  await expect(page.locator(".history-caption")).toContainText(/vidutinės kainos/);
   await page.getByRole("button", { name: "Min", exact: true }).click();
   await expect(page.getByRole("button", { name: "Min", exact: true })).toHaveAttribute(
     "aria-pressed",
@@ -176,12 +175,18 @@ test("history chart switches min max avg and median modes", async ({ page }) => 
     "aria-pressed",
     "false",
   );
-  await expect(page.locator(".history-caption")).toContainText(/mažiausios kainos/);
   await expect(page.locator("#history-chart .uplot")).toBeVisible();
   await page.getByRole("button", { name: "Max", exact: true }).click();
-  await expect(page.locator(".history-caption")).toContainText(/didžiausios kainos/);
+  await expect(page.getByRole("button", { name: "Max", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
   await page.getByRole("button", { name: "Mediana", exact: true }).click();
-  await expect(page.locator(".history-caption")).toContainText(/mediana/i);
+  await expect(page.getByRole("button", { name: "Mediana", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(page.locator(".history-caption")).toHaveCount(0);
 });
 
 test("history legend toggles all providers then a single line", async ({ page }) => {
@@ -467,9 +472,9 @@ test("station list shows last updated time", async ({ page }) => {
   await expect(page.locator(".list-updated")).toBeVisible({ timeout: 15_000 });
   await expect(page.locator(".list-updated")).toContainText(/Atnaujinta/);
   await expect(page.locator(".list-updated")).toContainText(/\d{1,2}:\d{2}/);
-  await expect(page.locator(".list-source")).toHaveText("LEA (Lietuvos energetikos agentūra)");
-  await expect(page.locator(".list-cheap-hour")).toContainText(/Pigiausia/);
-  await expect(page.locator(".list-cheap-hour")).toContainText(/09-15 \d{2}:\d{2}/);
+  await expect(page.locator(".list-source")).toHaveCount(0);
+  await expect(page.locator(".list-cheap-hour")).toHaveCount(0);
+  await expect(page.locator(".list-prices-as-of")).toHaveCount(0);
   await expect(page.locator(".list-meta")).toBeVisible();
   const metaLines = await page.locator(".list-meta").evaluate((el) => {
     const lineHeight = Number.parseFloat(getComputedStyle(el).lineHeight);
@@ -507,21 +512,7 @@ test("station list keeps last updated when a later check found the same prices",
   await expect(page.locator(".list-updated")).toContainText(/Atnaujinta/);
   await expect(page.locator(".list-updated")).toContainText("10:46");
   await expect(page.locator(".list-updated")).not.toContainText("16:17");
-  await expect(page.locator(".list-prices-as-of")).toContainText(/Kainos/);
-  await expect(page.locator(".list-prices-as-of")).toContainText("10:00");
-});
-
-test("station list credits every source behind the prices", async ({ page }) => {
-  await page.route("**/data/meta.json", async (route) => {
-    const res = await route.fetch();
-    const meta = (await res.json()) as Record<string, unknown>;
-    await route.fulfill({ json: { ...meta, sources: ["lea-live", "lea", "circle-k"] } });
-  });
-  await page.goto("/");
-  await expect(page.locator(".list-source")).toHaveText(
-    "LEA (Lietuvos energetikos agentūra), Circle K",
-    { timeout: 15_000 },
-  );
+  await expect(page.locator(".list-prices-as-of")).toHaveCount(0);
 });
 
 test("settings include consumption, time value, and provider checkboxes", async ({ page }) => {
@@ -536,6 +527,23 @@ test("settings include consumption, time value, and provider checkboxes", async 
   const boxes = page.locator(".brand-filter input[type=checkbox]");
   await expect(boxes.first()).toBeChecked();
   expect(await boxes.count()).toBeGreaterThan(3);
+  await expect(page.getByRole("group", { name: "Duomenų šaltiniai" })).toBeVisible();
+  const sources = page.locator(".data-sources");
+  await expect(
+    sources.getByRole("link", { name: "LEA (Lietuvos energetikos agentūra)" }),
+  ).toHaveAttribute("href", "https://degalukainos.ena.lt/");
+  await expect(sources.getByRole("link", { name: "Circle K" })).toHaveAttribute(
+    "href",
+    "https://www.circlek.lt/privatiems/degalu-kainos",
+  );
+  await expect(sources.getByRole("link", { name: "OpenStreetMap" })).toHaveAttribute(
+    "href",
+    "https://www.openstreetmap.org/copyright",
+  );
+  await expect(sources.getByRole("link", { name: "Vartotojų pranešimai" })).toHaveAttribute(
+    "href",
+    "https://github.com/Almantask/Degalai-web/issues/new?template=wrong-price.yml",
+  );
   await expect(page.getByText("Planuojama pripilti")).toHaveCount(0);
   await expect(page.getByText("Kelio koeficientas")).toHaveCount(0);
   await expect(page.getByText("Grįžtu į tą pačią vietą")).toHaveCount(0);
