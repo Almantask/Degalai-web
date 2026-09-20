@@ -1,16 +1,8 @@
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { netBenefit } from "./calc.ts";
-import { filterSeries, formatCheapRanges } from "./cheap-hours.ts";
-import {
-  loadAppData,
-  lastUpdatedAt,
-  loadHistory,
-  pricesObservedAt,
-  sourceLabels,
-  type AppData,
-  type SourceLabel,
-} from "./data.ts";
+import { filterSeries } from "./cheap-hours.ts";
+import { loadAppData, lastUpdatedAt, loadHistory, type AppData } from "./data.ts";
 import {
   formatDate,
   formatDateTime,
@@ -90,6 +82,11 @@ import type { HistoryFile, HistoryHourSeries, HistoryStat, Station } from "./typ
 import { DEFAULT_SETTINGS, HISTORY_STATS } from "./types.ts";
 
 const DONATE_URL = "https://almantask.github.io/donate-me/";
+const LEA_SOURCE_URL = "https://degalukainos.ena.lt/";
+const CIRCLE_K_SOURCE_URL = "https://www.circlek.lt/privatiems/degalu-kainos";
+const OSM_SOURCE_URL = "https://www.openstreetmap.org/copyright";
+const REPORTS_SOURCE_URL =
+  "https://github.com/Almantask/Degalai-web/issues/new?template=wrong-price.yml";
 
 const DONATE_HEART = `<svg class="donate-heart" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
   <path fill="currentColor" d="M7.97 14s-5.3-3.18-6.76-6C.02 5.36 1.3 2.2 4.2 2.2c1.4 0 2.5.8 3.77 2.16C9.24 3 10.34 2.2 11.75 2.2c2.9 0 4.18 3.16 2.99 5.8C13.28 10.82 7.97 14 7.97 14z"/>
@@ -111,12 +108,6 @@ const REFRESH_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height=
   <path d="M21 12a9 9 0 1 1-3.5-7.1"/>
   <path d="M21 3v6h-6"/>
 </svg>`;
-
-function sourceLabelText(label: SourceLabel): string {
-  if (label === "circle-k") return brandLabel("circle-k");
-  if (label === "report") return t("list.sourceReports");
-  return t("list.source");
-}
 
 /** Price-delta savings only — user consumption and time value stay out of ranking. */
 function priceBenefit(baselinePrice: number, stationPrice: number): ReturnType<typeof netBenefit> {
@@ -963,6 +954,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         <span class="history-handle" aria-hidden="true"></span>
         <span class="history-head-copy">
           <h2>${escapeHtml(t("history.title"))}</h2>
+          ${updatedMetaHtml()}
         </span>
         <span class="history-chevron" aria-hidden="true">${historyMinimized ? "▴" : "▾"}</span>
       </button>`;
@@ -977,8 +969,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const hasPoints = Boolean(
       filtered && Object.values(filtered.brands).some((row) => row.some((v) => v != null)),
     );
-    const captionKey = `history.byHour.${settings.historyStat}` as MessageKey;
-    const caption = hasPoints ? t(captionKey) : t("history.empty");
+    const caption = hasPoints
+      ? ""
+      : `<p class="history-caption">${escapeHtml(t("history.empty"))}</p>`;
     return `<section class="history-panel${historyMinimized ? " is-min" : ""}" aria-label="${escapeHtml(t("history.title"))}">
       ${toggle}
       <div class="history-body">
@@ -987,7 +980,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
           <div id="history-chart"></div>
           ${historyLegendHtml(filtered)}
         </div>
-        <p class="history-caption">${escapeHtml(caption)}</p>
+        ${caption}
       </div>
     </section>`;
   }
@@ -1152,45 +1145,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
   }
 
+  function updatedMetaHtml(): string {
+    const updatedAt = lastUpdatedAt(data);
+    if (!updatedAt) return "";
+    const text = t("list.updated", { time: formatDateTime(updatedAt) });
+    return `<p class="list-meta" title="${escapeHtml(text)}"><span class="list-updated">${escapeHtml(text)}</span></p>`;
+  }
+
   function listWrap(items: string[], empty?: string): string {
     const count = items.length;
     const title = count ? `${t("list.title")} · ${tPlural("stations", count)}` : t("list.title");
-    const updatedAt = lastUpdatedAt(data);
-    const observedAt = pricesObservedAt(data);
-    const cheapMeta = data.meta?.cheapestHours?.[settings.fuel] ?? [];
-    const primary: Array<{ className: string; text: string }> = [];
-    if (observedAt) {
-      primary.push({
-        className: "list-prices-as-of",
-        text: t("list.pricesAsOf", { time: formatDateTime(observedAt) }),
-      });
-    }
-    if (updatedAt) {
-      primary.push({
-        className: "list-updated",
-        text: t("list.updated", { time: formatDateTime(updatedAt) }),
-      });
-    }
-    if (cheapMeta.length > 0) {
-      primary.push({
-        className: "list-cheap-hour",
-        text: t("list.cheapestHour", { range: formatCheapRanges(cheapMeta) }),
-      });
-    }
-    const sourceText = updatedAt ? sourceLabels(data.meta).map(sourceLabelText).join(", ") : "";
-    const primaryHtml = primary.length
-      ? `<span class="list-meta-primary">${primary
-          .map((b) => `<span class="${b.className}">${escapeHtml(b.text)}</span>`)
-          .join("")}</span>`
-      : "";
-    const sourceHtml = sourceText
-      ? `<span class="list-source">${escapeHtml(sourceText)}</span>`
-      : "";
-    const titleText = [...primary.map((b) => b.text), sourceText].filter(Boolean).join(" · ");
-    const meta =
-      primaryHtml || sourceHtml
-        ? `<p class="list-meta" title="${escapeHtml(titleText)}">${primaryHtml}${sourceHtml}</p>`
-        : "";
+    const meta = updatedMetaHtml();
     const body = empty
       ? `<p class="empty">${escapeHtml(empty)}</p>`
       : `<ul class="station-list">${items.join("")}</ul>`;
@@ -1334,6 +1299,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
       <fieldset class="brand-filter">
         <legend>${escapeHtml(t("settings.providers"))}</legend>
         ${checks}
+      </fieldset>
+      <fieldset class="data-sources">
+        <legend>${escapeHtml(t("settings.sources"))}</legend>
+        <ul>
+          <li><a href="${LEA_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("settings.source.lea"))}</a></li>
+          <li><a href="${CIRCLE_K_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(brandLabel("circle-k"))}</a></li>
+          <li><a href="${OSM_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("settings.source.osm"))}</a></li>
+          <li><a href="${REPORTS_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("settings.source.reports"))}</a></li>
+        </ul>
       </fieldset>
     </section>`;
   }

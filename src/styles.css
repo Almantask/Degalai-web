@@ -476,18 +476,6 @@ body,
   white-space: nowrap;
 }
 
-.list-meta-primary,
-.list-source {
-  font-weight: 500;
-}
-
-.list-meta > span + span::before,
-.list-meta-primary > span + span::before {
-  content: " · ";
-  color: var(--muted);
-  font-weight: 500;
-}
-
 .list-chevron {
   color: var(--muted);
   font-size: 0.85rem;
@@ -886,11 +874,6 @@ body,
   flex: 0 0 auto;
 }
 
-.list-cheap-hour {
-  color: var(--green-dark);
-  font-weight: 650;
-}
-
 .uplot {
   font-family: var(--font);
 }
@@ -956,11 +939,38 @@ body,
   gap: 6px;
 }
 
-.brand-filter legend {
+.brand-filter legend,
+.data-sources legend {
   padding: 0;
   margin-bottom: 4px;
   font-size: 0.9rem;
   font-weight: 600;
+}
+
+.data-sources {
+  border: 0;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.data-sources ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.data-sources a {
+  color: var(--green-dark);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.data-sources a:hover {
+  text-decoration: underline;
 }
 
 .setting-block {
