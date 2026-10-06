@@ -44,6 +44,9 @@ jobs:
       # Cache restores the whole data/ tree; keep committed station/price overrides on top.
       - name: Keep committed overrides
         run: git checkout HEAD -- data/overrides
+      - name: Probe Via Lietuva (temporary)
+        continue-on-error: true
+        run: npx tsx scripts/probe-vialietuva.ts
       - name: Run data pipeline
         run: |
           if [ -z "${{ steps.state.outputs.cache-matched-key }}" ]; then
