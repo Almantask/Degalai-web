@@ -279,7 +279,7 @@ async function main(): Promise<void> {
     : null;
   const { daily: fresh, log } = observationsToDaily(date, matched.observations, previous, policy);
   const tariffs = loadEvTariffs(join(DATA, "overrides", "ev-tariffs.json"));
-  const evPrices = chargerPrices(chargers, tariffs, runAt);
+  const evPrices = chargerPrices(chargers, tariffs, runAt, previous);
   mergeChargerPrices(fresh, evPrices);
   console.log(
     `EV: ${Object.keys(evPrices).length} of ${chargers.length} chargers priced (${tariffs.length} network tariffs)`,

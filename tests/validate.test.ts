@@ -82,6 +82,11 @@ describe("observationsToDaily", () => {
       observedAt: "2026-09-17T09:45:16+03:00",
     });
     expect(latestObservedAt(daily)).toBe("2026-09-17T09:45:16+03:00");
+    daily.prices["ev:node:1"] = {
+      EV: { price: 0.3, source: "osm-charge", observedAt: "2026-09-17T15:00:00Z" },
+    };
+    // Charger prices are not fuel observations and must not move the fuel snapshot time.
+    expect(latestObservedAt(daily)).toBe("2026-09-17T09:45:16+03:00");
   });
 
   it("lets a later live row replace a user report", () => {

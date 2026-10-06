@@ -52,12 +52,14 @@ function inRange(price: number): boolean {
 /**
  * One €/kWh price per charger. A price in the charger's own OSM `charge` tag wins; otherwise the
  * network tariff applies (DC for fast chargers, AC for the rest). Chargers of unknown networks
- * stay unpriced.
+ * stay unpriced. An unchanged tag price keeps its first `observedAt` from `previous`, so hourly
+ * runs do not rewrite the snapshot (and move "last updated") when nothing changed.
  */
 export function chargerPrices(
   chargers: Station[],
   tariffs: EvTariff[],
   now = new Date(),
+  previous: DailyPrices | null = null,
 ): DailyPrices["prices"] {
   const byBrand = new Map<string, EvTariff>();
   for (const t of tariffs) {
@@ -68,16 +70,26 @@ export function chargerPrices(
   }
   const out: DailyPrices["prices"] = {};
   for (const s of chargers) {
-    const entry = chargerEntry(s, byBrand.get(s.brand), now);
+    const entry = chargerEntry(s, byBrand.get(s.brand), now, previous?.prices[s.id]?.EV);
     if (entry) out[s.id] = { EV: entry };
   }
   return out;
 }
 
-function chargerEntry(s: Station, tariff: EvTariff | undefined, now: Date): PriceEntry | null {
+function chargerEntry(
+  s: Station,
+  tariff: EvTariff | undefined,
+  now: Date,
+  prev: PriceEntry | undefined,
+): PriceEntry | null {
   const tagged = s.ev?.chargeTag;
   if (tagged != null && inRange(tagged)) {
-    return { price: tagged, source: OSM_CHARGE_SOURCE, observedAt: now.toISOString() };
+    const same = prev?.source === OSM_CHARGE_SOURCE && prev.price === tagged;
+    return {
+      price: tagged,
+      source: OSM_CHARGE_SOURCE,
+      observedAt: same ? prev.observedAt : now.toISOString(),
+    };
   }
   if (!tariff) return null;
   const price = isDcCharger(s) ? (tariff.dc ?? tariff.ac) : (tariff.ac ?? tariff.dc);

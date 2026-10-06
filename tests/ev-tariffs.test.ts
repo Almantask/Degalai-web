@@ -59,6 +59,16 @@ describe("chargerPrices", () => {
     });
   });
 
+  it("keeps an unchanged tag price's first observation so hourly runs stay identical", () => {
+    const first = chargerPrices([charger("a", "x", { chargeTag: 0.33 })], [], NOW);
+    const later = new Date("2026-10-06T13:00:00Z");
+    const previous = { date: "2026-10-06", generatedAt: NOW.toISOString(), prices: first };
+    const again = chargerPrices([charger("a", "x", { chargeTag: 0.33 })], [], later, previous);
+    expect(again).toEqual(first);
+    const changed = chargerPrices([charger("a", "x", { chargeTag: 0.35 })], [], later, previous);
+    expect(changed.a?.EV?.observedAt).toBe(later.toISOString());
+  });
+
   it("leaves unknown networks and out-of-range prices unpriced", () => {
     const prices = chargerPrices(
       [charger("other", "independent"), charger("bad", "eleport")],

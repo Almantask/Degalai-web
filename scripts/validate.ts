@@ -1,5 +1,5 @@
 import type { DailyPrices, FuelType, Observation, PriceEntry } from "../src/types.ts";
-import { FUEL_TYPES } from "../src/types.ts";
+import { FUEL_TYPES, PUMP_FUELS } from "../src/types.ts";
 import { dateInVilnius } from "./history.ts";
 import { DEFAULT_MAX_AGE_HOURS, SOURCE_META } from "./source-health.ts";
 
@@ -139,11 +139,12 @@ function isFresh(o: Observation, policy: SelectionPolicy): boolean {
   return policy.now.getTime() - Date.parse(o.observedAt) <= hours * 3_600_000;
 }
 
-/** Newest observation time in a daily file; used so the UI can show the source snapshot. */
+/** Newest pump-fuel observation in a daily file; EV charger prices are not fuel observations. */
 export function latestObservedAt(daily: DailyPrices): string | undefined {
   let best: string | undefined;
   for (const fuels of Object.values(daily.prices)) {
-    for (const entry of Object.values(fuels)) {
+    for (const fuel of PUMP_FUELS) {
+      const entry = fuels[fuel];
       if (entry?.observedAt && (!best || entry.observedAt > best)) best = entry.observedAt;
     }
   }
