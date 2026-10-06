@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import ExcelJS from "exceljs";
 import { normalizeBrand } from "../../src/brands.ts";
 import { round3 } from "../../src/calc.ts";
-import { inLithuania } from "../../src/geo.ts";
+import { haversineKm, inLithuania } from "../../src/geo.ts";
 import type { Station } from "../../src/types.ts";
 import { FETCH_UA } from "./types.ts";
 
@@ -39,6 +39,11 @@ const COLUMNS = {
   price: /įkrovimo kaina/i,
 } as const;
 type Column = keyof typeof COLUMNS;
+/** "Kitos vietovės savybės" holds `Miesto mazgas - <town>`; only `foldMisplaced` reads it. */
+const FEATURES_COLUMN = /kitos vietovės savybės/i;
+
+/** A site farther than this from its stated town's other chargers is outside that town. */
+export const TOWN_KM = 15;
 
 /** Newest `/report/<id>` link on the register's home page. */
 export function reportUrlFromHome(html: string): string | null {
@@ -92,14 +97,38 @@ function num(text: string): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
+/**
+ * Location text without a `|` is often a place and its address joined by a comma, so the address
+ * comes twice: `Kauno g. 10, Kauno g. 10` → `Kauno g. 10`, and
+ * `Norfa XL Tilžės g. 58, Tilžės g. 58` → `Norfa XL` at `Tilžės g. 58`.
+ */
+function splitRepeated(text: string): { name: string; address: string } | null {
+  const parts = text.split(",").map((p) => p.replace(/\s+/g, " ").trim());
+  for (let i = 1; i < parts.length; i++) {
+    const head = parts.slice(0, i).join(", ");
+    const tail = parts.slice(i).join(", ");
+    if (head === tail) return { name: tail, address: tail };
+    if (head.endsWith(` ${tail}`)) {
+      return { name: head.slice(0, -tail.length).replace(/[\s,]+$/, ""), address: tail };
+    }
+  }
+  return null;
+}
+
 /** `IKI Mindaugo | Inbalance grid, Mindaugo str. 25` → name and address. */
 function splitLocation(text: string, operator: string): { name?: string; address?: string } {
   const [head, ...rest] = text.split("|").map((p) => p.trim());
+  if (!rest.length && head) return splitRepeated(head) ?? { name: head, address: head };
   let address = rest.join(" | ").trim();
   if (operator && address.toLowerCase().startsWith(`${operator.toLowerCase()},`)) {
     address = address.slice(operator.length + 1).trim();
   }
-  return { name: head || undefined, address: address || (rest.length ? undefined : head) };
+  return { name: head || undefined, address: address || undefined };
+}
+
+/** Lower case, no accents, single spaces: `Elektrinės g.  21` and `elektrines g. 21` match. */
+function fold(text: string): string {
+  return text.toLowerCase().normalize("NFD").replace(/\p{M}/gu, "").replace(/\s+/g, " ").trim();
 }
 
 interface SiteDraft {
@@ -108,6 +137,74 @@ interface SiteDraft {
   ac: number[];
   dc: number[];
   fees: number[];
+  /** Operator, folded. */
+  operator: string;
+  /** Location text as typed, folded. */
+  label: string;
+  /** `Miesto mazgas` town, folded; empty when not given. */
+  town: string;
+}
+
+function median(values: number[]): number {
+  const s = [...values].sort((a, b) => a - b);
+  const mid = s.length >> 1;
+  return s.length % 2 ? s[mid]! : (s[mid - 1]! + s[mid]!) / 2;
+}
+
+/**
+ * Some operators type the right address but drop the pin somewhere else: five Ignitis gamyba
+ * points labelled `Elektrinės g. 21, Elektrėnai` sit in Vilnius Old Town, 40 km away, while two
+ * more with that label sit at the Elektrėnai plant. When the operator gave the same location text
+ * to a site inside the stated town (judged by other operators' chargers there), a namesake site
+ * far outside it is folded into that site. Sites with no in-town namesake stay where they are.
+ */
+function foldMisplaced(drafts: SiteDraft[]): SiteDraft[] {
+  const centres = new Map<string, { lat: number; lon: number } | null>();
+  const centre = (town: string, operator: string) => {
+    const key = `${town}|${operator}`;
+    if (!centres.has(key)) {
+      const others = drafts.filter((d) => d.town === town && d.operator !== operator);
+      centres.set(
+        key,
+        others.length >= 3
+          ? {
+              lat: median(others.map((d) => d.station.lat)),
+              lon: median(others.map((d) => d.station.lon)),
+            }
+          : null,
+      );
+    }
+    return centres.get(key)!;
+  };
+  const groups = new Map<string, SiteDraft[]>();
+  for (const d of drafts) {
+    if (!d.town || !d.label) continue;
+    const key = `${d.operator}|${d.town}|${d.label}`;
+    groups.set(key, [...(groups.get(key) ?? []), d]);
+  }
+  const folded = new Set<SiteDraft>();
+  for (const group of groups.values()) {
+    if (group.length < 2) continue;
+    const c = centre(group[0]!.town, group[0]!.operator);
+    if (!c) continue;
+    const km = new Map(group.map((d) => [d, haversineKm(d.station, c)]));
+    const inside = group.filter((d) => km.get(d)! <= TOWN_KM);
+    if (!inside.length) continue;
+    const home = inside.reduce((a, b) => (km.get(b)! < km.get(a)! ? b : a));
+    for (const d of group) {
+      if (km.get(d)! <= TOWN_KM) continue;
+      for (const id of d.stations) home.stations.add(id);
+      home.ac.push(...d.ac);
+      home.dc.push(...d.dc);
+      home.fees.push(...d.fees);
+      const ev = home.station.ev!;
+      for (const k of d.station.ev!.sockets) if (!ev.sockets.includes(k)) ev.sockets.push(k);
+      const kw = d.station.ev!.maxKw;
+      if (kw != null && (ev.maxKw == null || kw > ev.maxKw)) ev.maxKw = kw;
+      folded.add(d);
+    }
+  }
+  return drafts.filter((d) => !folded.has(d));
 }
 
 /**
@@ -124,6 +221,7 @@ export function parseRegisterRows(rows: string[][]): Station[] {
     if (i === -1) throw new Error(`Via Lietuva report has no "${key}" column`);
     col[key] = i;
   }
+  const featuresCol = header.findIndex((h) => FEATURES_COLUMN.test(h));
   const sites = new Map<string, SiteDraft>();
   for (const r of body) {
     const get = (k: Column) => (r[col[k]] ?? "").trim();
@@ -140,12 +238,15 @@ export function parseRegisterRows(rows: string[][]): Station[] {
     const stationId = get("station");
     let site = sites.get(key);
     if (!site) {
-      const { name, address } = splitLocation(get("location"), operator);
+      const location = get("location");
+      const { name, address } = splitLocation(location, operator);
+      const town = (r[featuresCol] ?? "").match(/miesto mazgas\s*-\s*([^\n]+)/i)?.[1] ?? "";
       site = {
         station: {
           id: "",
           name: name || operator || "Įkrovimo stotelė",
-          brand: normalizeBrand(operator, get("owner"), name),
+          // Not the owner: Ignitis gamyba owns chargers Stuart Energy runs, outside Ignitis ON.
+          brand: normalizeBrand(operator, name),
           lat: p.lat,
           lon: p.lon,
           ...(address ? { address } : {}),
@@ -157,6 +258,9 @@ export function parseRegisterRows(rows: string[][]): Station[] {
         ac: [],
         dc: [],
         fees: [],
+        operator: fold(operator),
+        label: fold(location),
+        town: fold(town),
       };
       sites.set(key, site);
     }
@@ -175,7 +279,7 @@ export function parseRegisterRows(rows: string[][]): Station[] {
   }
 
   const out: Station[] = [];
-  for (const site of sites.values()) {
+  for (const site of foldMisplaced([...sites.values()])) {
     const ids = [...site.stations].sort();
     const s = site.station;
     s.id = `vl:${ids[0] ?? `${s.lat.toFixed(5)},${s.lon.toFixed(5)}`}`;

@@ -148,6 +148,15 @@ describe("stationPopupHtml", () => {
     expect(html).not.toContain("max speed");
     expect(html).not.toContain("min");
   });
+
+  it("does not repeat an address that is already the title", () => {
+    const html = stationPopupHtml(
+      { ...station, name: "Kauno g. 10", address: "Kauno g. 10" },
+      null,
+    );
+    expect(html.match(/Kauno g\. 10/g)).toHaveLength(1);
+    expect(stationPopupHtml({ ...station, address: "Oslo g. 12" }, null)).toContain("Oslo g. 12");
+  });
 });
 
 describe("charger popup", () => {

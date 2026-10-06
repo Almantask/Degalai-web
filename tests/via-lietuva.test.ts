@@ -46,14 +46,19 @@ function row(
     kw?: string;
     price?: string;
     vehicle?: string;
+    owner?: string;
+    operator?: string;
+    location?: string;
+    town?: string;
   } = {},
 ): string[] {
   const r = Array<string>(HEADER.length).fill("");
   r[1] = station;
   r[4] = opts.vehicle ?? "Lengvajam";
-  r[5] = "In Balance grid, UAB";
-  r[6] = "Inbalance grid";
-  r[9] = "IKI Mindaugo | Inbalance grid, Mindaugo str. 25";
+  r[5] = opts.owner ?? "In Balance grid, UAB";
+  r[6] = opts.operator ?? "Inbalance grid";
+  r[9] = opts.location ?? "IKI Mindaugo | Inbalance grid, Mindaugo str. 25";
+  r[10] = `Šalia TEN-T kelio - Ne\nMiesto mazgas - ${opts.town ?? "Vilnius"}`;
   r[11] = opts.lat ?? "54.673479";
   r[12] = opts.lon ?? "25.274997";
   r[14] = opts.type ?? "Type 2";
@@ -124,6 +129,90 @@ describe("parseRegisterRows", () => {
       },
     });
     expect(iki.sourceIds["via-lietuva"]).toBe("IBG-P-G7H7,IBG-P-T3T9");
+  });
+
+  it("keeps the address once when the register repeats it, and splits off a place name", () => {
+    const [plain, named] = parseRegisterRows([
+      HEADER,
+      row("A", { location: "Kauno g. 10, Kauno g. 10" }),
+      row("B", {
+        lat: "56.2",
+        lon: "23.5",
+        location: "Norfa XL Vilniaus g. 47B, Joniškis, Vilniaus g. 47B, Joniškis",
+      }),
+    ]);
+    expect(plain).toMatchObject({ name: "Kauno g. 10", address: "Kauno g. 10" });
+    expect(named).toMatchObject({ name: "Norfa XL", address: "Vilniaus g. 47B, Joniškis" });
+  });
+
+  it("brands a site by its operator, not the company that owns the charger", () => {
+    const [site] = parseRegisterRows([
+      HEADER,
+      row("STR-1", { owner: "AB „Ignitis gamyba“", operator: "Stuart Energy" }),
+    ]);
+    expect(site).toMatchObject({ brand: "independent", ev: { network: "Stuart Energy" } });
+  });
+
+  it("folds a pin dropped far outside its stated town into the operator's namesake site there", () => {
+    const plant = "Elektrinės g. 21, Elektrėnai, Elektrinės g. 21, Elektrėnai";
+    const str = (id: string, lat: string, lon: string, location = plant) =>
+      row(id, { lat, lon, location, operator: "Stuart Energy", town: "Elektrėnai" });
+    const sites = parseRegisterRows([
+      HEADER,
+      // Other operators' chargers in Elektrėnai locate the town.
+      row("L-1", { lat: "54.7894", lon: "24.6751", town: "Elektrėnai", operator: "Lidl" }),
+      row("E-1", { lat: "54.7879", lon: "24.6812", town: "Elektrėnai", operator: "Enefit Volt" }),
+      row("I-1", { lat: "54.7891", lon: "24.6770", town: "Elektrėnai", operator: "Ignitis LT" }),
+      str("STR-2835", "54.7734205", "24.648071"),
+      // Same place typed, pins around Vilnius Old Town, 40 km away.
+      str("STR-7922", "54.6832596", "25.2932739", plant.replaceAll("g. 21", "g.  21")),
+      str("STR-8457", "54.690643", "25.2806613"),
+      // A different place of the same operator stays where it is.
+      str(
+        "STR-7R08",
+        "54.6673285",
+        "25.1584233",
+        "Jočionių g. 13, Vilnius, Jočionių g. 13, Vilnius",
+      ),
+    ]);
+    const str2835 = sites.find((s) => s.sourceIds["via-lietuva"]?.includes("STR-2835"))!;
+    expect(str2835).toMatchObject({
+      lat: 54.7734205,
+      lon: 24.648071,
+      address: "Elektrinės g. 21, Elektrėnai",
+    });
+    expect(str2835.sourceIds["via-lietuva"]).toBe("STR-2835,STR-7922,STR-8457");
+    expect(sites.filter((s) => s.lon > 25 && s.address?.includes("Elektrėnai"))).toEqual([]);
+    expect(sites.find((s) => s.id === "vl:STR-7R08")).toMatchObject({ lat: 54.6673285 });
+    expect(sites).toHaveLength(5);
+  });
+
+  it("leaves a far pin alone when the operator has no namesake site inside the town", () => {
+    const sites = parseRegisterRows([
+      HEADER,
+      row("L-1", { lat: "54.7894", lon: "24.6751", town: "Elektrėnai", operator: "Lidl" }),
+      row("E-1", { lat: "54.7879", lon: "24.6812", town: "Elektrėnai", operator: "Enefit Volt" }),
+      row("I-1", { lat: "54.7891", lon: "24.6770", town: "Elektrėnai", operator: "Ignitis LT" }),
+      row("X-1", {
+        lat: "54.6832",
+        lon: "25.2932",
+        town: "Elektrėnai",
+        location: "Kelias 1, Kelias 1",
+      }),
+      row("X-2", {
+        lat: "54.6906",
+        lon: "25.2806",
+        town: "Elektrėnai",
+        location: "Kelias 1, Kelias 1",
+      }),
+    ]);
+    expect(sites.map((s) => s.id).sort()).toEqual([
+      "vl:E-1",
+      "vl:I-1",
+      "vl:L-1",
+      "vl:X-1",
+      "vl:X-2",
+    ]);
   });
 
   it("fails loudly when a needed column disappears", () => {

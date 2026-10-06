@@ -488,7 +488,7 @@ export function stationPopupHtml(
   return `<div class="popup">
     <h3>${escapeHtml(s.name)}</h3>
     <p class="popup-brand">${escapeHtml(brand)}</p>
-    <p class="popup-addr">${escapeHtml(addr)}</p>
+    ${addr === s.name ? "" : `<p class="popup-addr">${escapeHtml(addr)}</p>`}
     ${dist}
     ${fuels}
     ${s.ev ? chargerDetailsHtml(s, prices) : ""}
