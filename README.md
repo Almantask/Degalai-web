@@ -41,9 +41,12 @@ minimise for a full map.
 - **EV** shows public charging points from the national charge point register
   (Via Lietuva) and OpenStreetMap with a €/kWh price where one is known, plus
   sockets, power and any session fee in the popup. Chargers without a price
-  still show (grey pin, listed last). `chargers.json` loads only when you pick EV.
-  On **History**, EV is the hourly Nord Pool LT spot price, including tomorrow
-  once it is published, with the cheapest upcoming hours.
+  still show (grey pin, listed last). A free charger has a "?" that says why it is
+  probably free (see [provider-mistakes.md](provider-mistakes.md)).
+  `chargers.json` loads only when you pick EV. On **History**, EV has the same
+  average / min / max / median tabs per charging network (free chargers left
+  out), plus a **Spot** tab with the hourly Nord Pool LT price, including
+  tomorrow once it is published, and the cheapest upcoming hours.
 - Scan a cheapest-first list of stations in view, with cheapest / most expensive
   badges and a last-checked time.
 - Plan a trip: start defaults to your location; type a destination (Photon,

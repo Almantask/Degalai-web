@@ -18,6 +18,12 @@ const BRAND_COLORS: Record<string, string> = {
   enefit: "#f59e0b",
   tesla: "#dc2626",
   ionity: "#4f46e5",
+  "inbalance-grid": "#9333ea",
+  eldrive: "#ea580c",
+  "elektrum-drive": "#0891b2",
+  "stuart-energy": "#be123c",
+  lidl: "#ca8a04",
+  roaming: "#65a30d",
   spot: "#0f766e",
 };
 

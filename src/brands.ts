@@ -55,6 +55,26 @@ export function normalizeBrand(...parts: (string | undefined)[]): string {
   return "independent";
 }
 
+/**
+ * History series id for a charging network, which sets the price: a known brand id (`Ignitis LT`
+ * → `ignitis-on`), else the network's name as a slug (`In Balance grid, UAB` → `inbalance-grid`).
+ */
+export function evProviderId(network: string | undefined): string {
+  if (!network?.trim()) return "independent";
+  const brand = normalizeBrand(network);
+  if (brand !== "independent") return brand;
+  const slug = network
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/[„“"']/g, "")
+    .replace(/(^|[\s,])(uab|ab|vi|vsi|mb|ii)(?=$|[\s,])/g, "$1")
+    .replace(/\bin balance\b/g, "inbalance")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  return slug || "independent";
+}
+
 export function displayBrandName(brand: string): string {
   const map: Record<string, string> = {
     "circle-k": "Circle K",

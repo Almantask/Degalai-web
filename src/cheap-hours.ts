@@ -216,9 +216,10 @@ export function cheapestHoursByFuel(
   if (!file) return {};
   const out: Partial<Record<FuelType, CheapHourRange[]>> = {};
   for (const fuel of FUEL_TYPES) {
-    const series = file.byFuel[fuel];
-    if (!series) continue;
     const ev = fuel === "EV";
+    // EV cheap hours are the spot market's; charger prices do not follow the hour.
+    const series = ev ? file.spot : file.byFuel[fuel];
+    if (!series) continue;
     const ranges = cheapestHourRanges(
       ev ? series : filterSeries(series, excluded),
       CHEAP_HOUR_EPS,

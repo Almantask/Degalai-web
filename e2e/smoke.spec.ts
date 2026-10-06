@@ -853,11 +853,18 @@ test.describe("EV", () => {
     await expect(tip).toContainText("On the grounds of a Ignitis gamyba power plant");
   });
 
-  test("EV history shows the Nord Pool spot line without provider controls", async ({ page }) => {
+  test("EV history has stat tabs by network, and the spot price under its own tab", async ({
+    page,
+  }) => {
     const now = Date.now();
     const hours = Array.from({ length: 30 }, (_, i) => new Date(now + (i - 20) * 3_600_000));
     const vilnius = (d: Date, opts: Intl.DateTimeFormatOptions) =>
       new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Vilnius", ...opts }).format(d);
+    const dates = hours.map((d) =>
+      vilnius(d, { year: "numeric", month: "2-digit", day: "2-digit" }),
+    );
+    const hourOf = hours.map((d) => Number(vilnius(d, { hour: "2-digit", hourCycle: "h23" })));
+    const networks = { "ignitis-on": [0.39, 0.37], "inbalance-grid": [0.29, 0.28] };
     await page.route("**/data/history.json", (route) =>
       route.fulfill({
         json: {
@@ -865,19 +872,46 @@ test.describe("EV", () => {
           keepDays: 7,
           byFuel: {
             EV: {
-              dates: hours.map((d) =>
-                vilnius(d, { year: "numeric", month: "2-digit", day: "2-digit" }),
-              ),
-              hours: hours.map((d) => Number(vilnius(d, { hour: "2-digit", hourCycle: "h23" }))),
-              brands: { spot: hours.map((_, i) => (i === 25 ? 0.01 : 0.1 + (i % 5) / 100)) },
+              dates: dates.slice(0, 2),
+              hours: hourOf.slice(0, 2),
+              brands: networks,
+              stats: {
+                avg: networks,
+                min: { "ignitis-on": [0.29, 0.27], "inbalance-grid": [0.18, 0.18] },
+                max: networks,
+                median: networks,
+              },
             },
+          },
+          spot: {
+            dates,
+            hours: hourOf,
+            brands: { spot: hours.map((_, i) => (i === 25 ? 0.01 : 0.1 + (i % 5) / 100)) },
           },
         },
       }),
     );
     await page.goto("/en/history?fuel=ev");
     await expect(page.locator("#history-chart .uplot")).toBeVisible({ timeout: 15_000 });
-    await expect(page.locator(".history-stat")).toHaveCount(0);
+    const stat = page.locator(".history-stat");
+    await expect(stat.locator("[data-act='history-stat']")).toHaveCount(4);
+    await expect(page.locator("#history-legend [data-act='history-brand']")).toHaveCount(2);
+    await expect(page.locator("#history-legend")).toContainText("Ignitis ON");
+    await expect(page.locator("#history-legend")).toContainText("Inbalance Grid");
+    await expect(page.locator(".history-caption")).toContainText("Free chargers are left out");
+
+    await stat.getByRole("button", { name: "Min" }).click();
+    await expect(stat.getByRole("button", { name: "Min" })).toHaveAttribute("aria-pressed", "true");
+
+    await stat.getByRole("button", { name: "Spot" }).click();
+    await expect(stat.getByRole("button", { name: "Spot" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await expect(stat.getByRole("button", { name: "Min" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
     await expect(page.locator("#history-legend [data-act='history-brand']")).toHaveCount(0);
     await expect(page.locator(".history-cheap")).toContainText("Cheapest power");
     await expect(page.locator(".history-caption").last()).toContainText("excluding VAT");

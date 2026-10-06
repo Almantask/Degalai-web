@@ -211,7 +211,7 @@ describe("EV cheap hours look ahead", () => {
 
   it("picks the cheapest upcoming hours, not the cheaper past ones", () => {
     const ranges = cheapestHoursByFuel(
-      { generatedAt: "2026-10-01T00:00:00Z", keepDays: 7, byFuel: { EV: spot } },
+      { generatedAt: "2026-10-01T00:00:00Z", keepDays: 7, byFuel: {}, spot },
       [],
       "2026-10-06T11:30:00Z",
     ).EV;

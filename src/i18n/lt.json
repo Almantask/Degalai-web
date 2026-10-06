@@ -146,5 +146,7 @@
   "free.fleet": "Priklauso transporto įmonei „{owner}“. Greičiausiai skirta jos autoparkui, todėl nemokama; pašaliniams gali būti neprieinama.",
   "free.workplace": "Priklauso įmonei „{owner}“, kuri pati apmoka elektrą. Tikriausiai skirta darbuotojams ar klientams; prieiga gali būti ribota.",
   "free.networkPaid": "Kitos šio tinklo stotelės mokamos, todėl „nemokama“ čia gali būti klaida registre.",
-  "free.unknown": "Registre nurodyta, kad įkrovimas nemokamas, bet priežastis nenurodyta. Gali būti akcija arba ribota prieiga."
+  "free.unknown": "Registre nurodyta, kad įkrovimas nemokamas, bet priežastis nenurodyta. Gali būti akcija arba ribota prieiga.",
+  "history.mode.spot": "Birža",
+  "history.evCaption": "Įkrovimo kainos pagal tinklą, kuris jas nustato. Nemokamos stotelės neįtrauktos."
 }

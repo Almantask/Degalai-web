@@ -9,6 +9,7 @@ import {
   sampleFromDaily,
   sampleKey,
 } from "../scripts/history.ts";
+import { evProviderId } from "../src/brands.ts";
 import type { BrandStat, DailyPrices, HistorySample, Station } from "../src/types.ts";
 
 const stations = new Map<string, Station>([
@@ -230,20 +231,61 @@ describe("compactHistoryForClient", () => {
 });
 
 describe("buildHistoryFile", () => {
-  it("adds the spot series as EV and keeps chargers out of brand stats", () => {
-    const withCharger: DailyPrices = {
-      ...daily,
-      prices: {
-        ...daily.prices,
-        c: { EV: { price: 0.3, source: "ev-tariff", observedAt: "2026-09-14T07:00:00Z" } },
+  const charger = (id: string, network: string, brand = "independent"): [string, Station] => [
+    id,
+    {
+      id,
+      name: id,
+      brand,
+      lat: 54.7,
+      lon: 25.3,
+      fuels: ["EV"],
+      sourceIds: {},
+      ev: { sockets: [], network },
+    },
+  ];
+  const ev = (price: number) => ({
+    EV: { price, source: "via-lietuva", observedAt: "2026-09-14T07:00:00Z" },
+  });
+
+  it("keeps EV stats per charging network, without free chargers, and spot apart", () => {
+    const withChargers = new Map([
+      ...stations,
+      charger("c1", "Ignitis LT", "ignitis-on"),
+      charger("c2", "Inbalance grid", "orlen"),
+      charger("c3", "In Balance grid, UAB"),
+      charger("c4", "Stuart Energy"),
+    ]);
+    const sample = sampleFromDaily(
+      {
+        ...daily,
+        prices: { ...daily.prices, c1: ev(0.39), c2: ev(0.28), c3: ev(0.36), c4: ev(0) },
       },
-    };
-    const sample = sampleFromDaily(withCharger, stations);
-    expect(sample.byFuel.EV).toBeUndefined();
+      withChargers,
+    );
+    // The Orlen-hosted Inbalance charger counts for Inbalance, which sets its price.
+    expect(sample.byFuel.EV).toEqual({
+      "ignitis-on": p(0.39),
+      "inbalance-grid": { min: 0.28, max: 0.36, avg: 0.32, median: 0.32 },
+    });
     const spot = { dates: ["2026-09-14"], hours: [9], brands: { spot: [0.12] } };
     const file = buildHistoryFile([sample], "2026-09-14T12:00:00Z", spot);
-    expect(file.byFuel.EV).toEqual(spot);
+    expect(file.spot).toEqual(spot);
+    expect(file.byFuel.EV?.stats?.min?.["inbalance-grid"]).toEqual([0.28]);
     expect(file.byFuel.D?.brands.neste).toEqual([1.6]);
-    expect(buildHistoryFile([sample], "2026-09-14T12:00:00Z").byFuel.EV).toBeUndefined();
+    expect(buildHistoryFile([sample], "2026-09-14T12:00:00Z").spot).toBeUndefined();
+    expect(compactHistoryForClient(file).spot).toEqual(spot);
+  });
+});
+
+describe("evProviderId", () => {
+  it("names a network by brand when known, else by its name", () => {
+    expect(evProviderId("Ignitis LT")).toBe("ignitis-on");
+    expect(evProviderId("Eleport UAB")).toBe("eleport");
+    expect(evProviderId("Inbalance grid")).toBe("inbalance-grid");
+    expect(evProviderId("In Balance grid, UAB")).toBe("inbalance-grid");
+    expect(evProviderId("Stuart Energy, UAB")).toBe("stuart-energy");
+    expect(evProviderId("Elektrum Drive")).toBe("elektrum-drive");
+    expect(evProviderId(undefined)).toBe("independent");
   });
 });

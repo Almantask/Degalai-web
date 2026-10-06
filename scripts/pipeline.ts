@@ -335,7 +335,14 @@ async function main(): Promise<void> {
   const storedHistory = readJson<unknown>(join(DATA, "history.json"), null);
   const previousHistory = isHistoryFile(storedHistory) ? storedHistory : null;
   const spotChart = spotSeries(spot.points);
-  let history = recomputeHistory(PRICES, stations, previousHistory, runAt, spotChart);
+  // Chargers too: EV history is per charging network.
+  let history = recomputeHistory(
+    PRICES,
+    [...stations, ...chargers],
+    previousHistory,
+    runAt,
+    spotChart,
+  );
   writeJson(join(DATA, "history.json"), history);
   writeJson(join(DATA, "stations.json"), stations);
   writeJson(join(DATA, "chargers.json"), chargers);
@@ -391,7 +398,13 @@ async function main(): Promise<void> {
       console.log(`Backfilled ${d}: ${Object.keys(snap.daily.prices).length} stations`);
     }
     prunePriceFiles(PRICES, date);
-    history = recomputeHistory(PRICES, stations, previousHistory, runAt, spotChart);
+    history = recomputeHistory(
+      PRICES,
+      [...stations, ...chargers],
+      previousHistory,
+      runAt,
+      spotChart,
+    );
     writeJson(join(DATA, "history.json"), history);
     meta.cheapestHours = cheapestHoursByFuel(history, [], checkedAt);
     writeJson(join(DATA, "meta.json"), meta);

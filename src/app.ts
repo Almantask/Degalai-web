@@ -173,6 +173,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     setHidden: (hidden: ReadonlySet<string>) => void;
   } | null = null;
   let hiddenHistoryBrands = new Set<string>();
+  /** EV history shows the Nord Pool spot price instead of charger prices by network. */
+  let historySpot = false;
   let routeRows: RouteStationRow[] = [];
   let extraMapStationIds = new Set<string>();
   let routeLine: RouteResult | null = null;
@@ -429,11 +431,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
         applyHistoryVisibility();
       } else if (act === "history-stat" && tEl.dataset.stat) {
         const next = tEl.dataset.stat as HistoryStat;
-        if (HISTORY_STATS.includes(next) && next !== settings.historyStat) {
+        if (HISTORY_STATS.includes(next) && (next !== settings.historyStat || historySpot)) {
+          historySpot = false;
           settings.historyStat = next;
           saveSettings(settings);
           render();
         }
+      } else if (act === "history-spot" && !historySpot) {
+        historySpot = true;
+        render();
       }
     });
 
@@ -999,10 +1005,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (view === "history") render();
   }
 
+  /** EV's "Spot" tab: one Nord Pool line, no per-network stats or provider filter. */
+  function isSpotView(): boolean {
+    return isEv() && historySpot;
+  }
+
   function historyViewSeries(): HistoryHourSeries | undefined {
+    if (isSpotView()) return historyFile?.spot;
     const series = historyFile?.byFuel[settings.fuel];
-    // EV is the single Nord Pool spot line: no per-brand stats or provider filter.
-    if (isEv()) return series;
     const forStat = seriesForStat(series, settings.historyStat);
     return forStat ? filterSeries(forStat, settings.excludedBrands) : undefined;
   }
@@ -1013,7 +1023,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         <span class="history-handle" aria-hidden="true"></span>
         <span class="history-head-copy">
           <h2>${escapeHtml(t("history.title"))}</h2>
-          ${updatedMetaHtml(isEv() ? data.meta?.spotUpdatedAt : undefined)}
+          ${updatedMetaHtml(isSpotView() ? data.meta?.spotUpdatedAt : undefined)}
         </span>
         <span class="history-chevron" aria-hidden="true">${historyMinimized ? "▴" : "▾"}</span>
       </button>`;
@@ -1029,17 +1039,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
       filtered && Object.values(filtered.brands).some((row) => row.some((v) => v != null)),
     );
     const caption = hasPoints
-      ? isEv()
+      ? isSpotView()
         ? spotCaptionHtml(filtered)
-        : ""
+        : isEv()
+          ? `<p class="history-caption">${escapeHtml(t("history.evCaption"))}</p>`
+          : ""
       : `<p class="history-caption">${escapeHtml(t("history.empty"))}</p>`;
     return `<section class="history-panel${historyMinimized ? " is-min" : ""}" aria-label="${escapeHtml(t("history.title"))}">
       ${toggle}
       <div class="history-body">
-        ${isEv() ? "" : historyStatHtml()}
+        ${historyStatHtml()}
         <div class="history-chart-stack">
           <div id="history-chart"></div>
-          ${isEv() ? `<div id="history-legend"></div>` : historyLegendHtml(filtered)}
+          ${isSpotView() ? `<div id="history-legend"></div>` : historyLegendHtml(filtered)}
         </div>
         ${caption}
       </div>
@@ -1058,11 +1070,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function historyStatHtml(): string {
-    const buttons = HISTORY_STATS.map((stat) => {
-      const on = settings.historyStat === stat;
-      return `<button type="button" class="history-chip${on ? " is-on" : ""}" data-act="history-stat" data-stat="${stat}" aria-pressed="${on ? "true" : "false"}">${escapeHtml(t(`history.mode.${stat}` as MessageKey))}</button>`;
-    }).join("");
-    return `<div class="history-stat" role="group" aria-label="${escapeHtml(t("history.stat"))}">${buttons}</div>`;
+    const chip = (act: string, label: string, on: boolean, data = "") =>
+      `<button type="button" class="history-chip${on ? " is-on" : ""}" data-act="${act}"${data} aria-pressed="${on ? "true" : "false"}">${escapeHtml(label)}</button>`;
+    const buttons = HISTORY_STATS.map((stat) =>
+      chip(
+        "history-stat",
+        t(`history.mode.${stat}` as MessageKey),
+        !isSpotView() && settings.historyStat === stat,
+        ` data-stat="${stat}"`,
+      ),
+    ).join("");
+    const spot = isEv() ? chip("history-spot", t("history.mode.spot"), isSpotView()) : "";
+    return `<div class="history-stat" role="group" aria-label="${escapeHtml(t("history.stat"))}">${buttons}${spot}</div>`;
   }
 
   function historyBrandIds(): string[] {
@@ -1113,7 +1132,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (view !== "history" || historyMinimized) return;
     historyPlot = mountHistoryChart(el, filtered, hiddenHistoryBrands, {
       fuel: settings.fuel,
-      ...(isEv() ? { now: new Date().toISOString() } : {}),
+      ...(isSpotView() ? { now: new Date().toISOString() } : {}),
     });
   }
 

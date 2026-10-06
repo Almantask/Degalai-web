@@ -10,7 +10,8 @@ import type {
   HistoryStat,
   Station,
 } from "../src/types.ts";
-import { HISTORY_KEEP_DAYS, HISTORY_STATS, PUMP_FUELS, SPOT_SERIES } from "../src/types.ts";
+import { HISTORY_FUELS, HISTORY_KEEP_DAYS, HISTORY_STATS, SPOT_SERIES } from "../src/types.ts";
+import { evProviderId } from "../src/brands.ts";
 import { round3 } from "../src/calc.ts";
 
 export function median(sorted: number[]): number {
@@ -84,17 +85,24 @@ export function sampleHour(daily: DailyPrices): number {
   return daily.generatedAt ? hourInVilnius(daily.generatedAt) : 12;
 }
 
+/**
+ * Price stats per provider: pump fuels by station brand, EV by charging network (the host brand of
+ * a charger, e.g. Orlen, is not who sets its price). Free chargers stay out of EV stats: most are
+ * on private grounds (provider-mistakes.md), and a 0 would pin every minimum.
+ */
 export function brandStats(
   daily: DailyPrices,
   stations: Map<string, Station>,
 ): Partial<Record<FuelType, Record<string, BrandStat>>> {
   const out: Partial<Record<FuelType, Record<string, BrandStat>>> = {};
-  for (const fuel of PUMP_FUELS) {
+  for (const fuel of HISTORY_FUELS) {
     const bags = new Map<string, number[]>();
     for (const [sid, fuels] of Object.entries(daily.prices)) {
       const e = fuels[fuel];
       if (!e || e.stale) continue;
-      const brand = stations.get(sid)?.brand ?? "independent";
+      if (fuel === "EV" && e.price === 0) continue;
+      const s = stations.get(sid);
+      const brand = fuel === "EV" ? evProviderId(s?.ev?.network) : (s?.brand ?? "independent");
       const list = bags.get(brand) ?? [];
       list.push(e.price);
       bags.set(brand, list);
@@ -138,7 +146,7 @@ export function toBrandStat(value: unknown): BrandStat | undefined {
 
 export function normalizeSample(sample: HistorySample): HistorySample {
   const byFuel: HistorySample["byFuel"] = {};
-  for (const fuel of PUMP_FUELS) {
+  for (const fuel of HISTORY_FUELS) {
     const row = sample.byFuel[fuel] as Record<string, unknown> | undefined;
     if (!row) continue;
     const next: Record<string, BrandStat> = {};
@@ -252,7 +260,7 @@ export function rollupHourAverages(
   samples: HistorySample[],
 ): Partial<Record<FuelType, HistoryHourSeries>> {
   const out: Partial<Record<FuelType, HistoryHourSeries>> = {};
-  for (const fuel of PUMP_FUELS) {
+  for (const fuel of HISTORY_FUELS) {
     const brands = new Set<string>();
     const points: Array<{ date: string; hour: number; prices: Record<string, BrandStat> }> = [];
     for (const s of samples) appendChangedPoint(points, brands, normalizeSample(s), fuel);
@@ -287,6 +295,7 @@ export function compactHistoryForClient(file: HistoryFile): Omit<HistoryFile, "s
     generatedAt: file.generatedAt,
     keepDays: file.keepDays,
     byFuel: file.byFuel,
+    ...(file.spot ? { spot: file.spot } : {}),
   };
 }
 
@@ -295,14 +304,13 @@ export function buildHistoryFile(
   generatedAt = new Date().toISOString(),
   spot?: HistoryHourSeries,
 ): HistoryFile {
-  const byFuel = rollupHourAverages(samples);
   // Spot is one market price per hour, not a per-station stat, so it skips the samples.
-  if (spot?.brands[SPOT_SERIES]?.length) byFuel.EV = spot;
   return {
     generatedAt,
     keepDays: HISTORY_KEEP_DAYS,
     samples,
-    byFuel,
+    byFuel: rollupHourAverages(samples),
+    ...(spot?.brands[SPOT_SERIES]?.length ? { spot } : {}),
   };
 }
 
@@ -332,5 +340,6 @@ function historyPayload(file: HistoryFile): string {
     keepDays: file.keepDays,
     samples: file.samples,
     byFuel: file.byFuel,
+    spot: file.spot,
   });
 }

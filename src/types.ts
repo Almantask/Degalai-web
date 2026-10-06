@@ -5,7 +5,10 @@ export type FuelType = (typeof FUEL_TYPES)[number];
 export const PUMP_FUELS = ["95", "98", "D", "LPG"] as const satisfies readonly FuelType[];
 export type PumpFuel = (typeof PUMP_FUELS)[number];
 
-/** Series id of the Nord Pool LT spot price in `HistoryFile.byFuel.EV`. */
+/** Fuels with per-provider price history: pump fuels by brand, EV chargers by network. */
+export const HISTORY_FUELS = [...PUMP_FUELS, "EV"] as const satisfies readonly FuelType[];
+
+/** Series id of the Nord Pool LT spot price in `HistoryFile.spot`. */
 export const SPOT_SERIES = "spot";
 
 export const HISTORY_KEEP_DAYS = 7;
@@ -106,6 +109,8 @@ export interface HistoryFile {
   keepDays: number;
   samples?: HistorySample[];
   byFuel: Partial<Record<FuelType, HistoryHourSeries>>;
+  /** Nord Pool LT spot price by hour, including tomorrow once published. */
+  spot?: HistoryHourSeries;
 }
 
 export interface DataMeta {

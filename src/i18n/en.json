@@ -146,5 +146,7 @@
   "free.fleet": "Owned by the transport company {owner}. Most likely for its own fleet, hence free; it may not be open to others.",
   "free.workplace": "Owned by {owner}, which pays for the electricity itself. Probably for staff or customers; access may be limited.",
   "free.networkPaid": "Other chargers on this network are paid, so “free” here may be a register error.",
-  "free.unknown": "The register says charging is free but gives no reason. It may be a promotion or limited access."
+  "free.unknown": "The register says charging is free but gives no reason. It may be a promotion or limited access.",
+  "history.mode.spot": "Spot",
+  "history.evCaption": "Charger prices by the network that sets them. Free chargers are left out."
 }
