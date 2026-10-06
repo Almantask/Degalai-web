@@ -3,12 +3,20 @@ import { join } from "node:path";
 import type { DailyPrices, DataMeta, Observation, Station } from "../src/types.ts";
 import { HISTORY_KEEP_DAYS } from "../src/types.ts";
 import { cheapestHoursByFuel } from "../src/cheap-hours.ts";
+import { chargerPrices, loadEvTariffs, mergeChargerPrices } from "./adapters/ev-tariffs.ts";
+import {
+  fetchSpot,
+  loadSpotCache,
+  mergeSpot,
+  spotSeries,
+  type SpotPoint,
+} from "./adapters/nordpool.ts";
 import { loadPriceReports, reportsToObservations } from "./adapters/reports.ts";
 import { geocodePhoton, loadGeocodeCache, saveGeocodeCache, sleep } from "./geocode.ts";
 import { datesWithinDays, isHistoryFile, prunePriceFiles, recomputeHistory } from "./history.ts";
 import { loadOverrides, matchByAddress, matchObservations } from "./match.ts";
 import { combinePriceObservations, summarizeSources } from "./merge-sources.ts";
-import { chooseOsmStations, fetchOsmStations } from "./osm.ts";
+import { chooseOsmStations, fetchOsmChargers, fetchOsmStations, MIN_OSM_CHARGERS } from "./osm.ts";
 import {
   loadHealth,
   rankSources,
@@ -130,6 +138,50 @@ async function loadOsm(force: boolean): Promise<Station[]> {
   }
 }
 
+/** EV chargers refresh on the same weekly OSM cadence; a failed fetch never fails the build. */
+async function loadChargers(force: boolean): Promise<Station[]> {
+  const path = join(DATA, "chargers.json");
+  const existing = readJson<Station[]>(path, []);
+  const weekday = new Date().getUTCDay();
+  if (!force && existing.length > 0 && weekday !== 0) {
+    console.log(`Reusing ${existing.length} OSM chargers`);
+    return existing;
+  }
+  console.log("Fetching OSM EV chargers…");
+  try {
+    const chargers = chooseOsmStations(
+      existing,
+      await fetchOsmChargers(),
+      undefined,
+      MIN_OSM_CHARGERS,
+    );
+    console.log(`OSM chargers: ${chargers.length}`);
+    return chargers;
+  } catch (e) {
+    console.warn(`OSM charger fetch failed; reusing ${existing.length} cached chargers:`, e);
+    if (process.env.GITHUB_ACTIONS) console.log(`::warning::OSM chargers failed: ${String(e)}`);
+    return existing;
+  }
+}
+
+/** Nord Pool LT spot price, merged into a cache so one failed fetch keeps the chart. */
+async function loadSpot(now: Date): Promise<{ points: SpotPoint[]; fetchedAt?: string }> {
+  const path = join(DATA, "cache", "spot.json");
+  const cache = loadSpotCache(path);
+  try {
+    const fresh = await fetchSpot(now);
+    const points = mergeSpot(cache?.points ?? [], fresh, now);
+    const fetchedAt = now.toISOString();
+    writeJson(path, { fetchedAt, points });
+    console.log(`Spot price: ${fresh.length} hours fetched, ${points.length} kept`);
+    return { points, fetchedAt };
+  } catch (e) {
+    console.warn("Spot price fetch failed; keeping cached hours:", e);
+    if (process.env.GITHUB_ACTIONS) console.log(`::warning::Spot price failed: ${String(e)}`);
+    return { points: mergeSpot(cache?.points ?? [], [], now), fetchedAt: cache?.fetchedAt };
+  }
+}
+
 async function main(): Promise<void> {
   const args = new Set(process.argv.slice(2));
   const osmOnly = args.has("--osm-only");
@@ -144,12 +196,19 @@ async function main(): Promise<void> {
   if (!existsSync(join(DATA, "overrides", "prices.json"))) {
     writeJson(join(DATA, "overrides", "prices.json"), []);
   }
+  if (!existsSync(join(DATA, "overrides", "ev-tariffs.json"))) {
+    writeJson(join(DATA, "overrides", "ev-tariffs.json"), []);
+  }
 
   let stations = await loadOsm(args.has("--osm"));
+  const chargers = await loadChargers(args.has("--osm"));
   if (osmOnly) {
     writeJson(join(DATA, "stations.json"), stations);
+    writeJson(join(DATA, "chargers.json"), chargers);
     return;
   }
+  const runAt = new Date();
+  const spot = await loadSpot(runAt);
 
   const overrides = loadOverrides(join(DATA, "overrides", "stations.json"));
   const requested = dateArg ?? todayVilnius();
@@ -219,6 +278,12 @@ async function main(): Promise<void> {
     ? readJson<DailyPrices | null>(join(PRICES, `${prevDate}.json`), null)
     : null;
   const { daily: fresh, log } = observationsToDaily(date, matched.observations, previous, policy);
+  const tariffs = loadEvTariffs(join(DATA, "overrides", "ev-tariffs.json"));
+  const evPrices = chargerPrices(chargers, tariffs, runAt);
+  mergeChargerPrices(fresh, evPrices);
+  console.log(
+    `EV: ${Object.keys(evPrices).length} of ${chargers.length} chargers priced (${tariffs.length} network tariffs)`,
+  );
   applyStale(fresh, previous, prevDate);
   const daily = reuseGeneratedAtIfUnchanged(previous, fresh);
   writeJson(join(PRICES, `${date}.json`), daily);
@@ -230,9 +295,11 @@ async function main(): Promise<void> {
 
   const storedHistory = readJson<unknown>(join(DATA, "history.json"), null);
   const previousHistory = isHistoryFile(storedHistory) ? storedHistory : null;
-  let history = recomputeHistory(PRICES, stations, previousHistory);
+  const spotChart = spotSeries(spot.points);
+  let history = recomputeHistory(PRICES, stations, previousHistory, runAt, spotChart);
   writeJson(join(DATA, "history.json"), history);
   writeJson(join(DATA, "stations.json"), stations);
+  writeJson(join(DATA, "chargers.json"), chargers);
 
   const priced = Object.keys(daily.prices).length;
   const checkedAt = new Date().toISOString();
@@ -257,7 +324,9 @@ async function main(): Promise<void> {
     pricedStationCount: priced,
     sources: usage.map((u) => u.name),
     sourceRanking,
-    cheapestHours: cheapestHoursByFuel(history),
+    cheapestHours: cheapestHoursByFuel(history, [], checkedAt),
+    chargerCount: chargers.length,
+    ...(spot.fetchedAt ? { spotUpdatedAt: spot.fetchedAt } : {}),
   };
   writeJson(join(DATA, "meta.json"), meta);
   console.log(
@@ -283,9 +352,9 @@ async function main(): Promise<void> {
       console.log(`Backfilled ${d}: ${Object.keys(snap.daily.prices).length} stations`);
     }
     prunePriceFiles(PRICES, date);
-    history = recomputeHistory(PRICES, stations, previousHistory);
+    history = recomputeHistory(PRICES, stations, previousHistory, runAt, spotChart);
     writeJson(join(DATA, "history.json"), history);
-    meta.cheapestHours = cheapestHoursByFuel(history);
+    meta.cheapestHours = cheapestHoursByFuel(history, [], checkedAt);
     writeJson(join(DATA, "meta.json"), meta);
   }
 }

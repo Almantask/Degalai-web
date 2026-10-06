@@ -71,6 +71,7 @@ export default defineConfig({
           }
         }
         rewriteJson<Station[]>(join(dist, "data/stations.json"), slimStations);
+        rewriteJson<Station[]>(join(dist, "data/chargers.json"), slimStations);
         if (latestPrice) {
           rewriteJson<DailyPrices>(join(dist, `data/prices/${latestPrice}.json`), slimPrices);
         }

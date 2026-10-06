@@ -874,6 +874,11 @@ body,
   flex: 0 0 auto;
 }
 
+.history-caption.history-cheap {
+  color: var(--green-dark);
+  font-weight: 650;
+}
+
 .uplot {
   font-family: var(--font);
 }
@@ -1092,6 +1097,23 @@ body,
   margin: 0 0 8px;
   font-weight: 650;
   color: var(--green-dark);
+}
+
+.popup-ev,
+.popup-ev-note {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.popup-ev span,
+.popup-ev-note {
+  color: var(--muted);
+}
+
+.station-row.is-unpriced .station-price {
+  color: var(--muted);
+  font-weight: 500;
 }
 
 .badge {

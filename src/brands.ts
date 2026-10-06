@@ -25,6 +25,17 @@ export const BRAND_ALIASES: Record<string, string> = {
   q1: "q1",
   "sks degalinė": "sks",
   "sks degaline": "sks",
+  // EV charging networks (OSM `network` / `operator` on charging stations).
+  "ignitis on": "ignitis-on",
+  ignitis: "ignitis-on",
+  eleport: "eleport",
+  "enefit volt": "enefit",
+  enefit: "enefit",
+  supercharger: "tesla",
+  tesla: "tesla",
+  ionity: "ionity",
+  lidl: "lidl",
+  virta: "virta",
 };
 
 const ORDERED = Object.entries(BRAND_ALIASES).sort((a, b) => b[0].length - a[0].length);
@@ -63,6 +74,13 @@ export function displayBrandName(brand: string): string {
     shell: "Shell",
     q1: "Q1",
     sks: "SKS",
+    "ignitis-on": "Ignitis ON",
+    eleport: "Eleport",
+    enefit: "Enefit",
+    tesla: "Tesla",
+    ionity: "IONITY",
+    lidl: "Lidl",
+    virta: "Virta",
     independent: "Kita",
   };
   return map[brand] ?? brand;

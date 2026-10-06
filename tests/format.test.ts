@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { escapeHtml, formatChartDate, formatDateTime, shortAddress } from "../src/format.ts";
+import {
+  escapeHtml,
+  formatChartDate,
+  formatDateTime,
+  formatPrice,
+  formatPriceNumber,
+  shortAddress,
+} from "../src/format.ts";
 import { setLocale } from "../src/i18n/index.ts";
 
 describe("escapeHtml", () => {
@@ -36,5 +43,16 @@ describe("formatChartDate", () => {
     expect(formatChartDate("2026-09-15")).toMatch(/15/);
     setLocale("lt");
     expect(formatChartDate("2026-09-15")).toMatch(/15/);
+  });
+});
+
+describe("formatPrice", () => {
+  it("uses €/l for pump fuels and €/kWh for EV", () => {
+    setLocale("en");
+    expect(formatPrice(1.599, "D")).toBe("€1.599/l");
+    expect(formatPrice(0.29, "EV")).toBe("€0.290/kWh");
+    setLocale("lt");
+    expect(formatPrice(0.29, "EV")).toBe("0,290 €/kWh");
+    expect(formatPriceNumber(1.5)).toBe("1,500");
   });
 });

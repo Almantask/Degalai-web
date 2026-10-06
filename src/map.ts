@@ -2,7 +2,7 @@ import maplibregl from "maplibre-gl";
 import type { DailyPrices, FuelType, Station, UserSettings } from "./types.ts";
 import { LT_BOUNDS, LT_CENTER } from "./types.ts";
 import type { LngLat } from "./geo.ts";
-import { formatPrice, escapeHtml } from "./format.ts";
+import { formatPrice, formatPriceNumber, escapeHtml } from "./format.ts";
 import { brandLabel, t } from "./i18n/index.ts";
 
 const SOURCE = "stations";
@@ -312,7 +312,8 @@ export function setStationData(
     .map((s) => ({ s, price: prices?.prices[s.id]?.[fuel]?.price }))
     .filter(({ s, price }) => {
       if (excluded.has(s.brand)) return false;
-      if (price == null && settings.hideUnpriced) return false;
+      // Most chargers have no published price; hiding them would empty the EV map.
+      if (price == null && settings.hideUnpriced && fuel !== "EV") return false;
       if (price == null && !s.fuels.includes(fuel)) return false;
       return true;
     });
@@ -333,7 +334,7 @@ export function setStationData(
         price: price ?? null,
         hasPrice: price == null ? 0 : 1,
         pct,
-        priceLabel: price == null ? "" : formatPrice(price).replace(" €/l", "").replace("€", ""),
+        priceLabel: price == null ? "" : formatPriceNumber(price),
         emphasis: emp,
       },
     };
@@ -465,10 +466,10 @@ export function stationPopupHtml(
   prices: DailyPrices | null,
   extra?: StationPopupExtra,
 ): string {
-  const fuels = (["95", "D", "LPG"] as FuelType[])
+  const fuels = (s.ev ? (["EV"] as FuelType[]) : (["95", "D", "LPG"] as FuelType[]))
     .map((f) => {
       const e = prices?.prices[s.id]?.[f];
-      const price = e ? formatPrice(e.price) : t("popup.noPrice");
+      const price = e ? formatPrice(e.price, f) : t("popup.noPrice");
       const flags = [e?.stale ? t("popup.stale") : "", e?.suspicious ? t("popup.suspicious") : ""]
         .filter(Boolean)
         .join(" · ");
@@ -477,13 +478,56 @@ export function stationPopupHtml(
     .join("");
   const addr = s.address || s.city || t("list.addressMissing");
   const dist = extra?.distLabel ? `<p class="popup-eta">${escapeHtml(extra.distLabel)}</p>` : "";
+  const brand =
+    s.ev && s.brand === "independent" && s.ev.network ? s.ev.network : brandLabel(s.brand);
   return `<div class="popup">
     <h3>${escapeHtml(s.name)}</h3>
-    <p class="popup-brand">${escapeHtml(brandLabel(s.brand))}</p>
+    <p class="popup-brand">${escapeHtml(brand)}</p>
     <p class="popup-addr">${escapeHtml(addr)}</p>
     ${dist}
     ${fuels}
+    ${s.ev ? chargerDetailsHtml(s, prices) : ""}
   </div>`;
+}
+
+const SOCKET_NAMES: Record<string, string> = {
+  type2: "Type 2",
+  type2_cable: "Type 2",
+  type2_combo: "CCS",
+  chademo: "CHAdeMO",
+  tesla_supercharger: "Tesla",
+  type1: "Type 1",
+  type1_combo: "CCS1",
+  schuko: "Schuko",
+  cee_blue: "CEE",
+  cee_red_16a: "CEE",
+  cee_red_32a: "CEE",
+};
+
+export function socketLabels(sockets: readonly string[]): string[] {
+  const out: string[] = [];
+  for (const k of sockets) {
+    const label = SOCKET_NAMES[k] ?? k.replaceAll("_", " ");
+    if (!out.includes(label)) out.push(label);
+  }
+  return out;
+}
+
+function chargerDetailsHtml(s: Station, prices: DailyPrices | null): string {
+  const ev = s.ev;
+  if (!ev) return "";
+  const parts = [
+    socketLabels(ev.sockets).join(", "),
+    ev.maxKw != null ? t("popup.maxKw", { kw: ev.maxKw }) : "",
+  ].filter(Boolean);
+  const source = prices?.prices[s.id]?.EV?.source;
+  const note =
+    source === "osm-charge"
+      ? t("popup.chargeTag")
+      : source === "ev-tariff"
+        ? t("popup.tariff")
+        : "";
+  return `${parts.length ? `<p class="popup-ev"><span>${escapeHtml(t("popup.sockets"))}</span> ${escapeHtml(parts.join(" · "))}</p>` : ""}${note ? `<p class="popup-ev-note">${escapeHtml(note)}</p>` : ""}`;
 }
 
 /** Rank of `value` in ascending `sorted`: index of the first entry ≥ value, scaled to 0–1. */

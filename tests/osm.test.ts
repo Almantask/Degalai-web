@@ -1,7 +1,11 @@
 import {
   assertHealthyOsmCount,
+  chargerMaxKw,
+  chargerSockets,
   chooseOsmStations,
   MIN_OSM_STATIONS,
+  parseChargeTag,
+  parseOverpassChargers,
   parseOverpassResponse,
 } from "../scripts/osm.ts";
 import type { Station } from "../src/types.ts";
@@ -86,5 +90,62 @@ describe("chooseOsmStations", () => {
 describe("assertHealthyOsmCount", () => {
   it("rejects short lists that would wipe the station file", () => {
     expect(() => assertHealthyOsmCount([station("osm:node:1")])).toThrow(/too few stations/i);
+  });
+});
+
+describe("parseOverpassChargers", () => {
+  it("maps public car chargers with network, sockets and power", () => {
+    const chargers = parseOverpassChargers({
+      elements: [
+        {
+          type: "node",
+          id: 7,
+          lat: 54.69,
+          lon: 25.27,
+          tags: {
+            amenity: "charging_station",
+            network: "Ignitis ON",
+            "socket:type2": "2",
+            "socket:type2:output": "22 kW",
+            "socket:type2_combo": "1",
+            "socket:type2_combo:output": "150 kW",
+            charge: "0,39 EUR/kWh",
+            "addr:street": "Gedimino pr.",
+            "addr:housenumber": "1",
+            "addr:city": "Vilnius",
+          },
+        },
+        { type: "node", id: 8, lat: 54.69, lon: 25.27, tags: { access: "private" } },
+        { type: "node", id: 9, lat: 54.69, lon: 25.27, tags: { motorcar: "no", bicycle: "yes" } },
+      ],
+    });
+    expect(chargers).toHaveLength(1);
+    expect(chargers[0]).toMatchObject({
+      id: "ev:node:7",
+      name: "Ignitis ON",
+      brand: "ignitis-on",
+      fuels: ["EV"],
+      address: "Gedimino pr. 1, Vilnius",
+      ev: { sockets: ["type2", "type2_combo"], maxKw: 150, network: "Ignitis ON", chargeTag: 0.39 },
+    });
+  });
+});
+
+describe("charger tags", () => {
+  it("reads kW from W, kW and multi-value outputs", () => {
+    expect(chargerMaxKw({ "socket:type2:output": "11000 W" })).toBe(11);
+    expect(chargerMaxKw({ "socket:chademo:output": "50kW;25 kW" })).toBe(50);
+    expect(chargerMaxKw({ "socket:type2:output": "fast" })).toBeUndefined();
+  });
+
+  it("skips sockets tagged as absent", () => {
+    expect(chargerSockets({ "socket:type2": "no", "socket:chademo": "1" })).toEqual(["chademo"]);
+  });
+
+  it("parses €/kWh from charge tags and ignores per-minute or flat fees", () => {
+    expect(parseChargeTag("0.29 EUR/kWh")).toBe(0.29);
+    expect(parseChargeTag("EUR 0,35/kWh; 0.05 EUR/min")).toBe(0.35);
+    expect(parseChargeTag("0.10 EUR/min")).toBeUndefined();
+    expect(parseChargeTag(undefined)).toBeUndefined();
   });
 });

@@ -53,6 +53,8 @@ export function sanitizeSettings(raw: unknown): UserSettings {
     routePreference,
     consumption: clampNumber(parsed.consumption, DEFAULT_SETTINGS.consumption, 3, 20),
     litres: clampNumber(parsed.litres, DEFAULT_SETTINGS.litres, 5, 80),
+    evConsumption: clampNumber(parsed.evConsumption, DEFAULT_SETTINGS.evConsumption, 8, 40),
+    evKwh: clampNumber(parsed.evKwh, DEFAULT_SETTINGS.evKwh, 5, 120),
     timeValue: clampNumber(parsed.timeValue, DEFAULT_SETTINGS.timeValue, 0, 50),
     roadFactor: clampNumber(parsed.roadFactor, DEFAULT_SETTINGS.roadFactor, 1, 2),
     aroundRadiusKm,
@@ -131,11 +133,13 @@ export function fuelFromUrl(search: string): FuelType | null {
   if (v === "petrol" || v === "95") return "95";
   if (v === "98") return "98";
   if (v === "gas" || v === "lpg" || v === "LPG") return "LPG";
+  if (v === "ev" || v === "EV") return "EV";
   return null;
 }
 
 export function fuelToUrl(fuel: FuelType): string {
   if (fuel === "D") return "diesel";
   if (fuel === "LPG") return "gas";
+  if (fuel === "EV") return "ev";
   return fuel;
 }

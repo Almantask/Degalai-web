@@ -55,6 +55,12 @@ export async function loadAppData(): Promise<AppData> {
   return { stations, prices, meta };
 }
 
+/** EV chargers load only when the EV chip is picked, so the fuel map stays light. */
+export async function loadChargers(): Promise<Station[]> {
+  const raw = await fetchJson<unknown>(dataUrl("chargers.json"), []);
+  return Array.isArray(raw) ? (raw as Station[]) : [];
+}
+
 /** Loaded only when the history view opens so map search stays light. */
 export async function loadHistory(): Promise<HistoryFile | null> {
   const raw = await fetchJson<unknown>(dataUrl("history.json"), null);

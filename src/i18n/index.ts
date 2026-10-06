@@ -1,6 +1,6 @@
 import lt from "./lt.json";
 import en from "./en.json";
-import type { FuelType } from "../types.ts";
+import type { FuelGroup, FuelType } from "../types.ts";
 
 export type Locale = "lt" | "en";
 export type MessageKey = keyof typeof lt;
@@ -45,7 +45,7 @@ export function pluralCategory(n: number, locale: Locale = current): "one" | "fe
   return "other";
 }
 
-export function tPlural(base: "stations", n: number): string {
+export function tPlural(base: "stations" | "chargers", n: number): string {
   const cat = pluralCategory(n);
   const key = `plural.${base}.${cat}` as MessageKey;
   return t(key, { n });
@@ -60,14 +60,16 @@ export function brandLabel(brand: string): string {
     .join(" ");
 }
 
-export function fuelGroupOf(fuel: FuelType): "diesel" | "petrol" | "gas" {
+export function fuelGroupOf(fuel: FuelType): FuelGroup {
   if (fuel === "D") return "diesel";
   if (fuel === "LPG") return "gas";
+  if (fuel === "EV") return "ev";
   return "petrol";
 }
 
-export const FUEL_BY_GROUP = {
-  diesel: ["D"] as FuelType[],
-  petrol: ["95", "98"] as FuelType[],
-  gas: ["LPG"] as FuelType[],
+export const FUEL_BY_GROUP: Record<FuelGroup, FuelType[]> = {
+  diesel: ["D"],
+  petrol: ["95", "98"],
+  gas: ["LPG"],
+  ev: ["EV"],
 };

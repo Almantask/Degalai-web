@@ -8,6 +8,7 @@ import {
   stationsInView,
   routeStationEmphasis,
   ROUTE_MARKER,
+  socketLabels,
 } from "../src/map.ts";
 import type { Station } from "../src/types.ts";
 
@@ -146,6 +147,40 @@ describe("stationPopupHtml", () => {
     expect(html).toContain("12 km");
     expect(html).not.toContain("max speed");
     expect(html).not.toContain("min");
+  });
+});
+
+describe("charger popup", () => {
+  const charger: Station = {
+    ...station,
+    id: "ev:node:1",
+    name: "Akropolis",
+    brand: "independent",
+    fuels: ["EV"],
+    ev: { sockets: ["type2", "type2_combo"], maxKw: 150, network: "Local Grid" },
+  };
+
+  it("shows the €/kWh price, sockets, power and price origin", () => {
+    setLocale("en");
+    const html = stationPopupHtml(charger, {
+      date: "2026-10-06",
+      generatedAt: "2026-10-06T12:00:00Z",
+      prices: {
+        "ev:node:1": {
+          EV: { price: 0.39, source: "ev-tariff", observedAt: "2026-10-01T00:00:00Z" },
+        },
+      },
+    });
+    expect(html).toContain("€0.390/kWh");
+    expect(html).toContain("Type 2, CCS");
+    expect(html).toContain("up to 150 kW");
+    expect(html).toContain("Network tariff");
+    expect(html).toContain("Local Grid");
+    expect(html).not.toContain("LPG");
+  });
+
+  it("dedupes socket names", () => {
+    expect(socketLabels(["type2", "type2_cable", "chademo"])).toEqual(["Type 2", "CHAdeMO"]);
   });
 });
 

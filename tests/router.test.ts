@@ -7,6 +7,7 @@ describe("hrefFor", () => {
     expect(hrefFor("map", "lt", "D")).toMatch(/[?&]fuel=diesel$/);
     expect(hrefFor("map", "en", "LPG")).toMatch(/[?&]fuel=gas$/);
     expect(hrefFor("map", "lt", "95")).toMatch(/[?&]fuel=95$/);
+    expect(hrefFor("history", "en", "EV")).toMatch(/\/en\/history\?fuel=ev$/);
   });
 
   it("ignores unknown fuel values instead of interpolating them", () => {

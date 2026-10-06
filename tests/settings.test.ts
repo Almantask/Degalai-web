@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_SETTINGS } from "../src/types.ts";
 import {
   fuelFromUrl,
+  fuelToUrl,
   isBrandIncluded,
   locationPositionOptions,
   sanitizeSettings,
@@ -22,6 +23,8 @@ describe("sanitizeSettings", () => {
         routePreference: "shortest",
         consumption: 8.5,
         litres: 30,
+        evConsumption: 19,
+        evKwh: 45,
         timeValue: 10,
         roadFactor: 1.5,
         aroundRadiusKm: 30,
@@ -37,6 +40,8 @@ describe("sanitizeSettings", () => {
       routePreference: "shortest",
       consumption: 8.5,
       litres: 30,
+      evConsumption: 19,
+      evKwh: 45,
       timeValue: 10,
       roadFactor: 1.5,
       aroundRadiusKm: 30,
@@ -48,6 +53,14 @@ describe("sanitizeSettings", () => {
       historyStat: "avg",
       locale: "en",
     });
+  });
+
+  it("keeps EV fuel and clamps EV consumption and charge size", () => {
+    const s = sanitizeSettings({ fuel: "EV", evConsumption: 200, evKwh: -3 });
+    expect(s.fuel).toBe("EV");
+    expect(s.evConsumption).toBe(40);
+    expect(s.evKwh).toBe(5);
+    expect(sanitizeSettings({}).evConsumption).toBe(17);
   });
 
   it("defaults high-accuracy location to on", () => {
@@ -131,6 +144,8 @@ describe("fuelFromUrl", () => {
   it("maps known aliases and rejects other query values", () => {
     expect(fuelFromUrl("?fuel=diesel")).toBe("D");
     expect(fuelFromUrl("?fuel=gas")).toBe("LPG");
+    expect(fuelFromUrl("?fuel=ev")).toBe("EV");
+    expect(fuelToUrl("EV")).toBe("ev");
     expect(fuelFromUrl(`?fuel=" onclick="alert(1)`)).toBeNull();
   });
 });

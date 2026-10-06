@@ -1,9 +1,10 @@
 import uPlot from "uplot";
 import "uplot/dist/uPlot.min.css";
 import type { FuelType, HistoryFile, HistoryHourSeries } from "./types.ts";
+import { SPOT_SERIES } from "./types.ts";
 import { formatChartDate, formatPrice } from "./format.ts";
 import { brandColor, chartBrands, isHistoryBrandOn } from "./history-series.ts";
-import { formatHourClock } from "./cheap-hours.ts";
+import { formatHourClock, isoOrdinalHours, sampleOrdinalHours } from "./cheap-hours.ts";
 import { brandLabel, t } from "./i18n/index.ts";
 
 export { brandColor, chartBrands } from "./history-series.ts";
@@ -87,6 +88,31 @@ export function historyChartScrollLeft(
   return Math.max(0, Math.min(max, Math.max(0, hour) * HISTORY_HOUR_MIN_PX));
 }
 
+/** First sample at or after `nowIso` (Vilnius hour), or -1 when the series ends before it. */
+export function historyNowIndex(series: HistoryHourSeries, nowIso: string): number {
+  const now = isoOrdinalHours(nowIso);
+  if (now == null) return -1;
+  for (let i = 0; i < series.hours.length; i++) {
+    const o = sampleOrdinalHours(series.dates?.[i], series.hours[i]);
+    if (o != null && o >= now) return i;
+  }
+  return -1;
+}
+
+/** Hours of past shown left of the "now" marker when a series runs into the future. */
+export const HISTORY_NOW_LEAD = 6;
+
+export function historySeriesLabel(id: string): string {
+  return id === SPOT_SERIES ? t("history.spot") : brandLabel(id);
+}
+
+export interface HistoryChartOptions {
+  /** Unit of the plotted prices; EV is €/kWh. */
+  fuel?: FuelType;
+  /** Draw a "now" marker and start scrolled to it (spot prices run a day ahead). */
+  now?: string;
+}
+
 export type HistoryPlot = {
   destroy: () => void;
   setHidden: (hidden: ReadonlySet<string>) => void;
@@ -96,8 +122,10 @@ export function mountHistoryChart(
   el: HTMLElement,
   series: HistoryHourSeries | undefined,
   hiddenBrands: ReadonlySet<string> = new Set(),
+  opts: HistoryChartOptions = {},
 ): HistoryPlot | null {
   if (!series) return null;
+  const nowIndex = opts.now ? historyNowIndex(series, opts.now) : -1;
   const brands = chartBrands(series);
   if (brands.length === 0) return null;
   const xs = series.hours.map((_, i) => i);
@@ -123,10 +151,13 @@ export function mountHistoryChart(
   rootStyle.setProperty("--history-chart-min", `${HISTORY_CHART_MIN_PX}px`);
 
   const size = chartSize(scroll, xs.length);
-  const initialHour = historyChartInitialHour(
-    xs,
-    brands.map((b) => b.values),
-  );
+  const initialHour =
+    nowIndex >= 0
+      ? Math.max(0, nowIndex - HISTORY_NOW_LEAD)
+      : historyChartInitialHour(
+          xs,
+          brands.map((b) => b.values),
+        );
   const plot = new uPlot(
     {
       width: size.width,
@@ -167,17 +198,18 @@ export function mountHistoryChart(
       series: [
         { label: t("history.hour") },
         ...brands.map((b, i) => ({
-          label: brandLabel(b.id),
+          label: historySeriesLabel(b.id),
           stroke: brandColor(b.id, i),
           width: 2,
           spanGaps: true,
           show: isHistoryBrandOn(hiddenBrands, b.id),
-          value: (_u: uPlot, v: number | null) => (v == null ? "—" : formatPrice(v)),
+          value: (_u: uPlot, v: number | null) => (v == null ? "—" : formatPrice(v, opts.fuel)),
         })),
       ],
       hooks: {
         draw: [
           (u) => {
+            if (nowIndex >= 0) drawNowMarker(u, nowIndex);
             syncYAxisOverlay(u, yAxis);
           },
         ],
@@ -239,6 +271,21 @@ function chartSize(viewport: HTMLElement, hourCount: number): { width: number; h
   return { width, height };
 }
 
+function drawNowMarker(plot: uPlot, index: number): void {
+  const x = Math.round(plot.valToPos(index, "x", true));
+  const { top, height } = plot.bbox;
+  const ctx = plot.ctx;
+  ctx.save();
+  ctx.strokeStyle = "rgb(16 32 24 / 45%)";
+  ctx.lineWidth = Math.max(1, plot.ctx.canvas.width / Math.max(1, plot.width));
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(x, top);
+  ctx.lineTo(x, top + height);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function syncYAxisOverlay(plot: uPlot, overlay: HTMLCanvasElement): void {
   const src = plot.ctx.canvas;
   const dpr = src.width / Math.max(1, plot.width);
@@ -259,4 +306,3 @@ function syncYAxisOverlay(plot: uPlot, overlay: HTMLCanvasElement): void {
   ctx.clearRect(0, 0, overlay.width, overlay.height);
   ctx.drawImage(src, 0, 0, slice, sliceH, 0, 0, slice, sliceH);
 }
-

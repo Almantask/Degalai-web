@@ -68,6 +68,18 @@ export function indicesInLastHours(
   return out;
 }
 
+/** Indices from the hour containing `startAt` onward, for a series that runs into the future. */
+export function indicesFromHour(series: HistoryHourSeries, startAt: string): number[] {
+  const from = isoOrdinalHours(startAt);
+  if (from == null) return [];
+  const out: number[] = [];
+  series.hours.forEach((h, i) => {
+    const o = sampleOrdinalHours(series.dates?.[i], h);
+    if (o != null && o >= from) out.push(i);
+  });
+  return out;
+}
+
 export function filterSeries(
   series: HistoryHourSeries,
   excluded: readonly string[] = [],
@@ -96,9 +108,12 @@ export function cheapestHourRanges(
   series: HistoryHourSeries,
   epsilon = CHEAP_HOUR_EPS,
   endAt?: string,
+  opts: { ahead?: boolean } = {},
 ): CheapHourRange[] {
   const avgs = hourAverages(series);
-  const windowIdx = indicesInLastHours(series, CHEAP_WINDOW_HOURS, endAt);
+  // The spot price is known a day ahead, so EV looks forward from `endAt` (now) when it can.
+  const ahead = opts.ahead && endAt ? indicesFromHour(series, endAt) : [];
+  const windowIdx = ahead.length ? ahead : indicesInLastHours(series, CHEAP_WINDOW_HOURS, endAt);
   const allowed = windowIdx ? new Set(windowIdx) : null;
   const cheapHours: number[] = [];
   let min = Infinity;
@@ -196,16 +211,19 @@ export function formatCheapRanges(ranges: CheapHourRange[]): string {
 export function cheapestHoursByFuel(
   file: HistoryFile | null,
   excluded: readonly string[] = [],
+  now?: string,
 ): Partial<Record<FuelType, CheapHourRange[]>> {
   if (!file) return {};
   const out: Partial<Record<FuelType, CheapHourRange[]>> = {};
   for (const fuel of FUEL_TYPES) {
     const series = file.byFuel[fuel];
     if (!series) continue;
+    const ev = fuel === "EV";
     const ranges = cheapestHourRanges(
-      filterSeries(series, excluded),
+      ev ? series : filterSeries(series, excluded),
       CHEAP_HOUR_EPS,
-      file.generatedAt,
+      ev ? (now ?? file.generatedAt) : file.generatedAt,
+      { ahead: ev },
     );
     if (ranges.length) out[fuel] = ranges;
   }

@@ -71,3 +71,16 @@ describe("slimPrices", () => {
     });
   });
 });
+
+describe("slimPrices for chargers", () => {
+  it("keeps the EV price source so the popup can name it", () => {
+    const observedAt = "2026-10-06T07:00:00Z";
+    expect(
+      slimPrices({
+        date: "2026-10-06",
+        generatedAt: observedAt,
+        prices: { c: { EV: { price: 0.29, source: "ev-tariff", observedAt } } },
+      }).prices,
+    ).toEqual({ c: { EV: { price: 0.29, source: "ev-tariff" } } });
+  });
+});

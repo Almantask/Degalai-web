@@ -13,6 +13,12 @@ const BRAND_COLORS: Record<string, string> = {
   ecoil: "#4d7c0f",
   kvistija: "#be185d",
   independent: "#6b7280",
+  "ignitis-on": "#0e7c3a",
+  eleport: "#0284c7",
+  enefit: "#f59e0b",
+  tesla: "#dc2626",
+  ionity: "#4f46e5",
+  spot: "#0f766e",
 };
 
 const FALLBACK_COLORS = ["#ea580c", "#2563eb", "#9333ea", "#0d9488", "#ca8a04", "#e11d48"];

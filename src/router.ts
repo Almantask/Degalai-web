@@ -52,6 +52,7 @@ export function pathFor(view: View, locale: Locale = getLocale()): string {
 function fuelQueryParam(fuel: FuelType): string | null {
   if (fuel === "D") return "diesel";
   if (fuel === "LPG") return "gas";
+  if (fuel === "EV") return "ev";
   if (fuel === "95" || fuel === "98") return fuel;
   return null;
 }

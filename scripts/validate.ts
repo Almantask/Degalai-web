@@ -8,6 +8,7 @@ export const PRICE_RANGE: Record<FuelType, { min: number; max: number }> = {
   "98": { min: 0.9, max: 2.8 },
   D: { min: 0.9, max: 2.6 },
   LPG: { min: 0.4, max: 1.6 },
+  EV: { min: 0.05, max: 1.5 },
 };
 
 export interface ValidationLog {

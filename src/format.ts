@@ -1,11 +1,18 @@
 import { getLocale, intlLocale, t } from "./i18n/index.ts";
+import type { FuelType } from "./types.ts";
 
-export function formatPrice(price: number): string {
-  const n = new Intl.NumberFormat(intlLocale(), {
+/** Bare number for map pin labels, without currency or unit. */
+export function formatPriceNumber(price: number): string {
+  return new Intl.NumberFormat(intlLocale(), {
     minimumFractionDigits: 3,
     maximumFractionDigits: 3,
   }).format(price);
-  return t("units.eurPerL", { price: n });
+}
+
+/** Pump fuels are €/l; EV charging and the spot price are €/kWh. */
+export function formatPrice(price: number, fuel?: FuelType): string {
+  const n = formatPriceNumber(price);
+  return t(fuel === "EV" ? "units.eurPerKwh" : "units.eurPerL", { price: n });
 }
 
 export function formatMoney(amount: number): string {

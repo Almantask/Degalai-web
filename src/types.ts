@@ -1,5 +1,12 @@
-export const FUEL_TYPES = ["95", "98", "D", "LPG"] as const;
+export const FUEL_TYPES = ["95", "98", "D", "LPG", "EV"] as const;
 export type FuelType = (typeof FUEL_TYPES)[number];
+
+/** Fuels sold at the pump (€/l), priced per station by LEA and the other ranked sources. */
+export const PUMP_FUELS = ["95", "98", "D", "LPG"] as const satisfies readonly FuelType[];
+export type PumpFuel = (typeof PUMP_FUELS)[number];
+
+/** Series id of the Nord Pool LT spot price in `HistoryFile.byFuel.EV`. */
+export const SPOT_SERIES = "spot";
 
 export const HISTORY_KEEP_DAYS = 7;
 
@@ -13,7 +20,7 @@ export interface BrandStat {
   median: number;
 }
 
-export const FUEL_GROUPS = ["diesel", "petrol", "gas"] as const;
+export const FUEL_GROUPS = ["diesel", "petrol", "gas", "ev"] as const;
 export type FuelGroup = (typeof FUEL_GROUPS)[number];
 
 export interface Station {
@@ -26,6 +33,19 @@ export interface Station {
   city?: string;
   fuels: FuelType[];
   sourceIds: Record<string, string>;
+  /** Charging point details; set only on EV chargers (`data/chargers.json`). */
+  ev?: ChargerInfo;
+}
+
+export interface ChargerInfo {
+  /** Socket kinds from OSM `socket:*` tags, e.g. `type2`, `type2_combo`, `chademo`. */
+  sockets: string[];
+  /** Highest output in kW across sockets, when tagged. */
+  maxKw?: number;
+  /** Network or operator as tagged in OSM. */
+  network?: string;
+  /** Price in €/kWh parsed from the OSM `charge` tag. */
+  chargeTag?: number;
 }
 
 export interface PriceEntry {
@@ -90,6 +110,10 @@ export interface DataMeta {
   /** Ranked sources after this run: 7-day hourly reliability, this run's result, prices chosen. */
   sourceRanking?: Array<{ name: string; score: number; ok: boolean; rows: number; chosen: number }>;
   cheapestHours?: Partial<Record<FuelType, CheapHourRange[]>>;
+  /** EV chargers in `chargers.json`. */
+  chargerCount?: number;
+  /** When the Nord Pool LT spot price series was last fetched successfully. */
+  spotUpdatedAt?: string;
 }
 
 export interface Observation {
@@ -129,6 +153,10 @@ export interface UserSettings {
   routePreference: "shortest" | "fastest";
   consumption: number;
   litres: number;
+  /** EV consumption in kWh/100 km. */
+  evConsumption: number;
+  /** Energy per charging stop in kWh, used like `litres` for EV savings. */
+  evKwh: number;
   timeValue: number;
   roadFactor: number;
   aroundRadiusKm: number;
@@ -149,6 +177,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   routePreference: "fastest",
   consumption: 7,
   litres: 40,
+  evConsumption: 17,
+  evKwh: 30,
   timeValue: 0,
   roadFactor: 1.3,
   aroundRadiusKm: 15,

@@ -6,7 +6,9 @@ import {
   formatCheapRange,
   formatCheapRanges,
   formatHourSpan,
+  cheapestHoursByFuel,
   hourAverages,
+  indicesFromHour,
   indicesInLastHours,
 } from "../src/cheap-hours.ts";
 import type { HistoryHourSeries } from "../src/types.ts";
@@ -192,5 +194,41 @@ describe("formatCheapRanges", () => {
         { start: 19, end: 19, price: 1.4 },
       ]),
     ).toBe("07:00 and 19:00");
+  });
+});
+
+describe("EV cheap hours look ahead", () => {
+  const spot: HistoryHourSeries = {
+    dates: ["2026-10-06", "2026-10-06", "2026-10-06", "2026-10-07", "2026-10-07"],
+    hours: [3, 14, 15, 3, 4],
+    brands: { spot: [0.01, 0.2, 0.18, 0.05, 0.05] },
+  };
+
+  it("indexes samples from the current Vilnius hour on", () => {
+    // 11:30 UTC is 14:30 in Vilnius (UTC+3).
+    expect(indicesFromHour(spot, "2026-10-06T11:30:00Z")).toEqual([1, 2, 3, 4]);
+  });
+
+  it("picks the cheapest upcoming hours, not the cheaper past ones", () => {
+    const ranges = cheapestHoursByFuel(
+      { generatedAt: "2026-10-01T00:00:00Z", keepDays: 7, byFuel: { EV: spot } },
+      [],
+      "2026-10-06T11:30:00Z",
+    ).EV;
+    expect(ranges).toEqual([
+      { start: 3, end: 4, price: 0.05, from: "2026-10-07T03:00", to: "2026-10-07T04:00" },
+    ]);
+  });
+
+  it("falls back to the trailing day when no future hours are published", () => {
+    // 03:30 UTC is 06:30 in Vilnius, after the last published hour.
+    const ranges = cheapestHourRanges(spot, undefined, "2026-10-07T03:30:00Z", { ahead: true });
+    expect(ranges.map((r) => [r.start, r.end])).toEqual([[3, 4]]);
+  });
+
+  it("shows nothing when the spot series is days old", () => {
+    expect(cheapestHourRanges(spot, undefined, "2026-10-12T12:00:00Z", { ahead: true })).toEqual(
+      [],
+    );
   });
 });

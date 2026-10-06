@@ -13,7 +13,8 @@ export function includePublishedDataFile(rel: string, latestPrice: string): bool
   return true;
 }
 
-type PublishedPriceEntry = Pick<PriceEntry, "price" | "stale" | "suspicious">;
+type PublishedPriceEntry = Pick<PriceEntry, "price" | "stale" | "suspicious"> &
+  Partial<Pick<PriceEntry, "source">>;
 
 /** Drops pipeline-only matching ids; the app never reads them. */
 export function slimStations(stations: Station[]): Omit<Station, "sourceIds">[] {
@@ -32,6 +33,8 @@ export function slimPrices(daily: DailyPrices): Omit<DailyPrices, "prices"> & {
       const out: PublishedPriceEntry = { price: entry.price };
       if (entry.stale) out.stale = true;
       if (entry.suspicious) out.suspicious = true;
+      // The charger popup says whether a price is the charger's own or its network's tariff.
+      if (fuel === "EV") out.source = entry.source;
       slot[fuel] = out;
     }
     prices[id] = slot;

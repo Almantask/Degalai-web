@@ -437,7 +437,7 @@ test("fuel filter has no 95/98 petrol grades", async ({ page }) => {
   await page.getByRole("button", { name: "Benzinas" }).click();
   await expect(page.getByRole("button", { name: "95", exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "98", exact: true })).toHaveCount(0);
-  await expect(page.locator(".fuel-filter button")).toHaveCount(3);
+  await expect(page.locator(".fuel-filter button")).toHaveCount(4);
 });
 
 test("donate button links to the donate page", async ({ page }) => {
@@ -771,4 +771,67 @@ test("destination draws a route from the current location", async ({ page }) => 
   await expect(page.locator(".sheet")).toHaveClass(/is-min/);
   await expect(page.locator(".list-body")).toBeHidden();
   await expect(page.locator(".maplibregl-popup")).toBeVisible();
+});
+
+test.describe("EV", () => {
+  // The PWA service worker would answer data requests before page.route sees them.
+  test.use({ serviceWorkers: "block" });
+
+  test("EV chip loads chargers only when picked and lists them", async ({ page }) => {
+    const chargerUrls: string[] = [];
+    await page.route("**/data/chargers.json", async (route) => {
+      chargerUrls.push(route.request().url());
+      await route.fulfill({
+        json: [
+          {
+            id: "ev:node:1",
+            name: "Test charger",
+            brand: "ignitis-on",
+            lat: 54.687,
+            lon: 25.28,
+            fuels: ["EV"],
+            ev: { sockets: ["type2_combo"], maxKw: 150, network: "Ignitis ON" },
+          },
+        ],
+      });
+    });
+    await page.goto("/en/");
+    await expect(page.getByRole("button", { name: "EV", exact: true })).toBeVisible();
+    expect(chargerUrls).toEqual([]);
+    await page.getByRole("button", { name: "EV", exact: true }).click();
+    await expect(page).toHaveURL(/[?&]fuel=ev/);
+    await expect.poll(() => chargerUrls.length).toBe(1);
+    await expect(page.locator(".list-head h2")).toContainText("Chargers");
+    await expect(page.locator(".station-row.is-unpriced")).toContainText("Test charger");
+  });
+
+  test("EV history shows the Nord Pool spot line without provider controls", async ({ page }) => {
+    const now = Date.now();
+    const hours = Array.from({ length: 30 }, (_, i) => new Date(now + (i - 20) * 3_600_000));
+    const vilnius = (d: Date, opts: Intl.DateTimeFormatOptions) =>
+      new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Vilnius", ...opts }).format(d);
+    await page.route("**/data/history.json", (route) =>
+      route.fulfill({
+        json: {
+          generatedAt: new Date(now).toISOString(),
+          keepDays: 7,
+          byFuel: {
+            EV: {
+              dates: hours.map((d) =>
+                vilnius(d, { year: "numeric", month: "2-digit", day: "2-digit" }),
+              ),
+              hours: hours.map((d) => Number(vilnius(d, { hour: "2-digit", hourCycle: "h23" }))),
+              brands: { spot: hours.map((_, i) => (i === 25 ? 0.01 : 0.1 + (i % 5) / 100)) },
+            },
+          },
+        },
+      }),
+    );
+    await page.goto("/en/history?fuel=ev");
+    await expect(page.locator("#history-chart .uplot")).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator(".history-stat")).toHaveCount(0);
+    await expect(page.locator("#history-legend [data-act='history-brand']")).toHaveCount(0);
+    await expect(page.locator(".history-cheap")).toContainText("Cheapest power");
+    await expect(page.locator(".history-caption").last()).toContainText("excluding VAT");
+  });
 });

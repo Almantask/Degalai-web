@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   brandAverages,
+  buildHistoryFile,
   compactHistoryForClient,
   datesWithinDays,
   mergeSamples,
@@ -225,5 +226,24 @@ describe("compactHistoryForClient", () => {
       byFuel: { D: { dates: ["2026-09-14"], hours: [8], brands: { neste: [1.6] } } },
     });
     expect("samples" in compact).toBe(false);
+  });
+});
+
+describe("buildHistoryFile", () => {
+  it("adds the spot series as EV and keeps chargers out of brand stats", () => {
+    const withCharger: DailyPrices = {
+      ...daily,
+      prices: {
+        ...daily.prices,
+        c: { EV: { price: 0.3, source: "ev-tariff", observedAt: "2026-09-14T07:00:00Z" } },
+      },
+    };
+    const sample = sampleFromDaily(withCharger, stations);
+    expect(sample.byFuel.EV).toBeUndefined();
+    const spot = { dates: ["2026-09-14"], hours: [9], brands: { spot: [0.12] } };
+    const file = buildHistoryFile([sample], "2026-09-14T12:00:00Z", spot);
+    expect(file.byFuel.EV).toEqual(spot);
+    expect(file.byFuel.D?.brands.neste).toEqual([1.6]);
+    expect(buildHistoryFile([sample], "2026-09-14T12:00:00Z").byFuel.EV).toBeUndefined();
   });
 });

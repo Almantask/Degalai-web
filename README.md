@@ -1,7 +1,7 @@
 # Kur degalai
 
 Free, up-to-date fuel prices at every station in Lithuania. Open the map, pick
-diesel, petrol, or LPG, and see who is cheapest nearby or on the way.
+diesel, petrol, LPG or EV, and see who is cheapest nearby or on the way.
 
 **[Open the app](https://almantask.github.io/Degalai-web/)** · Lithuanian is the
 default (`/`) · [English](https://almantask.github.io/Degalai-web/en/)
@@ -36,8 +36,13 @@ minimise for a full map.
 ## What you can do
 
 - Browse every station in Lithuania on a MapLibre map (OpenFreeMap tiles).
-- Filter **Diesel**, **Petrol** (95), or **Gas (LPG)**. Pins and the list follow
-  that fuel.
+- Filter **Diesel**, **Petrol** (95), **Gas (LPG)** or **EV**. Pins and the list
+  follow that fuel.
+- **EV** shows public charging points from OpenStreetMap with a €/kWh price where
+  one is known, plus sockets and power in the popup. Chargers without a price
+  still show (grey pin, listed last). `chargers.json` loads only when you pick EV.
+  On **History**, EV is the hourly Nord Pool LT spot price, including tomorrow
+  once it is published, with the cheapest upcoming hours.
 - Scan a cheapest-first list of stations in view, with cheapest / most expensive
   badges and a last-checked time.
 - Plan a trip: start defaults to your location; type a destination (Photon,
@@ -71,15 +76,18 @@ The map loads `stations.json`, `meta.json`, and **today’s** price file only.
 `history.json` is fetched when History opens. The published build does not ship
 older daily files.
 
-| Path                            | What                                       |
-| ------------------------------- | ------------------------------------------ |
-| `data/stations.json`            | OSM stations + unmatched LEA sites         |
-| `data/prices/YYYY-MM-DD.json`   | Daily snapshot (kept 7 days)               |
-| `data/history.json`             | Provider averages by date and time         |
-| `data/overrides/stations.json`  | Manual OSM ↔ source matches                |
-| `data/overrides/prices.json`    | Optional 24 h user-report overlay          |
-| `data/cache/source-health.json` | 7 days of hourly source runs (unpublished) |
-| `reports/unmatched.json`        | Source rows that still need a home         |
+| Path                             | What                                       |
+| -------------------------------- | ------------------------------------------ |
+| `data/stations.json`             | OSM stations + unmatched LEA sites         |
+| `data/chargers.json`             | OSM public EV chargers                     |
+| `data/prices/YYYY-MM-DD.json`    | Daily snapshot (kept 7 days)               |
+| `data/history.json`              | Provider averages by date and time         |
+| `data/overrides/stations.json`   | Manual OSM ↔ source matches                |
+| `data/overrides/prices.json`     | Optional 24 h user-report overlay          |
+| `data/overrides/ev-tariffs.json` | EV network AC/DC tariffs (maintained)      |
+| `data/cache/spot.json`           | Nord Pool LT hourly spot (unpublished)     |
+| `data/cache/source-health.json`  | 7 days of hourly source runs (unpublished) |
+| `reports/unmatched.json`         | Source rows that still need a home         |
 
 ### Price sources
 
@@ -130,7 +138,39 @@ xydata.lt all rehost LEA data. Neste, Viada, Baltic Petroleum, Emsi and Jozita
 publish no per-station pump prices, orlen.lt did not respond, and Circle K’s
 station locator has metadata only.
 
-Coordinates: OpenStreetMap. Attribute OSM, LEA, Circle K, and the station chains.
+### EV chargers and the spot price
+
+- **Chargers**: OSM `amenity=charging_station` in Lithuania, refreshed weekly with
+  the fuel stations. Private, customer-only and bicycle-only points are skipped.
+  A failed fetch keeps the last list and never fails the build.
+- **Charger price** (`scripts/adapters/ev-tariffs.ts`), per charger: the charger's
+  own OSM `charge` tag (e.g. `0.39 EUR/kWh`) wins; otherwise its network's tariff
+  from `data/overrides/ev-tariffs.json`, DC for 50 kW+ or CCS/CHAdeMO chargers and
+  AC for the rest. No network publishes a per-charger feed, so a maintainer copies
+  tariffs from each network's page (the values below are illustrative):
+
+  ```json
+  [
+    {
+      "network": "Ignitis ON",
+      "ac": 0.29,
+      "dc": 0.39,
+      "observedAt": "2026-10-06T00:00:00Z",
+      "url": "https://…"
+    }
+  ]
+  ```
+
+  `network` is matched like OSM `network` / `operator` (`src/brands.ts`). The file
+  ships empty; until it is filled, only chargers with a `charge` tag have a price.
+
+- **Spot price** (`scripts/adapters/nordpool.ts`): Nord Pool LT day-ahead prices
+  from [Elering's public API](https://dashboard.elering.ee/) (no key), averaged to
+  hours and stored as `byFuel.EV` in `history.json`. It is the exchange price
+  without VAT, grid fees or supplier margin. A failed fetch keeps the cached hours.
+
+Coordinates: OpenStreetMap. Attribute OSM, LEA, Circle K, Nord Pool / Elering, and
+the station chains.
 
 ## Routing
 
@@ -143,7 +183,7 @@ unavailable.
 
 ```bash
 npm install
-npm run pipeline          # OSM + LEA live + LEA Excel + Circle K + reports (needs network)
+npm run pipeline          # OSM + LEA live + LEA Excel + Circle K + reports + EV (needs network)
 npm run dev
 ```
 
