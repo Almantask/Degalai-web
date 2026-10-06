@@ -138,5 +138,6 @@
   "popup.register": "Kaina iš nacionalinio įkrovimo prieigų registro (Via Lietuva)",
   "popup.sessionFee": "+ {fee} už sesiją",
   "settings.source.register": "Via Lietuva įkrovimo prieigų registras (CC BY 4.0)",
-  "popup.notInRegister": "Nėra nacionaliniame įkrovimo prieigų registre – duomenys gali būti pasenę."
+  "popup.notInRegister": "Nėra nacionaliniame įkrovimo prieigų registre – duomenys gali būti pasenę.",
+  "dest.swap": "Sukeisti pradžią ir tikslą"
 }

@@ -835,3 +835,88 @@ test.describe("EV", () => {
     await expect(page.locator(".history-caption").last()).toContainText("excluding VAT");
   });
 });
+
+test.describe("route fields", () => {
+  test.use({ serviceWorkers: "block" });
+
+  test("swap start and destination, and clear with the browser's own ✕", async ({ page }) => {
+    await page.addInitScript(() => {
+      const pos = {
+        coords: {
+          latitude: 54.687,
+          longitude: 25.28,
+          accuracy: 10,
+          altitude: null,
+          altitudeAccuracy: null,
+          heading: null,
+          speed: null,
+        },
+        timestamp: Date.now(),
+      };
+      navigator.geolocation.getCurrentPosition = (ok) => ok(pos as GeolocationPosition);
+    });
+    await page.route("https://photon.komoot.io/**", async (route) => {
+      const reverse = route.request().url().includes("/reverse");
+      await route.fulfill({
+        json: {
+          features: [
+            reverse
+              ? { geometry: { coordinates: [25.28, 54.687] }, properties: { name: "Vilnius" } }
+              : { geometry: { coordinates: [23.9, 54.9] }, properties: { name: "Kaunas" } },
+          ],
+        },
+      });
+    });
+    await page.route("https://router.project-osrm.org/**", (route) =>
+      route.fulfill({
+        json: {
+          code: "Ok",
+          routes: [
+            {
+              distance: 100000,
+              duration: 5400,
+              geometry: {
+                coordinates: [
+                  [25.28, 54.687],
+                  [24.6, 54.8],
+                  [23.9, 54.9],
+                ],
+              },
+            },
+          ],
+        },
+      }),
+    );
+    await page.goto("/");
+    const swap = page.getByRole("button", { name: "Sukeisti pradžią ir tikslą" });
+    await expect(swap).toBeDisabled();
+    for (const clear of await page.locator(".dest-clear").all()) await expect(clear).toBeHidden();
+
+    const dest = page.locator("#dest");
+    await dest.fill("Kaunas");
+    await dest.press("Enter");
+    await expect(page.locator(".app")).toHaveClass(/has-route/, { timeout: 15_000 });
+    await expect(page.locator(".dest-clear")).toBeHidden();
+
+    await page.locator(".header-toggle").click();
+    await swap.click();
+    await expect(page.locator("#start")).toHaveValue(/Kaunas/);
+    await expect(page.locator("#dest")).toHaveValue("Mano vieta");
+    await expect(page.locator(".app")).toHaveClass(/has-route/);
+
+    await page.locator(".header-toggle").click();
+    await swap.click();
+    await expect(page.locator("#dest")).toHaveValue(/Kaunas/);
+    await expect(page.locator("#start")).not.toHaveValue(/Kaunas/);
+
+    // What the native ✕ does: empty the field, fire `input`, then a non-bubbling `search`.
+    await page.locator(".header-toggle").click();
+    await dest.evaluate((el: HTMLInputElement) => {
+      el.value = "";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("search"));
+    });
+    await expect(page.locator(".app")).not.toHaveClass(/has-route/);
+    await expect(dest).toHaveValue("");
+  });
+});

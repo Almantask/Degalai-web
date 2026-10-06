@@ -2,6 +2,7 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { netBenefit } from "./calc.ts";
 import { cheapestHourRanges, filterSeries, formatCheapRanges } from "./cheap-hours.ts";
+import { swapEndpoints, type Endpoints } from "./endpoints.ts";
 import { loadAppData, lastUpdatedAt, loadChargers, loadHistory, type AppData } from "./data.ts";
 import {
   formatDate,
@@ -113,6 +114,13 @@ const SETTINGS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height
   <path d="M17 16h6"/>
 </svg>`;
 
+const SWAP_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M7 4v16"/>
+  <path d="M3 8l4-4 4 4"/>
+  <path d="M17 20V4"/>
+  <path d="M21 16l-4 4-4-4"/>
+</svg>`;
+
 const REFRESH_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
   <path d="M21 12a9 9 0 1 1-3.5-7.1"/>
   <path d="M21 3v6h-6"/>
@@ -179,6 +187,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let startQuery = "";
   let startIsGps = true;
   let endHit: GeoHit | null = null;
+  /** The destination is the user's location, swapped in from the GPS start. */
+  let endIsHere = false;
   let destQuery = "";
   let destStatus: DestStatus = "idle";
   let pendingDest = false;
@@ -399,7 +409,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       } else if (act === "clear-dest") {
         clearDestination();
       } else if (act === "clear-start") {
-        resetStartToGps();
+        clearStart();
+      } else if (act === "swap-dest") {
+        swapStartAndDestination();
       } else if (act === "toggle-list") {
         listMinimized = !listMinimized;
         renderList();
@@ -444,6 +456,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
         settings.evConsumption = num(el.value, DEFAULT_SETTINGS.evConsumption);
       else if (el.id === "set-time") settings.timeValue = num(el.value, 0);
     });
+    // The browser's own ✕ in a search field fires `search` with an empty value (so does Enter on
+    // an empty field). Capture it: the event does not reach `root` by bubbling in every browser.
+    root.addEventListener(
+      "search",
+      (e) => {
+        const el = e.target as HTMLInputElement;
+        if (el.value !== "") return;
+        if (el.id === "dest" && (endHit || destStatus !== "idle")) clearDestination();
+        else if (el.id === "start") clearStart();
+      },
+      true,
+    );
     root.addEventListener("change", (e) => {
       const el = e.target as HTMLInputElement;
       if (el.id === "set-high-accuracy") {
@@ -547,6 +571,40 @@ export async function startApp(root: HTMLElement): Promise<void> {
     else render();
   }
 
+  /** Back to "my location" with an empty field; the placeholder already says so. */
+  function clearStart(): void {
+    startHit = null;
+    startIsGps = true;
+    startQuery = "";
+    pickMode = null;
+    if (!userLocation) requestLocation(true);
+    if (endHit) void runRoute();
+    else render();
+  }
+
+  function currentEndpoints(): Endpoints {
+    return { start: startIsGps ? null : startHit, end: endHit, endIsHere };
+  }
+
+  function hereForSwap(): LngLat | null {
+    return userLocation && inLithuania(userLocation) ? userLocation : null;
+  }
+
+  function swapStartAndDestination(): void {
+    const next = swapEndpoints(currentEndpoints(), hereForSwap(), t("route.myLocation"));
+    if (!next) return;
+    startHit = next.start;
+    startIsGps = next.start === null;
+    startQuery = next.start?.label ?? (userLocation ? t("route.myLocation") : "");
+    if (startIsGps && userLocation) void fillGpsStartLabel(userLocation);
+    endHit = next.end;
+    endIsHere = next.endIsHere;
+    destQuery = next.end?.label ?? "";
+    pickMode = null;
+    if (endHit) void runRoute();
+    else clearDestination();
+  }
+
   async function fillGpsStartLabel(ll: LngLat): Promise<void> {
     const hit = await reverseGeocode(ll, locale);
     if (!startIsGps) return;
@@ -566,6 +624,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   async function selectDestination(hit: GeoHit): Promise<void> {
     endHit = hit;
+    endIsHere = false;
     destQuery = hit.label;
     settingsOpen = false;
     pendingDest = true;
@@ -581,6 +640,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function clearDestination(): void {
     endHit = null;
+    endIsHere = false;
     destQuery = "";
     pendingDest = false;
     destStatus = "idle";
@@ -1304,6 +1364,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const startPlaceholder =
       startIsGps && locateStatus === "pending" ? t("dest.locating") : t("dest.from");
     const minLabel = destVal || startVal || t("app.name");
+    const canSwap = swapEndpoints(currentEndpoints(), hereForSwap(), "") !== null;
     return `
       <div class="header-body">
         <div class="topbar">
@@ -1346,6 +1407,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
             ${endHit ? `<button type="button" class="dest-clear" data-act="clear-dest" aria-label="${escapeHtml(t("dest.clear"))}">×</button>` : ""}
             <div id="dest-sug" class="sug-box"></div>
           </div>
+          <button type="button" class="dest-swap" data-act="swap-dest" aria-label="${escapeHtml(t("dest.swap"))}" title="${escapeHtml(t("dest.swap"))}"${canSwap ? "" : " disabled"}>${SWAP_ICON}</button>
         </div>
       </div>
       <button type="button" class="header-toggle" data-act="toggle-header" aria-expanded="${headerMinimized ? "false" : "true"}" aria-label="${escapeHtml(headerMinimized ? t("header.expand") : t("header.collapse"))}">
