@@ -11,6 +11,7 @@ export function formatPriceNumber(price: number): string {
 
 /** Pump fuels are €/l; EV charging and the spot price are €/kWh. */
 export function formatPrice(price: number, fuel?: FuelType): string {
+  if (fuel === "EV" && price === 0) return t("units.free");
   const n = formatPriceNumber(price);
   return t(fuel === "EV" ? "units.eurPerKwh" : "units.eurPerL", { price: n });
 }

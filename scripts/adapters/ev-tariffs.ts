@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { normalizeBrand } from "../../src/brands.ts";
-import type { DailyPrices, PriceEntry, Station } from "../../src/types.ts";
+import type { DailyPrices, Station } from "../../src/types.ts";
 import { PRICE_RANGE } from "../validate.ts";
+import { VIA_LIETUVA_SOURCE } from "./via-lietuva.ts";
 
 /** Charging network list price in €/kWh, copied by a maintainer from the network's own page. */
 export interface EvTariff {
@@ -50,10 +51,39 @@ function inRange(price: number): boolean {
 }
 
 /**
- * One €/kWh price per charger. A price in the charger's own OSM `charge` tag wins; otherwise the
- * network tariff applies (DC for fast chargers, AC for the rest). Chargers of unknown networks
- * stay unpriced. An unchanged tag price keeps its first `observedAt` from `previous`, so hourly
- * runs do not rewrite the snapshot (and move "last updated") when nothing changed.
+ * EV price sources, most trustworthy first:
+ * 1. `via-lietuva`: the charger's ad hoc price as its operator reported it to the national register;
+ * 2. `ev-tariff`: the network's published AC/DC list price, copied by a maintainer;
+ * 3. `osm-charge`: a price a volunteer tagged on the charger in OpenStreetMap.
+ * Each charger takes the first source that has a price for it this run.
+ */
+export const EV_SOURCE_ORDER = [VIA_LIETUVA_SOURCE, EV_TARIFF_SOURCE, OSM_CHARGE_SOURCE] as const;
+export type EvSource = (typeof EV_SOURCE_ORDER)[number];
+
+interface Candidate {
+  source: EvSource;
+  price: number;
+  /** Set when the source dates its own price (tariffs); otherwise first seen at this price. */
+  observedAt?: string;
+}
+
+function candidates(s: Station, tariff: EvTariff | undefined): Candidate[] {
+  const out: Candidate[] = [];
+  const ev = s.ev;
+  if (ev?.registerPrice != null) out.push({ source: VIA_LIETUVA_SOURCE, price: ev.registerPrice });
+  if (tariff) {
+    const price = isDcCharger(s) ? (tariff.dc ?? tariff.ac) : (tariff.ac ?? tariff.dc);
+    if (price != null) out.push({ source: EV_TARIFF_SOURCE, price, observedAt: tariff.observedAt });
+  }
+  if (ev?.chargeTag != null) out.push({ source: OSM_CHARGE_SOURCE, price: ev.chargeTag });
+  return out.filter((c) => inRange(c.price));
+}
+
+/**
+ * One €/kWh price per charger from the most trustworthy source that has one (`EV_SOURCE_ORDER`).
+ * Chargers no source covers stay unpriced. A price that has not changed keeps its first
+ * `observedAt` from `previous`, so hourly runs do not rewrite the snapshot (and move "last
+ * updated") when nothing changed.
  */
 export function chargerPrices(
   chargers: Station[],
@@ -70,31 +100,26 @@ export function chargerPrices(
   }
   const out: DailyPrices["prices"] = {};
   for (const s of chargers) {
-    const entry = chargerEntry(s, byBrand.get(s.brand), now, previous?.prices[s.id]?.EV);
-    if (entry) out[s.id] = { EV: entry };
+    const best = candidates(s, byBrand.get(s.brand)).sort(
+      (a, b) => EV_SOURCE_ORDER.indexOf(a.source) - EV_SOURCE_ORDER.indexOf(b.source),
+    )[0];
+    if (!best) continue;
+    const prev = previous?.prices[s.id]?.EV;
+    const same = prev?.source === best.source && prev.price === best.price;
+    const observedAt = best.observedAt ?? (same ? prev.observedAt : now.toISOString());
+    out[s.id] = { EV: { price: best.price, source: best.source, observedAt } };
   }
   return out;
 }
 
-function chargerEntry(
-  s: Station,
-  tariff: EvTariff | undefined,
-  now: Date,
-  prev: PriceEntry | undefined,
-): PriceEntry | null {
-  const tagged = s.ev?.chargeTag;
-  if (tagged != null && inRange(tagged)) {
-    const same = prev?.source === OSM_CHARGE_SOURCE && prev.price === tagged;
-    return {
-      price: tagged,
-      source: OSM_CHARGE_SOURCE,
-      observedAt: same ? prev.observedAt : now.toISOString(),
-    };
+/** Priced chargers per source, for the run log. */
+export function countBySource(prices: DailyPrices["prices"]): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const fuels of Object.values(prices)) {
+    const source = fuels.EV?.source;
+    if (source) out[source] = (out[source] ?? 0) + 1;
   }
-  if (!tariff) return null;
-  const price = isDcCharger(s) ? (tariff.dc ?? tariff.ac) : (tariff.ac ?? tariff.dc);
-  if (price == null || !inRange(price)) return null;
-  return { price, source: EV_TARIFF_SOURCE, observedAt: tariff.observedAt };
+  return out;
 }
 
 /** Adds charger prices to a snapshot; pump fuels at the same id are left alone. */

@@ -51,6 +51,7 @@ describe("formatPrice", () => {
     setLocale("en");
     expect(formatPrice(1.599, "D")).toBe("€1.599/l");
     expect(formatPrice(0.29, "EV")).toBe("€0.290/kWh");
+    expect(formatPrice(0, "EV")).toBe("Free");
     setLocale("lt");
     expect(formatPrice(0.29, "EV")).toBe("0,290 €/kWh");
     expect(formatPriceNumber(1.5)).toBe("1,500");

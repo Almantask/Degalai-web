@@ -2,7 +2,7 @@ import maplibregl from "maplibre-gl";
 import type { DailyPrices, FuelType, Station, UserSettings } from "./types.ts";
 import { LT_BOUNDS, LT_CENTER } from "./types.ts";
 import type { LngLat } from "./geo.ts";
-import { formatPrice, formatPriceNumber, escapeHtml } from "./format.ts";
+import { formatMoney, formatPrice, formatPriceNumber, escapeHtml } from "./format.ts";
 import { brandLabel, t } from "./i18n/index.ts";
 
 const SOURCE = "stations";
@@ -334,7 +334,12 @@ export function setStationData(
         price: price ?? null,
         hasPrice: price == null ? 0 : 1,
         pct,
-        priceLabel: price == null ? "" : formatPriceNumber(price),
+        priceLabel:
+          price == null
+            ? ""
+            : fuel === "EV" && price === 0
+              ? t("units.free")
+              : formatPriceNumber(price),
         emphasis: emp,
       },
     };
@@ -520,14 +525,27 @@ function chargerDetailsHtml(s: Station, prices: DailyPrices | null): string {
     socketLabels(ev.sockets).join(", "),
     ev.maxKw != null ? t("popup.maxKw", { kw: ev.maxKw }) : "",
   ].filter(Boolean);
-  const source = prices?.prices[s.id]?.EV?.source;
+  const entry = prices?.prices[s.id]?.EV;
+  const source = entry?.source;
+  // The register's AC and DC prices differ at some sites; the headline is the cheaper one.
+  const split =
+    source === "via-lietuva" && ev.prices?.ac != null && ev.prices?.dc != null
+      ? `AC ${formatPrice(ev.prices.ac, "EV")} · DC ${formatPrice(ev.prices.dc, "EV")}`
+      : "";
+  const fee =
+    source === "via-lietuva" && ev.sessionFee
+      ? t("popup.sessionFee", { fee: formatMoney(ev.sessionFee) })
+      : "";
   const note =
-    source === "osm-charge"
-      ? t("popup.chargeTag")
-      : source === "ev-tariff"
-        ? t("popup.tariff")
-        : "";
-  return `${parts.length ? `<p class="popup-ev"><span>${escapeHtml(t("popup.sockets"))}</span> ${escapeHtml(parts.join(" · "))}</p>` : ""}${note ? `<p class="popup-ev-note">${escapeHtml(note)}</p>` : ""}`;
+    source === "via-lietuva"
+      ? t("popup.register")
+      : source === "osm-charge"
+        ? t("popup.chargeTag")
+        : source === "ev-tariff"
+          ? t("popup.tariff")
+          : "";
+  const lines = [split, fee].filter(Boolean);
+  return `${lines.map((l) => `<p class="popup-ev">${escapeHtml(l)}</p>`).join("")}${parts.length ? `<p class="popup-ev"><span>${escapeHtml(t("popup.sockets"))}</span> ${escapeHtml(parts.join(" · "))}</p>` : ""}${note ? `<p class="popup-ev-note">${escapeHtml(note)}</p>` : ""}`;
 }
 
 /** Rank of `value` in ascending `sorted`: index of the first entry ≥ value, scaled to 0–1. */

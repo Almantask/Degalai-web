@@ -46,6 +46,12 @@ export interface ChargerInfo {
   network?: string;
   /** Price in €/kWh parsed from the OSM `charge` tag. */
   chargeTag?: number;
+  /** Cheapest ad hoc €/kWh reported to the national register (Via Lietuva); 0 means free. */
+  registerPrice?: number;
+  /** Register prices by current type, for the popup. */
+  prices?: { ac?: number; dc?: number };
+  /** Flat € per charging session on top of the €/kWh price. */
+  sessionFee?: number;
 }
 
 export interface PriceEntry {

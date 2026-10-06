@@ -133,5 +133,9 @@
   "brand.tesla": "Tesla",
   "brand.ionity": "IONITY",
   "brand.lidl": "Lidl",
-  "brand.virta": "Virta"
+  "brand.virta": "Virta",
+  "units.free": "Nemokamai",
+  "popup.register": "Kaina iš nacionalinio įkrovimo prieigų registro (Via Lietuva)",
+  "popup.sessionFee": "+ {fee} už sesiją",
+  "settings.source.register": "Via Lietuva įkrovimo prieigų registras (CC BY 4.0)"
 }

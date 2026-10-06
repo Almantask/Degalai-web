@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   chargerPrices,
+  countBySource,
   EV_TARIFF_SOURCE,
   isDcCharger,
   mergeChargerPrices,
   OSM_CHARGE_SOURCE,
   type EvTariff,
 } from "../scripts/adapters/ev-tariffs.ts";
+import { VIA_LIETUVA_SOURCE } from "../scripts/adapters/via-lietuva.ts";
 import type { Station } from "../src/types.ts";
 
 const NOW = new Date("2026-10-06T12:00:00Z");
@@ -50,13 +52,38 @@ describe("chargerPrices", () => {
     expect(prices.dc?.EV).toMatchObject({ price: 0.39, source: EV_TARIFF_SOURCE });
   });
 
-  it("prefers the charger's own OSM charge tag", () => {
-    const prices = chargerPrices([charger("a", "ignitis-on", { chargeTag: 0.33 })], TARIFFS, NOW);
-    expect(prices.a?.EV).toEqual({
+  it("ranks the register over network tariffs over OSM tags", () => {
+    const all = charger("a", "ignitis-on", { maxKw: 22, chargeTag: 0.33, registerPrice: 0.27 });
+    const prices = chargerPrices(
+      [
+        all,
+        charger("b", "ignitis-on", { maxKw: 22, chargeTag: 0.33 }),
+        charger("c", "x", { chargeTag: 0.33 }),
+      ],
+      TARIFFS,
+      NOW,
+    );
+    expect(prices.a?.EV).toMatchObject({ price: 0.27, source: VIA_LIETUVA_SOURCE });
+    expect(prices.b?.EV).toMatchObject({ price: 0.29, source: EV_TARIFF_SOURCE });
+    expect(prices.c?.EV).toEqual({
       price: 0.33,
       source: OSM_CHARGE_SOURCE,
       observedAt: NOW.toISOString(),
     });
+    expect(countBySource(prices)).toEqual({ "via-lietuva": 1, "ev-tariff": 1, "osm-charge": 1 });
+  });
+
+  it("keeps free register chargers at 0 and skips a lower source's out-of-range price", () => {
+    const prices = chargerPrices(
+      [
+        charger("free", "x", { registerPrice: 0, chargeTag: 0.4 }),
+        charger("bad", "x", { chargeTag: 7 }),
+      ],
+      [],
+      NOW,
+    );
+    expect(prices.free?.EV).toMatchObject({ price: 0, source: VIA_LIETUVA_SOURCE });
+    expect(prices.bad).toBeUndefined();
   });
 
   it("keeps an unchanged tag price's first observation so hourly runs stay identical", () => {

@@ -3,7 +3,13 @@ import { join } from "node:path";
 import type { DailyPrices, DataMeta, Observation, Station } from "../src/types.ts";
 import { HISTORY_KEEP_DAYS } from "../src/types.ts";
 import { cheapestHoursByFuel } from "../src/cheap-hours.ts";
-import { chargerPrices, loadEvTariffs, mergeChargerPrices } from "./adapters/ev-tariffs.ts";
+import {
+  chargerPrices,
+  countBySource,
+  EV_SOURCE_ORDER,
+  loadEvTariffs,
+  mergeChargerPrices,
+} from "./adapters/ev-tariffs.ts";
 import {
   fetchSpot,
   loadSpotCache,
@@ -12,6 +18,8 @@ import {
   type SpotPoint,
 } from "./adapters/nordpool.ts";
 import { loadPriceReports, reportsToObservations } from "./adapters/reports.ts";
+import { fetchRegister, loadRegisterCache, usableCache } from "./adapters/via-lietuva.ts";
+import { mergeChargers } from "./chargers.ts";
 import { geocodePhoton, loadGeocodeCache, saveGeocodeCache, sleep } from "./geocode.ts";
 import { datesWithinDays, isHistoryFile, prunePriceFiles, recomputeHistory } from "./history.ts";
 import { loadOverrides, matchByAddress, matchObservations } from "./match.ts";
@@ -138,13 +146,17 @@ async function loadOsm(force: boolean): Promise<Station[]> {
   }
 }
 
-/** EV chargers refresh on the same weekly OSM cadence; a failed fetch never fails the build. */
-async function loadChargers(force: boolean): Promise<Station[]> {
-  const path = join(DATA, "chargers.json");
-  const existing = readJson<Station[]>(path, []);
+/** OSM EV chargers refresh on the same weekly cadence; a failed fetch never fails the build. */
+async function loadOsmChargers(force: boolean): Promise<Station[]> {
+  const path = join(DATA, "cache", "osm-chargers.json");
+  // Before this cache existed, the OSM chargers lived only in chargers.json (`ev:` ids).
+  const existing = existsSync(path)
+    ? readJson<Station[]>(path, [])
+    : readJson<Station[]>(join(DATA, "chargers.json"), []).filter((c) => c.id.startsWith("ev:"));
   const weekday = new Date().getUTCDay();
   if (!force && existing.length > 0 && weekday !== 0) {
     console.log(`Reusing ${existing.length} OSM chargers`);
+    if (!existsSync(path)) writeJson(path, existing);
     return existing;
   }
   console.log("Fetching OSM EV chargers…");
@@ -156,11 +168,33 @@ async function loadChargers(force: boolean): Promise<Station[]> {
       MIN_OSM_CHARGERS,
     );
     console.log(`OSM chargers: ${chargers.length}`);
+    writeJson(path, chargers);
     return chargers;
   } catch (e) {
     console.warn(`OSM charger fetch failed; reusing ${existing.length} cached chargers:`, e);
+    if (!existsSync(path) && existing.length) writeJson(path, existing);
     if (process.env.GITHUB_ACTIONS) console.log(`::warning::OSM chargers failed: ${String(e)}`);
     return existing;
+  }
+}
+
+/** Via Lietuva register chargers with prices; a failed download falls back to a recent cache. */
+async function loadRegister(now: Date): Promise<Station[]> {
+  const path = join(DATA, "cache", "via-lietuva.json");
+  try {
+    const { reportUrl, chargers } = await fetchRegister();
+    writeJson(path, { fetchedAt: now.toISOString(), reportUrl, chargers });
+    console.log(`Via Lietuva register: ${chargers.length} sites from ${reportUrl}`);
+    return chargers;
+  } catch (e) {
+    const cache = usableCache(loadRegisterCache(path), now);
+    console.warn(
+      `Via Lietuva register failed; ${cache ? `using cache from ${cache.fetchedAt}` : "no recent cache"}:`,
+      e,
+    );
+    if (process.env.GITHUB_ACTIONS)
+      console.log(`::warning::Via Lietuva register failed: ${String(e)}`);
+    return cache?.chargers ?? [];
   }
 }
 
@@ -201,13 +235,14 @@ async function main(): Promise<void> {
   }
 
   let stations = await loadOsm(args.has("--osm"));
-  const chargers = await loadChargers(args.has("--osm"));
+  const osmChargers = await loadOsmChargers(args.has("--osm"));
   if (osmOnly) {
     writeJson(join(DATA, "stations.json"), stations);
-    writeJson(join(DATA, "chargers.json"), chargers);
     return;
   }
   const runAt = new Date();
+  const register = await loadRegister(runAt);
+  const { chargers, osmOnly: osmOnlyChargers } = mergeChargers(register, osmChargers);
   const spot = await loadSpot(runAt);
 
   const overrides = loadOverrides(join(DATA, "overrides", "stations.json"));
@@ -281,8 +316,12 @@ async function main(): Promise<void> {
   const tariffs = loadEvTariffs(join(DATA, "overrides", "ev-tariffs.json"));
   const evPrices = chargerPrices(chargers, tariffs, runAt, previous);
   mergeChargerPrices(fresh, evPrices);
+  const bySource = countBySource(evPrices);
   console.log(
-    `EV: ${Object.keys(evPrices).length} of ${chargers.length} chargers priced (${tariffs.length} network tariffs)`,
+    `EV: ${chargers.length} chargers (${register.length} register, ${osmOnlyChargers} OSM only); ` +
+      `${Object.keys(evPrices).length} priced: ` +
+      EV_SOURCE_ORDER.map((src) => `${src} ${bySource[src] ?? 0}`).join(", ") +
+      ` (${tariffs.length} network tariffs)`,
   );
   applyStale(fresh, previous, prevDate);
   const daily = reuseGeneratedAtIfUnchanged(previous, fresh);

@@ -179,6 +179,25 @@ describe("charger popup", () => {
     expect(html).not.toContain("LPG");
   });
 
+  it("names the register as the source and shows AC/DC prices and the session fee", () => {
+    setLocale("en");
+    const html = stationPopupHtml(
+      { ...charger, ev: { ...charger.ev!, prices: { ac: 0.28, dc: 0.39 }, sessionFee: 0.3 } },
+      {
+        date: "2026-10-06",
+        generatedAt: "2026-10-06T12:00:00Z",
+        prices: {
+          "ev:node:1": {
+            EV: { price: 0.28, source: "via-lietuva", observedAt: "2026-10-06T12:00:00Z" },
+          },
+        },
+      },
+    );
+    expect(html).toContain("AC €0.280/kWh · DC €0.390/kWh");
+    expect(html).toContain("+ €0.30 per session");
+    expect(html).toContain("national charger register");
+  });
+
   it("dedupes socket names", () => {
     expect(socketLabels(["type2", "type2_cable", "chademo"])).toEqual(["Type 2", "CHAdeMO"]);
   });

@@ -38,8 +38,9 @@ minimise for a full map.
 - Browse every station in Lithuania on a MapLibre map (OpenFreeMap tiles).
 - Filter **Diesel**, **Petrol** (95), **Gas (LPG)** or **EV**. Pins and the list
   follow that fuel.
-- **EV** shows public charging points from OpenStreetMap with a €/kWh price where
-  one is known, plus sockets and power in the popup. Chargers without a price
+- **EV** shows public charging points from the national charge point register
+  (Via Lietuva) and OpenStreetMap with a €/kWh price where one is known, plus
+  sockets, power and any session fee in the popup. Chargers without a price
   still show (grey pin, listed last). `chargers.json` loads only when you pick EV.
   On **History**, EV is the hourly Nord Pool LT spot price, including tomorrow
   once it is published, with the cheapest upcoming hours.
@@ -86,6 +87,8 @@ older daily files.
 | `data/overrides/prices.json`     | Optional 24 h user-report overlay          |
 | `data/overrides/ev-tariffs.json` | EV network AC/DC tariffs (maintained)      |
 | `data/cache/spot.json`           | Nord Pool LT hourly spot (unpublished)     |
+| `data/cache/via-lietuva.json`    | Last good charge point register            |
+| `data/cache/osm-chargers.json`   | Last good OSM charger list                 |
 | `data/cache/source-health.json`  | 7 days of hourly source runs (unpublished) |
 | `reports/unmatched.json`         | Source rows that still need a home         |
 
@@ -140,14 +143,22 @@ station locator has metadata only.
 
 ### EV chargers and the spot price
 
-- **Chargers**: OSM `amenity=charging_station` in Lithuania, refreshed weekly with
-  the fuel stations. Private, customer-only and bicycle-only points are skipped.
-  A failed fetch keeps the last list and never fails the build.
-- **Charger price** (`scripts/adapters/ev-tariffs.ts`), per charger: the charger's
-  own OSM `charge` tag (e.g. `0.39 EUR/kWh`) wins; otherwise its network's tariff
-  from `data/overrides/ev-tariffs.json`, DC for 50 kW+ or CCS/CHAdeMO chargers and
-  AC for the rest. No network publishes a per-charger feed, so a maintainer copies
-  tariffs from each network's page (the values below are illustrative):
+- **Chargers** (`scripts/chargers.ts`): every site in the national charge point
+  register (below) first. OSM `amenity=charging_station` fills in places the
+  register lacks; an OSM charger within 100 m of a register site is the same place
+  and is dropped (its `charge` tag stays as a fallback price). OSM refreshes weekly
+  and the register hourly. Private, customer-only, heavy-vehicle-only and
+  bicycle-only points are skipped. A failed fetch never fails the build.
+- **Charger price**, per charger, from the most trustworthy source that has one
+  (`EV_SOURCE_ORDER` in `scripts/adapters/ev-tariffs.ts`):
+
+  | Rank | Source        | What it is                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+  | ---- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+  | 1    | `via-lietuva` | [Via Lietuva's register of public charge points](https://ev.vialietuva.lt/en/data-provision), Lithuania's AFIR national access point: operators report each charge point and its ad hoc price. `scripts/adapters/via-lietuva.ts` reads the latest XLSX report (`/report/<id>`) every run, groups charge points into sites, and keeps the cheapest €/kWh (AC and DC shown in the popup, plus any session fee; "Nemokama" is free). A failed download uses the last report for up to 7 days. |
+  | 2    | `ev-tariff`   | A network's AC/DC list price from `data/overrides/ev-tariffs.json`, copied by a maintainer from the network's page. DC applies to 50 kW+ or CCS/CHAdeMO chargers.                                                                                                                                                                                                                                                                                                                          |
+  | 3    | `osm-charge`  | A volunteer's OSM `charge` tag, e.g. `0.39 EUR/kWh`.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+
+  Tariff file format (values are illustrative):
 
   ```json
   [
@@ -161,16 +172,17 @@ station locator has metadata only.
   ]
   ```
 
-  `network` is matched like OSM `network` / `operator` (`src/brands.ts`). The file
-  ships empty; until it is filled, only chargers with a `charge` tag have a price.
+  `network` is matched like OSM `network` / `operator` (`src/brands.ts`).
 
 - **Spot price** (`scripts/adapters/nordpool.ts`): Nord Pool LT day-ahead prices
   from [Elering's public API](https://dashboard.elering.ee/) (no key), averaged to
   hours and stored as `byFuel.EV` in `history.json`. It is the exchange price
   without VAT, grid fees or supplier margin. A failed fetch keeps the cached hours.
 
-Coordinates: OpenStreetMap. Attribute OSM, LEA, Circle K, Nord Pool / Elering, and
-the station chains.
+Coordinates: OpenStreetMap. Attribute OSM, LEA, Circle K, Nord Pool / Elering, Via
+Lietuva and the station chains. The charge point register is published under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) / ODC-BY; this app
+groups its charge points into sites and shows the cheapest price per site.
 
 ## Routing
 

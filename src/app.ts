@@ -93,6 +93,7 @@ const LEA_SOURCE_URL = "https://degalukainos.ena.lt/";
 const CIRCLE_K_SOURCE_URL = "https://www.circlek.lt/privatiems/degalu-kainos";
 const OSM_SOURCE_URL = "https://www.openstreetmap.org/copyright";
 const SPOT_SOURCE_URL = "https://dashboard.elering.ee/";
+const REGISTER_SOURCE_URL = "https://ev.vialietuva.lt/en/data-provision";
 const REPORTS_SOURCE_URL =
   "https://github.com/Almantask/Degalai-web/issues/new?template=wrong-price.yml";
 
@@ -1390,6 +1391,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
           <li><a href="${LEA_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("settings.source.lea"))}</a></li>
           <li><a href="${CIRCLE_K_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(brandLabel("circle-k"))}</a></li>
           <li><a href="${OSM_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("settings.source.osm"))}</a></li>
+          <li><a href="${REGISTER_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("settings.source.register"))}</a></li>
           <li><a href="${SPOT_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("settings.source.nordpool"))}</a></li>
           <li><a href="${REPORTS_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("settings.source.reports"))}</a></li>
         </ul>
