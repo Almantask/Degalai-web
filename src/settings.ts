@@ -66,6 +66,7 @@ export function sanitizeSettings(raw: unknown): UserSettings {
       DEFAULT_SETTINGS.highAccuracyLocation,
     ),
     excludedBrands: sanitizeExcludedBrands(parsed.excludedBrands),
+    excludedEvBrands: sanitizeExcludedBrands(parsed.excludedEvBrands),
     historyStat,
     ...(locale ? { locale } : {}),
   };
@@ -95,6 +96,11 @@ function sanitizeExcludedBrands(value: unknown): string[] {
   return out.sort();
 }
 
+/** The provider filter of the selected fuel: charging networks for EV, fuel brands otherwise. */
+export function excludedFor(settings: UserSettings): string[] {
+  return settings.fuel === "EV" ? settings.excludedEvBrands : settings.excludedBrands;
+}
+
 export function isBrandIncluded(brand: string, excluded: readonly string[]): boolean {
   return !excluded.includes(brand);
 }
@@ -104,7 +110,7 @@ export function uniqueBrands(stations: Station[]): string[] {
 }
 
 function copyDefaults(): UserSettings {
-  return { ...DEFAULT_SETTINGS, excludedBrands: [] };
+  return { ...DEFAULT_SETTINGS, excludedBrands: [], excludedEvBrands: [] };
 }
 
 export function loadSettings(): UserSettings {

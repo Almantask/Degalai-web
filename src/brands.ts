@@ -55,6 +55,29 @@ export function normalizeBrand(...parts: (string | undefined)[]): string {
   return "independent";
 }
 
+/** Brand ids the app knows by name (fuel chains and the larger EV networks). */
+export const KNOWN_BRANDS = new Set([...Object.values(BRAND_ALIASES), "independent"]);
+
+// Company forms dropped from network names (after diacritics are stripped, so "VšĮ" is "vsi").
+const LEGAL_FORMS = /\b(?:uab|ab|mb|vsi|sia|oy|gmbh|ltd)\b/g;
+
+/**
+ * Provider id for a charging network the alias list does not know, e.g. `In Balance grid, UAB`
+ * → `in-balance-grid`. Same shape as brand ids, so settings can store it.
+ */
+export function networkSlug(name: string | undefined): string {
+  const slug = (name ?? "")
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(LEGAL_FORMS, " ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40)
+    .replace(/-+$/g, "");
+  return slug || "independent";
+}
+
 export function displayBrandName(brand: string): string {
   const map: Record<string, string> = {
     "circle-k": "Circle K",

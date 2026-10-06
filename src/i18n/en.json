@@ -139,5 +139,6 @@
   "popup.sessionFee": "+ {fee} per session",
   "settings.source.register": "Via Lietuva charge point register (CC BY 4.0)",
   "popup.notInRegister": "Not in the national charger register; may be outdated.",
-  "dest.swap": "Swap start and destination"
+  "dest.swap": "Swap start and destination",
+  "settings.networks": "Charging networks"
 }

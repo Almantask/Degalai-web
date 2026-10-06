@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_SETTINGS } from "../src/types.ts";
 import {
+  excludedFor,
   fuelFromUrl,
   fuelToUrl,
   isBrandIncluded,
@@ -33,6 +34,7 @@ describe("sanitizeSettings", () => {
         hideUnpriced: false,
         highAccuracyLocation: false,
         excludedBrands: ["viada"],
+        excludedEvBrands: ["in-balance-grid"],
         locale: "en",
       }),
     ).toEqual({
@@ -50,9 +52,18 @@ describe("sanitizeSettings", () => {
       hideUnpriced: false,
       highAccuracyLocation: false,
       excludedBrands: ["viada"],
+      excludedEvBrands: ["in-balance-grid"],
       historyStat: "avg",
       locale: "en",
     });
+  });
+
+  it("keeps the fuel and EV provider filters apart", () => {
+    const s = sanitizeSettings({ excludedBrands: ["independent"], excludedEvBrands: ["bad id!"] });
+    expect(s.excludedBrands).toEqual(["independent"]);
+    expect(s.excludedEvBrands).toEqual([]);
+    expect(excludedFor({ ...s, fuel: "EV" })).toBe(s.excludedEvBrands);
+    expect(excludedFor({ ...s, fuel: "D" })).toBe(s.excludedBrands);
   });
 
   it("keeps EV fuel and clamps EV consumption and charge size", () => {

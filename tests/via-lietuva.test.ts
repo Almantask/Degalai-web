@@ -8,7 +8,9 @@ import {
   socketKey,
   usableCache,
 } from "../scripts/adapters/via-lietuva.ts";
-import { mergeChargers } from "../scripts/chargers.ts";
+import { assignNetworkBrands, mergeChargers } from "../scripts/chargers.ts";
+import { networkSlug } from "../src/brands.ts";
+import { chargerBrandLabel, networkLabels } from "../src/i18n/index.ts";
 import type { Station } from "../src/types.ts";
 
 // Header text as the live report (ev.vialietuva.lt/report/904) prints it, trimmed.
@@ -207,5 +209,50 @@ describe("mergeChargers", () => {
     });
     expect(chargers[0].sourceIds).toEqual({ "via-lietuva": "A", osm: "node/1" });
     expect(site.ev?.chargeTag).toBeUndefined();
+  });
+});
+
+describe("networkSlug", () => {
+  it("makes a provider id from an operator name", () => {
+    expect(networkSlug("In Balance grid, UAB")).toBe("in-balance-grid");
+    expect(networkSlug("UAB „Elinta“")).toBe("elinta");
+    expect(networkSlug("Eldrive Lithuania")).toBe("eldrive-lithuania");
+    expect(networkSlug("VšĮ Šiaulių būstas")).toBe("siauliu-bustas");
+    expect(networkSlug("")).toBe("independent");
+  });
+});
+
+describe("assignNetworkBrands", () => {
+  const at = (id: string, network: string, brand = "independent"): Station => ({
+    id,
+    name: id,
+    brand,
+    lat: 54.7,
+    lon: 25.3,
+    fuels: ["EV"],
+    sourceIds: {},
+    ev: { sockets: [], network },
+  });
+
+  it("names networks with enough sites and leaves the long tail under Kita", () => {
+    const { chargers, networks } = assignNetworkBrands([
+      at("a", "Inbalance grid"),
+      at("b", "Inbalance grid"),
+      at("c", "Inbalance grid"),
+      at("d", "Hotel Charger"),
+      at("e", "Tesla", "tesla"),
+    ]);
+    expect(chargers.map((c) => c.brand)).toEqual([
+      "inbalance-grid",
+      "inbalance-grid",
+      "inbalance-grid",
+      "independent",
+      "tesla",
+    ]);
+    expect(networks).toBe(2);
+    expect(networkLabels(chargers).get("inbalance-grid")).toBe("Inbalance grid");
+    expect(chargerBrandLabel(chargers[0])).toBe("Inbalance grid");
+    expect(chargerBrandLabel(chargers[4])).toBe("Tesla");
+    expect(chargerBrandLabel(chargers[3])).toBe("Hotel Charger");
   });
 });

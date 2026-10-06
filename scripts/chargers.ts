@@ -1,3 +1,4 @@
+import { KNOWN_BRANDS, networkSlug } from "../src/brands.ts";
 import { haversineKm } from "../src/geo.ts";
 import type { Station } from "../src/types.ts";
 
@@ -46,4 +47,30 @@ export function mergeChargers(
     best.sourceIds = { ...best.sourceIds, ...o.sourceIds };
   }
   return { chargers: [...sites, ...extra], osmOnly: extra.length };
+}
+
+/** Networks with fewer sites than this are listed under "Kita" rather than on their own. */
+export const MIN_NETWORK_SITES = 3;
+
+/**
+ * Gives each charging network its own provider id so the EV provider filter can list it: known
+ * brands keep theirs, others get a slug of the network name, and networks with fewer than
+ * `min` sites stay "independent" so the list stays short.
+ */
+export function assignNetworkBrands(
+  chargers: Station[],
+  min = MIN_NETWORK_SITES,
+): { chargers: Station[]; networks: number } {
+  const ids = chargers.map((c) =>
+    c.brand !== "independent" ? c.brand : networkSlug(c.ev?.network ?? undefined),
+  );
+  const counts = new Map<string, number>();
+  for (const id of ids) counts.set(id, (counts.get(id) ?? 0) + 1);
+  const out = chargers.map((c, i) => {
+    const id = ids[i];
+    const brand = KNOWN_BRANDS.has(id) || (counts.get(id) ?? 0) >= min ? id : "independent";
+    return brand === c.brand ? c : { ...c, brand };
+  });
+  const networks = new Set(out.map((c) => c.brand).filter((b) => b !== "independent")).size;
+  return { chargers: out, networks };
 }

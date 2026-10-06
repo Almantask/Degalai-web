@@ -145,7 +145,8 @@ export function parseRegisterRows(rows: string[][]): Station[] {
         station: {
           id: "",
           name: name || operator || "Įkrovimo stotelė",
-          brand: normalizeBrand(operator, get("owner"), name),
+          // The operator, not the host named in the location (an "IKI" or "Viada" car park).
+          brand: normalizeBrand(operator, get("owner")),
           lat: p.lat,
           lon: p.lon,
           ...(address ? { address } : {}),

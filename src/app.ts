@@ -23,6 +23,7 @@ import {
 } from "./geo.ts";
 import {
   brandLabel,
+  networkLabels,
   FUEL_BY_GROUP,
   fuelGroupOf,
   setLocale,
@@ -65,6 +66,7 @@ import {
   toggleHistoryBrand,
 } from "./history-series.ts";
 import {
+  excludedFor,
   fuelFromUrl,
   isBrandIncluded,
   loadSettings,
@@ -479,10 +481,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
       }
       if (el.id.startsWith("set-brand-") && el.dataset.brand) {
         const brand = el.dataset.brand;
-        const next = new Set(settings.excludedBrands);
+        const next = new Set(excludedFor(settings));
         if (el.checked) next.delete(brand);
         else next.add(brand);
-        settings.excludedBrands = [...next].sort();
+        // Fuel brands and charging networks are filtered separately ("Kita" exists in both).
+        if (isEv()) settings.excludedEvBrands = [...next].sort();
+        else settings.excludedBrands = [...next].sort();
         saveSettings(settings);
         applyBrandFilter();
         return;
@@ -690,11 +694,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** Brand filter is replaced, never mutated, so the array identity keys the cache. */
   function includedStations(): Station[] {
     const source = activeStations();
-    if (includedCache?.excluded !== settings.excludedBrands || includedCache.source !== source) {
+    const excluded = excludedFor(settings);
+    if (includedCache?.excluded !== excluded || includedCache.source !== source) {
       includedCache = {
-        excluded: settings.excludedBrands,
+        excluded,
         source,
-        stations: source.filter((s) => isBrandIncluded(s.brand, settings.excludedBrands)),
+        stations: source.filter((s) => isBrandIncluded(s.brand, excluded)),
       };
     }
     return includedCache.stations;
@@ -1419,18 +1424,39 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function settingsHtml(): string {
+    const ev = isEv();
+    // EV lists charging networks by the name their operator uses; fuel lists the chains.
+    const evLabels = ev ? networkLabels(activeStations()) : new Map<string, string>();
+    const label = (brand: string) => evLabels.get(brand) ?? brandLabel(brand);
+    const excluded = excludedFor(settings);
     const brands = uniqueBrands(activeStations()).sort((a, b) => {
       if (a === "independent") return 1;
       if (b === "independent") return -1;
-      return brandLabel(a).localeCompare(brandLabel(b), locale === "lt" ? "lt" : "en");
+      return label(a).localeCompare(label(b), locale === "lt" ? "lt" : "en");
     });
-    const checks = brands
-      .map((brand) => {
-        const id = `set-brand-${brand}`;
-        const on = isBrandIncluded(brand, settings.excludedBrands);
-        return `<label class="check"><input id="${escapeHtml(id)}" data-brand="${escapeHtml(brand)}" type="checkbox"${on ? " checked" : ""} />${escapeHtml(brandLabel(brand))}</label>`;
-      })
-      .join("");
+    const checks = brands.length
+      ? brands
+          .map((brand) => {
+            const id = `set-brand-${brand}`;
+            const on = isBrandIncluded(brand, excluded);
+            return `<label class="check"><input id="${escapeHtml(id)}" data-brand="${escapeHtml(brand)}" type="checkbox"${on ? " checked" : ""} />${escapeHtml(label(brand))}</label>`;
+          })
+          .join("")
+      : `<p class="hint">${escapeHtml(t("list.loadingChargers"))}</p>`;
+    const source = (href: string, text: string) =>
+      `<li><a href="${href}" target="_blank" rel="noopener noreferrer">${escapeHtml(text)}</a></li>`;
+    const sources = ev
+      ? [
+          source(REGISTER_SOURCE_URL, t("settings.source.register")),
+          source(OSM_SOURCE_URL, t("settings.source.osm")),
+          source(SPOT_SOURCE_URL, t("settings.source.nordpool")),
+        ]
+      : [
+          source(LEA_SOURCE_URL, t("settings.source.lea")),
+          source(CIRCLE_K_SOURCE_URL, brandLabel("circle-k")),
+          source(OSM_SOURCE_URL, t("settings.source.osm")),
+          source(REPORTS_SOURCE_URL, t("settings.source.reports")),
+        ];
     return `<section class="panel" aria-label="${escapeHtml(t("settings.title"))}">
       <header><h2>${escapeHtml(t("settings.title"))}</h2><button type="button" data-act="close-panel">${escapeHtml(t("action.close"))}</button></header>
       ${
@@ -1444,18 +1470,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
         <p class="hint">${escapeHtml(t("settings.highAccuracyHint"))}</p>
       </div>
       <fieldset class="brand-filter">
-        <legend>${escapeHtml(t("settings.providers"))}</legend>
+        <legend>${escapeHtml(t(ev ? "settings.networks" : "settings.providers"))}</legend>
         ${checks}
       </fieldset>
       <fieldset class="data-sources">
         <legend>${escapeHtml(t("settings.sources"))}</legend>
         <ul>
-          <li><a href="${LEA_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("settings.source.lea"))}</a></li>
-          <li><a href="${CIRCLE_K_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(brandLabel("circle-k"))}</a></li>
-          <li><a href="${OSM_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("settings.source.osm"))}</a></li>
-          <li><a href="${REGISTER_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("settings.source.register"))}</a></li>
-          <li><a href="${SPOT_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("settings.source.nordpool"))}</a></li>
-          <li><a href="${REPORTS_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("settings.source.reports"))}</a></li>
+          ${sources.join("\n          ")}
         </ul>
       </fieldset>
     </section>`;

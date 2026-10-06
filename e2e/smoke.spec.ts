@@ -805,6 +805,55 @@ test.describe("EV", () => {
     await expect(page.locator(".station-row.is-unpriced")).toContainText("Test charger");
   });
 
+  test("EV settings list charging networks and EV data sources only", async ({ page }) => {
+    const charger = (id: string, brand: string, network: string, lat: number) => ({
+      id,
+      name: id,
+      brand,
+      lat,
+      lon: 25.28,
+      fuels: ["EV"],
+      ev: { sockets: ["type2"], network },
+    });
+    await page.route("**/data/chargers.json", (route) =>
+      route.fulfill({
+        json: [
+          charger("vl:A", "in-balance-grid", "Inbalance grid", 54.687),
+          charger("vl:B", "eldrive-lithuania", "Eldrive Lithuania", 54.688),
+          charger("vl:C", "independent", "Hotel Charger", 54.689),
+        ],
+      }),
+    );
+    await page.goto("/en/?fuel=ev");
+    await expect(page.locator(".station-row")).toHaveCount(3);
+    await page.getByRole("button", { name: "Settings" }).click();
+    const networks = page.getByRole("group", { name: "Charging networks" });
+    await expect(networks.getByRole("checkbox")).toHaveCount(3);
+    await expect(networks.getByRole("checkbox", { name: "Inbalance grid" })).toBeChecked();
+    await expect(networks.getByRole("checkbox", { name: "Eldrive Lithuania" })).toBeChecked();
+    await expect(networks.getByRole("checkbox", { name: "Other" })).toBeChecked();
+    const sources = page.getByRole("group", { name: "Data sources" });
+    await expect(sources.getByRole("link")).toHaveText([
+      "Via Lietuva charge point register (CC BY 4.0)",
+      "OpenStreetMap",
+      "Nord Pool power exchange (Elering)",
+    ]);
+
+    await networks.getByRole("checkbox", { name: "Other" }).uncheck();
+    await expect(page.locator(".station-row")).toHaveCount(2);
+
+    // Unticking "Other" for chargers leaves independent fuel stations alone.
+    await page.getByRole("button", { name: "Diesel", exact: true }).click();
+    const providers = page.getByRole("group", { name: "Providers" });
+    await expect(providers.getByRole("checkbox", { name: "Other" })).toBeChecked();
+    await expect(page.getByRole("group", { name: "Data sources" }).getByRole("link")).toHaveText([
+      "LEA (Lithuanian Energy Agency)",
+      "Circle K",
+      "OpenStreetMap",
+      "User reports",
+    ]);
+  });
+
   test("EV history shows the Nord Pool spot line without provider controls", async ({ page }) => {
     const now = Date.now();
     const hours = Array.from({ length: 30 }, (_, i) => new Date(now + (i - 20) * 3_600_000));
