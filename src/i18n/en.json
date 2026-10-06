@@ -137,5 +137,6 @@
   "units.free": "Free",
   "popup.register": "Price from the national charger register (Via Lietuva)",
   "popup.sessionFee": "+ {fee} per session",
-  "settings.source.register": "Via Lietuva charge point register (CC BY 4.0)"
+  "settings.source.register": "Via Lietuva charge point register (CC BY 4.0)",
+  "popup.notInRegister": "Not in the national charger register; may be outdated."
 }

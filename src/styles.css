@@ -1111,6 +1111,10 @@ body,
   color: var(--muted);
 }
 
+.popup-ev-warn {
+  color: #92400e;
+}
+
 .station-row.is-unpriced .station-price {
   color: var(--muted);
   font-weight: 500;

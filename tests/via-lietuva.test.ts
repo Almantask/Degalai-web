@@ -181,6 +181,20 @@ describe("mergeChargers", () => {
     lon: 21.1,
     sourceIds: { osm: "node/2" },
   };
+  // ~250 m east of the site, as OSM points in a big car park often are; ~370 m is a neighbour.
+  const carPark: Station = { ...near, id: "ev:node:3", lon: 25.2789, sourceIds: { osm: "node/3" } };
+  const nextDoor: Station = {
+    ...near,
+    id: "ev:node:4",
+    lon: 25.2808,
+    sourceIds: { osm: "node/4" },
+  };
+
+  it("treats an OSM point up to 300 m away as the same site", () => {
+    const { chargers, osmOnly } = mergeChargers([site], [carPark, nextDoor]);
+    expect(osmOnly).toBe(1);
+    expect(chargers.map((c) => c.id)).toEqual(["vl:A", "ev:node:4"]);
+  });
 
   it("keeps register sites, drops OSM duplicates but keeps their tag price, and adds OSM-only places", () => {
     const { chargers, osmOnly } = mergeChargers([site], [near, far]);

@@ -175,6 +175,7 @@ describe("charger popup", () => {
     expect(html).toContain("Type 2, CCS");
     expect(html).toContain("up to 150 kW");
     expect(html).toContain("Network tariff");
+    expect(html).toContain("Not in the national charger register");
     expect(html).toContain("Local Grid");
     expect(html).not.toContain("LPG");
   });
@@ -196,6 +197,8 @@ describe("charger popup", () => {
     expect(html).toContain("AC €0.280/kWh · DC €0.390/kWh");
     expect(html).toContain("+ €0.30 per session");
     expect(html).toContain("national charger register");
+    const registered = stationPopupHtml({ ...charger, id: "vl:IBG-1" }, null);
+    expect(registered).not.toContain("Not in the national charger register");
   });
 
   it("dedupes socket names", () => {

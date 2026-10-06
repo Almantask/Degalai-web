@@ -1,8 +1,11 @@
 import { haversineKm } from "../src/geo.ts";
 import type { Station } from "../src/types.ts";
 
-/** An OSM charger this close to a register site is the same place. */
-export const SAME_SITE_KM = 0.1;
+/**
+ * An OSM charger this close to a register site is the same place. Large car parks put OSM points
+ * 100–300 m from the register's coordinates; real neighbouring sites are rarely that close.
+ */
+export const SAME_SITE_KM = 0.3;
 
 /**
  * Chargers from the national register first; OSM fills in places the register lacks. An OSM
@@ -19,8 +22,11 @@ export function mergeChargers(
   for (const o of osm) {
     let best: Station | undefined;
     let bestKm = radiusKm;
+    // Cheap box test before haversine; a degree of longitude shrinks with latitude.
+    const dLat = radiusKm / 111;
+    const dLon = radiusKm / (111 * Math.cos((o.lat * Math.PI) / 180));
     for (const s of sites) {
-      if (Math.abs(s.lat - o.lat) > 0.002 || Math.abs(s.lon - o.lon) > 0.004) continue;
+      if (Math.abs(s.lat - o.lat) > dLat || Math.abs(s.lon - o.lon) > dLon) continue;
       const km = haversineKm(s, o);
       if (km <= bestKm) {
         best = s;

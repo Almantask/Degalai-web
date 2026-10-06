@@ -545,7 +545,11 @@ function chargerDetailsHtml(s: Station, prices: DailyPrices | null): string {
           ? t("popup.tariff")
           : "";
   const lines = [split, fee].filter(Boolean);
-  return `${lines.map((l) => `<p class="popup-ev">${escapeHtml(l)}</p>`).join("")}${parts.length ? `<p class="popup-ev"><span>${escapeHtml(t("popup.sockets"))}</span> ${escapeHtml(parts.join(" · "))}</p>` : ""}${note ? `<p class="popup-ev-note">${escapeHtml(note)}</p>` : ""}`;
+  // Register sites have `vl:` ids; anything else came from OSM alone and may be stale.
+  const unregistered = !s.id.startsWith("vl:")
+    ? `<p class="popup-ev-note popup-ev-warn">${escapeHtml(t("popup.notInRegister"))}</p>`
+    : "";
+  return `${unregistered}${lines.map((l) => `<p class="popup-ev">${escapeHtml(l)}</p>`).join("")}${parts.length ? `<p class="popup-ev"><span>${escapeHtml(t("popup.sockets"))}</span> ${escapeHtml(parts.join(" · "))}</p>` : ""}${note ? `<p class="popup-ev-note">${escapeHtml(note)}</p>` : ""}`;
 }
 
 /** Rank of `value` in ascending `sorted`: index of the first entry ≥ value, scaled to 0–1. */
