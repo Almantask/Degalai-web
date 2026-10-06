@@ -805,6 +805,54 @@ test.describe("EV", () => {
     await expect(page.locator(".station-row.is-unpriced")).toContainText("Test charger");
   });
 
+  test("a free charger explains why behind a ?", async ({ page }) => {
+    await page.route("**/data/chargers.json", (route) =>
+      route.fulfill({
+        json: [
+          {
+            id: "vl:STR-1",
+            name: "Elektrinės g. 21, Elektrėnai",
+            brand: "independent",
+            lat: 54.687,
+            lon: 25.28,
+            address: "Elektrinės g. 21, Elektrėnai",
+            fuels: ["EV"],
+            sourceIds: { "via-lietuva": "STR-1" },
+            ev: {
+              sockets: ["type2"],
+              maxKw: 22,
+              network: "Stuart Energy",
+              registerPrice: 0,
+              prices: { ac: 0 },
+              free: { reason: "powerPlant", owner: "Ignitis gamyba" },
+            },
+          },
+        ],
+      }),
+    );
+    await page.route("**/data/prices/*.json", async (route) => {
+      const daily = (await (await route.fetch()).json()) as { prices: Record<string, unknown> };
+      daily.prices["vl:STR-1"] = {
+        EV: { price: 0, source: "via-lietuva", observedAt: "2026-10-06T12:00:00Z" },
+      };
+      await route.fulfill({ json: daily });
+    });
+    await page.goto("/en/?fuel=ev");
+    const row = page.locator(".station-row", { hasText: "Elektrinės g. 21" });
+    await expect(row.locator(".station-price")).toContainText("Free");
+    await expect(row.locator(".free-why-mark")).toHaveAttribute("title", /Ignitis gamyba/);
+    await row.click();
+    const why = page.locator(".maplibregl-popup .free-why-btn");
+    const tip = page.locator(".maplibregl-popup .free-why-tip");
+    await expect(why).toBeVisible();
+    await expect(why).toHaveAttribute("title", /Ignitis gamyba power plant/);
+    await expect(tip).toBeHidden();
+    await why.click();
+    await expect(why).toHaveAttribute("aria-expanded", "true");
+    await expect(tip).toBeVisible();
+    await expect(tip).toContainText("On the grounds of a Ignitis gamyba power plant");
+  });
+
   test("EV history shows the Nord Pool spot line without provider controls", async ({ page }) => {
     const now = Date.now();
     const hours = Array.from({ length: 30 }, (_, i) => new Date(now + (i - 20) * 3_600_000));

@@ -1,6 +1,8 @@
 import ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
 import {
+  companyName,
+  freeReason,
   parseRegisterPrice,
   parseRegisterRows,
   parseRegisterXlsx,
@@ -229,6 +231,58 @@ describe("parseRegisterXlsx", () => {
     const buf = Buffer.from(await wb.xlsx.writeBuffer());
     const sites = await parseRegisterXlsx(buf);
     expect(sites.map((s) => [s.id, s.ev?.registerPrice])).toEqual([["vl:IBG-P-G7H7", 0.28]]);
+  });
+});
+
+describe("freeReason", () => {
+  it("reads why a charger is free from its owner and site", () => {
+    expect(freeReason("AB „Ignitis gamyba“", "Stuart Energy", "Elektrinės g. 21")).toEqual({
+      reason: "powerPlant",
+      owner: "Ignitis gamyba",
+    });
+    expect(freeReason("Jonavos rajono savivaldybės administracija", "Stuart Energy", "")).toEqual({
+      reason: "municipal",
+    });
+    expect(freeReason("Lietuvos oro uostai, AB", "Stuart Energy", "")).toEqual({
+      reason: "airport",
+      owner: "Lietuvos oro uostai",
+    });
+    expect(freeReason('UAB "Rar transportas"', "Stuart Energy", "")).toEqual({
+      reason: "fleet",
+      owner: "Rar transportas",
+    });
+    expect(freeReason('AB "Klaipėdos vanduo"', "Stuart Energy", "")).toEqual({
+      reason: "workplace",
+      owner: "Klaipėdos vanduo",
+    });
+    expect(
+      freeReason("In Balance grid, UAB", "Inbalance grid", "SEB, Konstitucijos pr. 25 | x"),
+    ).toEqual({ reason: "workplace", owner: "SEB" });
+    expect(
+      freeReason("In Balance grid, UAB", "Inbalance grid", "Kapsų g. 26 | Vilniaus Apšvietimas"),
+    ).toEqual({ reason: "networkPaid" });
+    // The operator owning its own charger is not a workplace.
+    expect(freeReason("In Balance grid, UAB", "Inbalance grid", "Smiltynės perkėla")).toEqual({
+      reason: "unknown",
+    });
+  });
+
+  it("is set only on free sites", () => {
+    const [free, paid] = parseRegisterRows([
+      HEADER,
+      row("F", { price: "Nemokama", owner: 'UAB "IDM GROUP"', operator: "Stuart Energy" }),
+      row("P", { lat: "55.1", lon: "24.1", owner: 'UAB "IDM GROUP"', operator: "Stuart Energy" }),
+    ]);
+    expect(free!.ev).toMatchObject({
+      registerPrice: 0,
+      free: { reason: "workplace", owner: "IDM GROUP" },
+    });
+    expect(paid!.ev?.free).toBeUndefined();
+  });
+
+  it("drops legal forms and quotes from company names", () => {
+    expect(companyName("Iglu Tech Arnoldas, UAB")).toBe("Iglu Tech Arnoldas");
+    expect(companyName('VĮ "Ignalinos atominė elektrinė"')).toBe("Ignalinos atominė elektrinė");
   });
 });
 

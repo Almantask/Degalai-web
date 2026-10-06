@@ -138,5 +138,13 @@
   "popup.register": "Price from the national charger register (Via Lietuva)",
   "popup.sessionFee": "+ {fee} per session",
   "settings.source.register": "Via Lietuva charge point register (CC BY 4.0)",
-  "popup.notInRegister": "Not in the national charger register; may be outdated."
+  "popup.notInRegister": "Not in the national charger register; may be outdated.",
+  "popup.freeWhy": "Why free?",
+  "free.municipal": "A municipal charger. Public chargers that municipalities built with EU funds are free for their first 5 years; this is likely one.",
+  "free.powerPlant": "On the grounds of a {owner} power plant. Most likely for staff and visitors, hence free; outsiders may not get in.",
+  "free.airport": "An airport charger. {owner} is building charging airside for buses and service cars, so this one is most likely not public.",
+  "free.fleet": "Owned by the transport company {owner}. Most likely for its own fleet, hence free; it may not be open to others.",
+  "free.workplace": "Owned by {owner}, which pays for the electricity itself. Probably for staff or customers; access may be limited.",
+  "free.networkPaid": "Other chargers on this network are paid, so “free” here may be a register error.",
+  "free.unknown": "The register says charging is free but gives no reason. It may be a promotion or limited access."
 }

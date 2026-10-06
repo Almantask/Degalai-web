@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { setLocale } from "../src/i18n/index.ts";
 import {
+  freeReasonText,
   overlayPadding,
   percentile,
   stationPopupHtml,
@@ -208,6 +209,33 @@ describe("charger popup", () => {
     expect(html).toContain("national charger register");
     const registered = stationPopupHtml({ ...charger, id: "vl:IBG-1" }, null);
     expect(registered).not.toContain("Not in the national charger register");
+  });
+
+  it("puts the reason a charger is free behind a ? next to the price", () => {
+    setLocale("lt");
+    const free: Station = {
+      ...charger,
+      id: "vl:STR-1",
+      ev: { ...charger.ev!, registerPrice: 0, free: { reason: "fleet", owner: "Rar transportas" } },
+    };
+    const html = stationPopupHtml(free, {
+      date: "2026-10-06",
+      generatedAt: "2026-10-06T12:00:00Z",
+      prices: { "vl:STR-1": { EV: { price: 0, source: "via-lietuva", observedAt: "x" } } },
+    });
+    expect(html).toContain("Nemokamai");
+    expect(html).toContain('data-act="free-why"');
+    expect(html).toContain('aria-label="Kodėl nemokama?"');
+    expect(html).toContain("Priklauso transporto įmonei „Rar transportas“");
+    expect(freeReasonText({ ...free, ev: { ...free.ev!, free: undefined } })).toContain(
+      "priežastis nenurodyta",
+    );
+    const paid = stationPopupHtml(charger, {
+      date: "2026-10-06",
+      generatedAt: "2026-10-06T12:00:00Z",
+      prices: { "ev:node:1": { EV: { price: 0.3, source: "ev-tariff", observedAt: "x" } } },
+    });
+    expect(paid).not.toContain("free-why");
   });
 
   it("dedupes socket names", () => {

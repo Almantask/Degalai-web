@@ -138,5 +138,13 @@
   "popup.register": "Kaina iš nacionalinio įkrovimo prieigų registro (Via Lietuva)",
   "popup.sessionFee": "+ {fee} už sesiją",
   "settings.source.register": "Via Lietuva įkrovimo prieigų registras (CC BY 4.0)",
-  "popup.notInRegister": "Nėra nacionaliniame įkrovimo prieigų registre – duomenys gali būti pasenę."
+  "popup.notInRegister": "Nėra nacionaliniame įkrovimo prieigų registre – duomenys gali būti pasenę.",
+  "popup.freeWhy": "Kodėl nemokama?",
+  "free.municipal": "Savivaldybės stotelė. Savivaldybių viešose stotelėse, įrengtose ES lėšomis, pirmus 5 metus įkrauti galima nemokamai; tikėtina, kad tai tas atvejis.",
+  "free.powerPlant": "Stovi „{owner}“ elektrinės teritorijoje. Greičiausiai skirta darbuotojams ir svečiams, todėl nemokama; pašaliniams patekti gali nepavykti.",
+  "free.airport": "Oro uosto stotelė. „{owner}“ įkrovimą įrengia vidinėje oro uosto zonoje autobusams ir tarnybiniams automobiliams, todėl viešai ji greičiausiai neprieinama.",
+  "free.fleet": "Priklauso transporto įmonei „{owner}“. Greičiausiai skirta jos autoparkui, todėl nemokama; pašaliniams gali būti neprieinama.",
+  "free.workplace": "Priklauso įmonei „{owner}“, kuri pati apmoka elektrą. Tikriausiai skirta darbuotojams ar klientams; prieiga gali būti ribota.",
+  "free.networkPaid": "Kitos šio tinklo stotelės mokamos, todėl „nemokama“ čia gali būti klaida registre.",
+  "free.unknown": "Registre nurodyta, kad įkrovimas nemokamas, bet priežastis nenurodyta. Gali būti akcija arba ribota prieiga."
 }

@@ -38,6 +38,7 @@ import {
   setMapGeolocateAccuracy,
   setRouteData,
   setStationData,
+  freeReasonText,
   stationPopupHtml,
   stationsForRouteMap,
   stationsInView,
@@ -360,7 +361,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
       if (!tEl) return;
       const act = tEl.dataset.act;
       if (act === "view" || act === "locale") e.preventDefault();
-      if (act === "view") {
+      if (act === "free-why") {
+        tEl.setAttribute(
+          "aria-expanded",
+          tEl.getAttribute("aria-expanded") === "true" ? "false" : "true",
+        );
+      } else if (act === "view") {
         view = tEl.dataset.view === "history" ? "history" : "map";
         headerMinimized = false;
         settingsOpen = false;
@@ -1275,7 +1281,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
         <small class="station-addr" title="${escapeHtml(addr)}">${escapeHtml(shortAddress(addr))}</small>
         ${metaLine ? `<small class="station-eta">${escapeHtml(metaLine)}</small>` : ""}
       </span>
-      <span class="station-price">${escapeHtml(price == null ? "—" : formatPrice(price, settings.fuel))}</span>
+      <span class="station-price">${escapeHtml(price == null ? "—" : formatPrice(price, settings.fuel))}${
+        isEv() && price === 0
+          ? `<span class="free-why-mark" title="${escapeHtml(freeReasonText(s))}" aria-hidden="true">?</span>`
+          : ""
+      }</span>
     </button></li>`;
   }
 

@@ -52,7 +52,13 @@ export interface ChargerInfo {
   prices?: { ac?: number; dc?: number };
   /** Flat € per charging session on top of the €/kWh price. */
   sessionFee?: number;
+  /** Why the register lists this charger as free; set only when `registerPrice` is 0. */
+  free?: { reason: FreeReason; owner?: string };
 }
+
+/** Likely reason a register charger is free, read from its owner and site (`free.*` messages). */
+export type FreeReason =
+  "municipal" | "powerPlant" | "airport" | "fleet" | "workplace" | "networkPaid" | "unknown";
 
 export interface PriceEntry {
   price: number;

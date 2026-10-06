@@ -1115,6 +1115,47 @@ body,
   color: #92400e;
 }
 
+.free-why-btn,
+.free-why-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  font: 700 0.72rem/1 var(--font);
+  vertical-align: 1px;
+  cursor: help;
+}
+
+.free-why-btn:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
+}
+
+/* In the flow under the price row, so the popup's overflow: hidden cannot clip it. */
+.free-why-tip {
+  display: none;
+  margin: 4px 0 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--green-soft);
+  color: var(--ink);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+/* Not on :hover: the popup grows upwards from its anchor, which would pull the "?" away from the
+   pointer. Hover gets the button's title instead. */
+.popup-row:has(.free-why-btn:focus-visible) + .free-why-tip,
+.popup-row:has(.free-why-btn[aria-expanded="true"]) + .free-why-tip {
+  display: block;
+}
+
 .station-row.is-unpriced .station-price {
   color: var(--muted);
   font-weight: 500;

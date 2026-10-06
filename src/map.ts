@@ -478,7 +478,16 @@ export function stationPopupHtml(
       const flags = [e?.stale ? t("popup.stale") : "", e?.suspicious ? t("popup.suspicious") : ""]
         .filter(Boolean)
         .join(" · ");
-      return `<div class="popup-row"><span>${escapeHtml(t(`fuel.${f}` as "fuel.D"))}</span><strong>${escapeHtml(price)}</strong>${flags ? `<small>${escapeHtml(flags)}</small>` : ""}</div>`;
+      const reason = f === "EV" && e?.price === 0 ? escapeHtml(freeReasonText(s)) : "";
+      // "?" shows the reason as a hover title, and below the row on tap or keyboard focus
+      // (app.ts toggles aria-expanded).
+      const why = reason
+        ? `<button type="button" class="free-why-btn" data-act="free-why" aria-expanded="false" aria-controls="free-why-tip" aria-label="${escapeHtml(t("popup.freeWhy"))}" title="${reason}">?</button>`
+        : "";
+      const tip = reason
+        ? `<p class="free-why-tip" id="free-why-tip" role="tooltip">${reason}</p>`
+        : "";
+      return `<div class="popup-row"><span>${escapeHtml(t(`fuel.${f}` as "fuel.D"))}</span><strong>${escapeHtml(price)}${why}</strong>${flags ? `<small>${escapeHtml(flags)}</small>` : ""}</div>${tip}`;
     })
     .join("");
   const addr = s.address || s.city || t("list.addressMissing");
@@ -493,6 +502,15 @@ export function stationPopupHtml(
     ${fuels}
     ${s.ev ? chargerDetailsHtml(s, prices) : ""}
   </div>`;
+}
+
+/** Why a free charger is free, for the "?" next to its price. */
+export function freeReasonText(s: Station): string {
+  const free = s.ev?.free;
+  if (!free || (free.reason !== "municipal" && free.reason !== "networkPaid" && !free.owner)) {
+    return t("free.unknown");
+  }
+  return t(`free.${free.reason}`, { owner: free.owner ?? "" });
 }
 
 const SOCKET_NAMES: Record<string, string> = {

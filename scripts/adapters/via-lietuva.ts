@@ -3,7 +3,7 @@ import ExcelJS from "exceljs";
 import { normalizeBrand } from "../../src/brands.ts";
 import { round3 } from "../../src/calc.ts";
 import { haversineKm, inLithuania } from "../../src/geo.ts";
-import type { Station } from "../../src/types.ts";
+import type { ChargerInfo, Station } from "../../src/types.ts";
 import { FETCH_UA } from "./types.ts";
 
 /**
@@ -131,12 +131,47 @@ function fold(text: string): string {
   return text.toLowerCase().normalize("NFD").replace(/\p{M}/gu, "").replace(/\s+/g, " ").trim();
 }
 
+/** `UAB "Rar transportas"`, `Lietuvos oro uostai, AB` → `Rar transportas`, `Lietuvos oro uostai`. */
+export function companyName(text: string): string {
+  return text
+    .replace(/[„“”"]/g, "")
+    .replace(/(^|[\s,])(UAB|AB|VĮ|VšĮ|MB|IĮ)(?=$|[\s,])/g, "$1")
+    .replace(/\s*,\s*$|^\s*,\s*/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Why the register lists a charger as free, from its owner and location. Owners named here were
+ * looked up by hand (October 2026); see provider-mistakes.md. Anything else owned by a company
+ * other than the operator reads as a workplace charger.
+ */
+export function freeReason(owner: string, operator: string, location: string): ChargerInfo["free"] {
+  const o = fold(owner);
+  const company = companyName(owner);
+  if (/savivaldyb/.test(o)) return { reason: "municipal" };
+  if (/ignitis gamyba/.test(o)) return { reason: "powerPlant", owner: company };
+  if (/oro uostai/.test(o)) return { reason: "airport", owner: company };
+  if (/transport/.test(o)) return { reason: "fleet", owner: company };
+  // Vilniaus apšvietimas street-light chargers cost 0.29 €/kWh everywhere else.
+  if (/vilniaus apsvietimas/.test(fold(location))) return { reason: "networkPaid" };
+  // Inbalance grid owns and runs the chargers at SEB's head office.
+  if (/^seb\b/.test(fold(location))) return { reason: "workplace", owner: "SEB" };
+  const key = (s: string) => fold(companyName(s)).replace(/[^a-z0-9]/g, "");
+  if (owner && key(owner) !== key(operator)) return { reason: "workplace", owner: company };
+  return { reason: "unknown" };
+}
+
 interface SiteDraft {
   station: Station;
   stations: Set<string>;
   ac: number[];
   dc: number[];
   fees: number[];
+  /** Owner as written in the register. */
+  owner: string;
+  /** Location text as written in the register. */
+  location: string;
   /** Operator, folded. */
   operator: string;
   /** Location text as typed, folded. */
@@ -258,6 +293,8 @@ export function parseRegisterRows(rows: string[][]): Station[] {
         ac: [],
         dc: [],
         fees: [],
+        owner: get("owner"),
+        location,
         operator: fold(operator),
         label: fold(location),
         town: fold(town),
@@ -290,6 +327,7 @@ export function parseRegisterRows(rows: string[][]): Station[] {
     const dc = site.dc.length ? Math.min(...site.dc) : undefined;
     const all = [ac, dc].filter((v): v is number => v != null);
     if (all.length) ev.registerPrice = Math.min(...all);
+    if (ev.registerPrice === 0) ev.free = freeReason(site.owner, ev.network ?? "", site.location);
     if (ac != null || dc != null) {
       ev.prices = { ...(ac != null ? { ac } : {}), ...(dc != null ? { dc } : {}) };
     }
