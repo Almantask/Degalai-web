@@ -332,14 +332,37 @@ body,
 }
 
 .dest {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 6px;
+  align-items: center;
 }
 
 .dest-field {
+  grid-column: 1;
   position: relative;
   min-width: 0;
+}
+
+.dest-swap {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green-dark);
+}
+
+.dest-swap:hover:not(:disabled) {
+  background: rgb(15 138 75 / 22%);
+}
+
+.dest-swap:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 .dest-pin {
@@ -365,9 +388,14 @@ body,
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 14px;
-  padding: 10px 38px 10px 28px;
+  padding: 10px 12px 10px 28px;
   font: inherit;
   background: #fff;
+}
+
+/* The browser draws the clear ✕ of a search field on hover; it fires `search` (see app.ts). */
+.search::-webkit-search-cancel-button {
+  cursor: pointer;
 }
 
 .search:focus {
@@ -375,7 +403,9 @@ body,
   border-color: var(--green);
 }
 
+/* Fallback clear button, only for browsers without a native ✕ in search fields (Firefox). */
 .dest-clear {
+  display: none;
   position: absolute;
   right: 8px;
   top: 50%;
@@ -387,6 +417,16 @@ body,
   color: var(--green-dark);
   font-size: 1.1rem;
   line-height: 1;
+}
+
+@supports not selector(::-webkit-search-cancel-button) {
+  .dest-field:is(:hover, :focus-within) .dest-clear {
+    display: block;
+  }
+
+  .dest-field .search {
+    padding-right: 38px;
+  }
 }
 
 .list {

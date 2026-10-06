@@ -2,6 +2,7 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { netBenefit } from "./calc.ts";
 import { cheapestHourRanges, filterSeries, formatCheapRanges } from "./cheap-hours.ts";
+import { swapEndpoints, type Endpoints } from "./endpoints.ts";
 import { loadAppData, lastUpdatedAt, loadChargers, loadHistory, type AppData } from "./data.ts";
 import {
   formatDate,
@@ -22,6 +23,7 @@ import {
 } from "./geo.ts";
 import {
   brandLabel,
+  networkLabels,
   FUEL_BY_GROUP,
   fuelGroupOf,
   setLocale,
@@ -65,6 +67,7 @@ import {
   toggleHistoryBrand,
 } from "./history-series.ts";
 import {
+  excludedFor,
   fuelFromUrl,
   isBrandIncluded,
   loadSettings,
@@ -112,6 +115,13 @@ const SETTINGS_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height
   <path d="M1 14h6"/>
   <path d="M9 8h6"/>
   <path d="M17 16h6"/>
+</svg>`;
+
+const SWAP_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M7 4v16"/>
+  <path d="M3 8l4-4 4 4"/>
+  <path d="M17 20V4"/>
+  <path d="M21 16l-4 4-4-4"/>
 </svg>`;
 
 const REFRESH_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -182,6 +192,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let startQuery = "";
   let startIsGps = true;
   let endHit: GeoHit | null = null;
+  /** The destination is the user's location, swapped in from the GPS start. */
+  let endIsHere = false;
   let destQuery = "";
   let destStatus: DestStatus = "idle";
   let pendingDest = false;
@@ -407,7 +419,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       } else if (act === "clear-dest") {
         clearDestination();
       } else if (act === "clear-start") {
-        resetStartToGps();
+        clearStart();
+      } else if (act === "swap-dest") {
+        swapStartAndDestination();
       } else if (act === "toggle-list") {
         listMinimized = !listMinimized;
         renderList();
@@ -456,6 +470,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
         settings.evConsumption = num(el.value, DEFAULT_SETTINGS.evConsumption);
       else if (el.id === "set-time") settings.timeValue = num(el.value, 0);
     });
+    // The browser's own ✕ in a search field fires `search` with an empty value (so does Enter on
+    // an empty field). Capture it: the event does not reach `root` by bubbling in every browser.
+    root.addEventListener(
+      "search",
+      (e) => {
+        const el = e.target as HTMLInputElement;
+        if (el.value !== "") return;
+        if (el.id === "dest" && (endHit || destStatus !== "idle")) clearDestination();
+        else if (el.id === "start") clearStart();
+      },
+      true,
+    );
     root.addEventListener("change", (e) => {
       const el = e.target as HTMLInputElement;
       if (el.id === "set-high-accuracy") {
@@ -467,10 +493,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
       }
       if (el.id.startsWith("set-brand-") && el.dataset.brand) {
         const brand = el.dataset.brand;
-        const next = new Set(settings.excludedBrands);
+        const next = new Set(excludedFor(settings));
         if (el.checked) next.delete(brand);
         else next.add(brand);
-        settings.excludedBrands = [...next].sort();
+        // Fuel brands and charging networks are filtered separately ("Kita" exists in both).
+        if (isEv()) settings.excludedEvBrands = [...next].sort();
+        else settings.excludedBrands = [...next].sort();
         saveSettings(settings);
         applyBrandFilter();
         return;
@@ -559,6 +587,40 @@ export async function startApp(root: HTMLElement): Promise<void> {
     else render();
   }
 
+  /** Back to "my location" with an empty field; the placeholder already says so. */
+  function clearStart(): void {
+    startHit = null;
+    startIsGps = true;
+    startQuery = "";
+    pickMode = null;
+    if (!userLocation) requestLocation(true);
+    if (endHit) void runRoute();
+    else render();
+  }
+
+  function currentEndpoints(): Endpoints {
+    return { start: startIsGps ? null : startHit, end: endHit, endIsHere };
+  }
+
+  function hereForSwap(): LngLat | null {
+    return userLocation && inLithuania(userLocation) ? userLocation : null;
+  }
+
+  function swapStartAndDestination(): void {
+    const next = swapEndpoints(currentEndpoints(), hereForSwap(), t("route.myLocation"));
+    if (!next) return;
+    startHit = next.start;
+    startIsGps = next.start === null;
+    startQuery = next.start?.label ?? (userLocation ? t("route.myLocation") : "");
+    if (startIsGps && userLocation) void fillGpsStartLabel(userLocation);
+    endHit = next.end;
+    endIsHere = next.endIsHere;
+    destQuery = next.end?.label ?? "";
+    pickMode = null;
+    if (endHit) void runRoute();
+    else clearDestination();
+  }
+
   async function fillGpsStartLabel(ll: LngLat): Promise<void> {
     const hit = await reverseGeocode(ll, locale);
     if (!startIsGps) return;
@@ -578,6 +640,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   async function selectDestination(hit: GeoHit): Promise<void> {
     endHit = hit;
+    endIsHere = false;
     destQuery = hit.label;
     settingsOpen = false;
     pendingDest = true;
@@ -593,6 +656,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function clearDestination(): void {
     endHit = null;
+    endIsHere = false;
     destQuery = "";
     pendingDest = false;
     destStatus = "idle";
@@ -642,11 +706,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** Brand filter is replaced, never mutated, so the array identity keys the cache. */
   function includedStations(): Station[] {
     const source = activeStations();
-    if (includedCache?.excluded !== settings.excludedBrands || includedCache.source !== source) {
+    const excluded = excludedFor(settings);
+    if (includedCache?.excluded !== excluded || includedCache.source !== source) {
       includedCache = {
-        excluded: settings.excludedBrands,
+        excluded,
         source,
-        stations: source.filter((s) => isBrandIncluded(s.brand, settings.excludedBrands)),
+        stations: source.filter((s) => isBrandIncluded(s.brand, excluded)),
       };
     }
     return includedCache.stations;
@@ -1014,7 +1079,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (isSpotView()) return historyFile?.spot;
     const series = historyFile?.byFuel[settings.fuel];
     const forStat = seriesForStat(series, settings.historyStat);
-    return forStat ? filterSeries(forStat, settings.excludedBrands) : undefined;
+    return forStat ? filterSeries(forStat, excludedFor(settings)) : undefined;
   }
 
   function historyHtml(): string {
@@ -1088,9 +1153,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
     return chartBrands(historyViewSeries()).map((b) => b.id);
   }
 
+  /** Charging networks by the name their operator uses; brands keep their own names. */
+  function historyLabels(): ReadonlyMap<string, string> {
+    return isEv() && chargers ? networkLabels(chargers) : new Map();
+  }
+
   function historyLegendHtml(filtered: HistoryHourSeries | undefined): string {
     const brands = chartBrands(filtered);
     if (brands.length === 0) return `<div id="history-legend"></div>`;
+    const labels = historyLabels();
     const ids = brands.map((b) => b.id);
     const allOn = allHistoryBrandsOn(hiddenHistoryBrands, ids);
     const chips = brands
@@ -1098,7 +1169,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         const on = !hiddenHistoryBrands.has(b.id);
         return `<button type="button" class="history-chip${on ? " is-on" : ""}" data-act="history-brand" data-brand="${escapeHtml(b.id)}" aria-pressed="${on ? "true" : "false"}">
         <span class="history-chip-swatch" style="background:${escapeHtml(brandColor(b.id, i))}"></span>
-        ${escapeHtml(brandLabel(b.id))}
+        ${escapeHtml(labels.get(b.id) ?? brandLabel(b.id))}
       </button>`;
       })
       .join("");
@@ -1133,6 +1204,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     historyPlot = mountHistoryChart(el, filtered, hiddenHistoryBrands, {
       fuel: settings.fuel,
       ...(isSpotView() ? { now: new Date().toISOString() } : {}),
+      labels: historyLabels(),
     });
   }
 
@@ -1333,6 +1405,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const startPlaceholder =
       startIsGps && locateStatus === "pending" ? t("dest.locating") : t("dest.from");
     const minLabel = destVal || startVal || t("app.name");
+    const canSwap = swapEndpoints(currentEndpoints(), hereForSwap(), "") !== null;
     return `
       <div class="header-body">
         <div class="topbar">
@@ -1375,6 +1448,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
             ${endHit ? `<button type="button" class="dest-clear" data-act="clear-dest" aria-label="${escapeHtml(t("dest.clear"))}">×</button>` : ""}
             <div id="dest-sug" class="sug-box"></div>
           </div>
+          <button type="button" class="dest-swap" data-act="swap-dest" aria-label="${escapeHtml(t("dest.swap"))}" title="${escapeHtml(t("dest.swap"))}"${canSwap ? "" : " disabled"}>${SWAP_ICON}</button>
         </div>
       </div>
       <button type="button" class="header-toggle" data-act="toggle-header" aria-expanded="${headerMinimized ? "false" : "true"}" aria-label="${escapeHtml(headerMinimized ? t("header.expand") : t("header.collapse"))}">
@@ -1386,18 +1460,39 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function settingsHtml(): string {
+    const ev = isEv();
+    // EV lists charging networks by the name their operator uses; fuel lists the chains.
+    const evLabels = ev ? networkLabels(activeStations()) : new Map<string, string>();
+    const label = (brand: string) => evLabels.get(brand) ?? brandLabel(brand);
+    const excluded = excludedFor(settings);
     const brands = uniqueBrands(activeStations()).sort((a, b) => {
       if (a === "independent") return 1;
       if (b === "independent") return -1;
-      return brandLabel(a).localeCompare(brandLabel(b), locale === "lt" ? "lt" : "en");
+      return label(a).localeCompare(label(b), locale === "lt" ? "lt" : "en");
     });
-    const checks = brands
-      .map((brand) => {
-        const id = `set-brand-${brand}`;
-        const on = isBrandIncluded(brand, settings.excludedBrands);
-        return `<label class="check"><input id="${escapeHtml(id)}" data-brand="${escapeHtml(brand)}" type="checkbox"${on ? " checked" : ""} />${escapeHtml(brandLabel(brand))}</label>`;
-      })
-      .join("");
+    const checks = brands.length
+      ? brands
+          .map((brand) => {
+            const id = `set-brand-${brand}`;
+            const on = isBrandIncluded(brand, excluded);
+            return `<label class="check"><input id="${escapeHtml(id)}" data-brand="${escapeHtml(brand)}" type="checkbox"${on ? " checked" : ""} />${escapeHtml(label(brand))}</label>`;
+          })
+          .join("")
+      : `<p class="hint">${escapeHtml(t("list.loadingChargers"))}</p>`;
+    const source = (href: string, text: string) =>
+      `<li><a href="${href}" target="_blank" rel="noopener noreferrer">${escapeHtml(text)}</a></li>`;
+    const sources = ev
+      ? [
+          source(REGISTER_SOURCE_URL, t("settings.source.register")),
+          source(OSM_SOURCE_URL, t("settings.source.osm")),
+          source(SPOT_SOURCE_URL, t("settings.source.nordpool")),
+        ]
+      : [
+          source(LEA_SOURCE_URL, t("settings.source.lea")),
+          source(CIRCLE_K_SOURCE_URL, brandLabel("circle-k")),
+          source(OSM_SOURCE_URL, t("settings.source.osm")),
+          source(REPORTS_SOURCE_URL, t("settings.source.reports")),
+        ];
     return `<section class="panel" aria-label="${escapeHtml(t("settings.title"))}">
       <header><h2>${escapeHtml(t("settings.title"))}</h2><button type="button" data-act="close-panel">${escapeHtml(t("action.close"))}</button></header>
       ${
@@ -1411,18 +1506,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
         <p class="hint">${escapeHtml(t("settings.highAccuracyHint"))}</p>
       </div>
       <fieldset class="brand-filter">
-        <legend>${escapeHtml(t("settings.providers"))}</legend>
+        <legend>${escapeHtml(t(ev ? "settings.networks" : "settings.providers"))}</legend>
         ${checks}
       </fieldset>
       <fieldset class="data-sources">
         <legend>${escapeHtml(t("settings.sources"))}</legend>
         <ul>
-          <li><a href="${LEA_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("settings.source.lea"))}</a></li>
-          <li><a href="${CIRCLE_K_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(brandLabel("circle-k"))}</a></li>
-          <li><a href="${OSM_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("settings.source.osm"))}</a></li>
-          <li><a href="${REGISTER_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("settings.source.register"))}</a></li>
-          <li><a href="${SPOT_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("settings.source.nordpool"))}</a></li>
-          <li><a href="${REPORTS_SOURCE_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("settings.source.reports"))}</a></li>
+          ${sources.join("\n          ")}
         </ul>
       </fieldset>
     </section>`;

@@ -148,5 +148,7 @@
   "free.networkPaid": "Other chargers on this network are paid, so “free” here may be a register error.",
   "free.unknown": "The register says charging is free but gives no reason. It may be a promotion or limited access.",
   "history.mode.spot": "Spot",
-  "history.evCaption": "Charger prices by the network that sets them. Free chargers are left out."
+  "history.evCaption": "Charger prices by the network that sets them. Free chargers are left out.",
+  "dest.swap": "Swap start and destination",
+  "settings.networks": "Charging networks"
 }

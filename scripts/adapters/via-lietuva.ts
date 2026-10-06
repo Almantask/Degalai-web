@@ -280,8 +280,9 @@ export function parseRegisterRows(rows: string[][]): Station[] {
         station: {
           id: "",
           name: name || operator || "Įkrovimo stotelė",
-          // Not the owner: Ignitis gamyba owns chargers Stuart Energy runs, outside Ignitis ON.
-          brand: normalizeBrand(operator, name),
+          // The operator sets the price: not the host named in the location (an "IKI" or "Viada" car
+          // park), nor the owner (Ignitis gamyba owns chargers Stuart Energy runs, outside Ignitis ON).
+          brand: normalizeBrand(operator),
           lat: p.lat,
           lon: p.lon,
           ...(address ? { address } : {}),

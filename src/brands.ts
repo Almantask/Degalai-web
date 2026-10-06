@@ -55,23 +55,28 @@ export function normalizeBrand(...parts: (string | undefined)[]): string {
   return "independent";
 }
 
+/** Brand ids the app knows by name (fuel chains and the larger EV networks). */
+export const KNOWN_BRANDS = new Set([...Object.values(BRAND_ALIASES), "independent"]);
+
+// Company forms dropped from network names (after diacritics are stripped, so "VšĮ" is "vsi").
+const LEGAL_FORMS = /\b(?:uab|ab|mb|vsi|sia|oy|gmbh|ltd)\b/g;
+
 /**
- * History series id for a charging network, which sets the price: a known brand id (`Ignitis LT`
- * → `ignitis-on`), else the network's name as a slug (`In Balance grid, UAB` → `inbalance-grid`).
+ * Provider id for a charging network the alias list does not know, e.g. `In Balance grid, UAB`
+ * → `in-balance-grid`. Same shape as brand ids, so settings can store it.
  */
-export function evProviderId(network: string | undefined): string {
-  if (!network?.trim()) return "independent";
-  const brand = normalizeBrand(network);
-  if (brand !== "independent") return brand;
-  const slug = network
-    .toLowerCase()
+export function networkSlug(name: string | undefined): string {
+  const slug = (name ?? "")
     .normalize("NFD")
     .replace(/\p{M}/gu, "")
-    .replace(/[„“"']/g, "")
-    .replace(/(^|[\s,])(uab|ab|vi|vsi|mb|ii)(?=$|[\s,])/g, "$1")
+    .toLowerCase()
+    .replace(LEGAL_FORMS, " ")
+    // The register spells one network both "Inbalance grid" and "In Balance grid, UAB".
     .replace(/\bin balance\b/g, "inbalance")
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40)
+    .replace(/-+$/g, "");
   return slug || "independent";
 }
 

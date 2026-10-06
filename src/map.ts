@@ -3,7 +3,7 @@ import type { DailyPrices, FuelType, Station, UserSettings } from "./types.ts";
 import { LT_BOUNDS, LT_CENTER } from "./types.ts";
 import type { LngLat } from "./geo.ts";
 import { formatMoney, formatPrice, formatPriceNumber, escapeHtml } from "./format.ts";
-import { brandLabel, t } from "./i18n/index.ts";
+import { brandLabel, chargerBrandLabel, t } from "./i18n/index.ts";
 
 const SOURCE = "stations";
 const CLUSTER = "stations-clusters";
@@ -307,7 +307,7 @@ export function setStationData(
 ): void {
   const src = map.getSource(SOURCE) as maplibregl.GeoJSONSource | undefined;
   if (!src) return;
-  const excluded = new Set(settings.excludedBrands);
+  const excluded = new Set(fuel === "EV" ? settings.excludedEvBrands : settings.excludedBrands);
   const priced = stations
     .map((s) => ({ s, price: prices?.prices[s.id]?.[fuel]?.price }))
     .filter(({ s, price }) => {
@@ -492,8 +492,7 @@ export function stationPopupHtml(
     .join("");
   const addr = s.address || s.city || t("list.addressMissing");
   const dist = extra?.distLabel ? `<p class="popup-eta">${escapeHtml(extra.distLabel)}</p>` : "";
-  const brand =
-    s.ev && s.brand === "independent" && s.ev.network ? s.ev.network : brandLabel(s.brand);
+  const brand = s.ev ? chargerBrandLabel(s) : brandLabel(s.brand);
   return `<div class="popup">
     <h3>${escapeHtml(s.name)}</h3>
     <p class="popup-brand">${escapeHtml(brand)}</p>

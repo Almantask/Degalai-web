@@ -148,5 +148,7 @@
   "free.networkPaid": "Kitos šio tinklo stotelės mokamos, todėl „nemokama“ čia gali būti klaida registre.",
   "free.unknown": "Registre nurodyta, kad įkrovimas nemokamas, bet priežastis nenurodyta. Gali būti akcija arba ribota prieiga.",
   "history.mode.spot": "Birža",
-  "history.evCaption": "Įkrovimo kainos pagal tinklą, kuris jas nustato. Nemokamos stotelės neįtrauktos."
+  "history.evCaption": "Įkrovimo kainos pagal tinklą, kuris jas nustato. Nemokamos stotelės neįtrauktos.",
+  "dest.swap": "Sukeisti pradžią ir tikslą",
+  "settings.networks": "Įkrovimo tinklai"
 }

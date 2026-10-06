@@ -853,6 +853,55 @@ test.describe("EV", () => {
     await expect(tip).toContainText("On the grounds of a Ignitis gamyba power plant");
   });
 
+  test("EV settings list charging networks and EV data sources only", async ({ page }) => {
+    const charger = (id: string, brand: string, network: string, lat: number) => ({
+      id,
+      name: id,
+      brand,
+      lat,
+      lon: 25.28,
+      fuels: ["EV"],
+      ev: { sockets: ["type2"], network },
+    });
+    await page.route("**/data/chargers.json", (route) =>
+      route.fulfill({
+        json: [
+          charger("vl:A", "in-balance-grid", "Inbalance grid", 54.687),
+          charger("vl:B", "eldrive-lithuania", "Eldrive Lithuania", 54.688),
+          charger("vl:C", "independent", "Hotel Charger", 54.689),
+        ],
+      }),
+    );
+    await page.goto("/en/?fuel=ev");
+    await expect(page.locator(".station-row")).toHaveCount(3);
+    await page.getByRole("button", { name: "Settings" }).click();
+    const networks = page.getByRole("group", { name: "Charging networks" });
+    await expect(networks.getByRole("checkbox")).toHaveCount(3);
+    await expect(networks.getByRole("checkbox", { name: "Inbalance grid" })).toBeChecked();
+    await expect(networks.getByRole("checkbox", { name: "Eldrive Lithuania" })).toBeChecked();
+    await expect(networks.getByRole("checkbox", { name: "Other" })).toBeChecked();
+    const sources = page.getByRole("group", { name: "Data sources" });
+    await expect(sources.getByRole("link")).toHaveText([
+      "Via Lietuva charge point register (CC BY 4.0)",
+      "OpenStreetMap",
+      "Nord Pool power exchange (Elering)",
+    ]);
+
+    await networks.getByRole("checkbox", { name: "Other" }).uncheck();
+    await expect(page.locator(".station-row")).toHaveCount(2);
+
+    // Unticking "Other" for chargers leaves independent fuel stations alone.
+    await page.getByRole("button", { name: "Diesel", exact: true }).click();
+    const providers = page.getByRole("group", { name: "Providers" });
+    await expect(providers.getByRole("checkbox", { name: "Other" })).toBeChecked();
+    await expect(page.getByRole("group", { name: "Data sources" }).getByRole("link")).toHaveText([
+      "LEA (Lithuanian Energy Agency)",
+      "Circle K",
+      "OpenStreetMap",
+      "User reports",
+    ]);
+  });
+
   test("EV history has stat tabs by network, and the spot price under its own tab", async ({
     page,
   }) => {
@@ -915,5 +964,90 @@ test.describe("EV", () => {
     await expect(page.locator("#history-legend [data-act='history-brand']")).toHaveCount(0);
     await expect(page.locator(".history-cheap")).toContainText("Cheapest power");
     await expect(page.locator(".history-caption").last()).toContainText("excluding VAT");
+  });
+});
+
+test.describe("route fields", () => {
+  test.use({ serviceWorkers: "block" });
+
+  test("swap start and destination, and clear with the browser's own ✕", async ({ page }) => {
+    await page.addInitScript(() => {
+      const pos = {
+        coords: {
+          latitude: 54.687,
+          longitude: 25.28,
+          accuracy: 10,
+          altitude: null,
+          altitudeAccuracy: null,
+          heading: null,
+          speed: null,
+        },
+        timestamp: Date.now(),
+      };
+      navigator.geolocation.getCurrentPosition = (ok) => ok(pos as GeolocationPosition);
+    });
+    await page.route("https://photon.komoot.io/**", async (route) => {
+      const reverse = route.request().url().includes("/reverse");
+      await route.fulfill({
+        json: {
+          features: [
+            reverse
+              ? { geometry: { coordinates: [25.28, 54.687] }, properties: { name: "Vilnius" } }
+              : { geometry: { coordinates: [23.9, 54.9] }, properties: { name: "Kaunas" } },
+          ],
+        },
+      });
+    });
+    await page.route("https://router.project-osrm.org/**", (route) =>
+      route.fulfill({
+        json: {
+          code: "Ok",
+          routes: [
+            {
+              distance: 100000,
+              duration: 5400,
+              geometry: {
+                coordinates: [
+                  [25.28, 54.687],
+                  [24.6, 54.8],
+                  [23.9, 54.9],
+                ],
+              },
+            },
+          ],
+        },
+      }),
+    );
+    await page.goto("/");
+    const swap = page.getByRole("button", { name: "Sukeisti pradžią ir tikslą" });
+    await expect(swap).toBeDisabled();
+    for (const clear of await page.locator(".dest-clear").all()) await expect(clear).toBeHidden();
+
+    const dest = page.locator("#dest");
+    await dest.fill("Kaunas");
+    await dest.press("Enter");
+    await expect(page.locator(".app")).toHaveClass(/has-route/, { timeout: 15_000 });
+    await expect(page.locator(".dest-clear")).toBeHidden();
+
+    await page.locator(".header-toggle").click();
+    await swap.click();
+    await expect(page.locator("#start")).toHaveValue(/Kaunas/);
+    await expect(page.locator("#dest")).toHaveValue("Mano vieta");
+    await expect(page.locator(".app")).toHaveClass(/has-route/);
+
+    await page.locator(".header-toggle").click();
+    await swap.click();
+    await expect(page.locator("#dest")).toHaveValue(/Kaunas/);
+    await expect(page.locator("#start")).not.toHaveValue(/Kaunas/);
+
+    // What the native ✕ does: empty the field, fire `input`, then a non-bubbling `search`.
+    await page.locator(".header-toggle").click();
+    await dest.evaluate((el: HTMLInputElement) => {
+      el.value = "";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("search"));
+    });
+    await expect(page.locator(".app")).not.toHaveClass(/has-route/);
+    await expect(dest).toHaveValue("");
   });
 });

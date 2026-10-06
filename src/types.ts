@@ -184,6 +184,8 @@ export interface UserSettings {
   highAccuracyLocation: boolean;
   /** Brand ids the user turned off. Empty means every provider is included. */
   excludedBrands: string[];
+  /** Charging networks the user turned off; kept apart so EV and fuel filters never mix. */
+  excludedEvBrands: string[];
   /** Statistic plotted on the history chart. */
   historyStat: HistoryStat;
   locale?: "lt" | "en";
@@ -204,6 +206,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   hideUnpriced: true,
   highAccuracyLocation: true,
   excludedBrands: [],
+  excludedEvBrands: [],
   historyStat: "avg",
 };
 

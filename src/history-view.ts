@@ -102,8 +102,8 @@ export function historyNowIndex(series: HistoryHourSeries, nowIso: string): numb
 /** Hours of past shown left of the "now" marker when a series runs into the future. */
 export const HISTORY_NOW_LEAD = 6;
 
-export function historySeriesLabel(id: string): string {
-  return id === SPOT_SERIES ? t("history.spot") : brandLabel(id);
+export function historySeriesLabel(id: string, labels?: ReadonlyMap<string, string>): string {
+  return id === SPOT_SERIES ? t("history.spot") : (labels?.get(id) ?? brandLabel(id));
 }
 
 export interface HistoryChartOptions {
@@ -111,6 +111,8 @@ export interface HistoryChartOptions {
   fuel?: FuelType;
   /** Draw a "now" marker and start scrolled to it (spot prices run a day ahead). */
   now?: string;
+  /** Names for provider ids without a brand name, e.g. charging networks. */
+  labels?: ReadonlyMap<string, string>;
 }
 
 export type HistoryPlot = {
@@ -198,7 +200,7 @@ export function mountHistoryChart(
       series: [
         { label: t("history.hour") },
         ...brands.map((b, i) => ({
-          label: historySeriesLabel(b.id),
+          label: historySeriesLabel(b.id, opts.labels),
           stroke: brandColor(b.id, i),
           width: 2,
           spanGaps: true,

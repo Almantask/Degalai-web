@@ -11,7 +11,6 @@ import type {
   Station,
 } from "../src/types.ts";
 import { HISTORY_FUELS, HISTORY_KEEP_DAYS, HISTORY_STATS, SPOT_SERIES } from "../src/types.ts";
-import { evProviderId } from "../src/brands.ts";
 import { round3 } from "../src/calc.ts";
 
 export function median(sorted: number[]): number {
@@ -86,9 +85,9 @@ export function sampleHour(daily: DailyPrices): number {
 }
 
 /**
- * Price stats per provider: pump fuels by station brand, EV by charging network (the host brand of
- * a charger, e.g. Orlen, is not who sets its price). Free chargers stay out of EV stats: most are
- * on private grounds (provider-mistakes.md), and a 0 would pin every minimum.
+ * Price stats per provider: station brand for pump fuels, charging network for EV (a charger's
+ * brand is its network id, see `assignNetworkBrands`). Free chargers stay out of EV stats: most
+ * are on private grounds (provider-mistakes.md), and a 0 would pin every minimum.
  */
 export function brandStats(
   daily: DailyPrices,
@@ -101,8 +100,7 @@ export function brandStats(
       const e = fuels[fuel];
       if (!e || e.stale) continue;
       if (fuel === "EV" && e.price === 0) continue;
-      const s = stations.get(sid);
-      const brand = fuel === "EV" ? evProviderId(s?.ev?.network) : (s?.brand ?? "independent");
+      const brand = stations.get(sid)?.brand ?? "independent";
       const list = bags.get(brand) ?? [];
       list.push(e.price);
       bags.set(brand, list);

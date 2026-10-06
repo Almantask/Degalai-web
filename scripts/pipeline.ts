@@ -19,7 +19,7 @@ import {
 } from "./adapters/nordpool.ts";
 import { loadPriceReports, reportsToObservations } from "./adapters/reports.ts";
 import { fetchRegister, loadRegisterCache, usableCache } from "./adapters/via-lietuva.ts";
-import { mergeChargers } from "./chargers.ts";
+import { assignNetworkBrands, mergeChargers } from "./chargers.ts";
 import { geocodePhoton, loadGeocodeCache, saveGeocodeCache, sleep } from "./geocode.ts";
 import { datesWithinDays, isHistoryFile, prunePriceFiles, recomputeHistory } from "./history.ts";
 import { loadOverrides, matchByAddress, matchObservations } from "./match.ts";
@@ -242,7 +242,9 @@ async function main(): Promise<void> {
   }
   const runAt = new Date();
   const register = await loadRegister(runAt);
-  const { chargers, osmOnly: osmOnlyChargers } = mergeChargers(register, osmChargers);
+  const merged = mergeChargers(register, osmChargers);
+  const osmOnlyChargers = merged.osmOnly;
+  const { chargers, networks } = assignNetworkBrands(merged.chargers);
   const spot = await loadSpot(runAt);
 
   const overrides = loadOverrides(join(DATA, "overrides", "stations.json"));
@@ -318,7 +320,8 @@ async function main(): Promise<void> {
   mergeChargerPrices(fresh, evPrices);
   const bySource = countBySource(evPrices);
   console.log(
-    `EV: ${chargers.length} chargers (${register.length} register, ${osmOnlyChargers} OSM only); ` +
+    `EV: ${chargers.length} chargers (${register.length} register, ${osmOnlyChargers} OSM only, ` +
+      `${networks} named networks); ` +
       `${Object.keys(evPrices).length} priced: ` +
       EV_SOURCE_ORDER.map((src) => `${src} ${bySource[src] ?? 0}`).join(", ") +
       ` (${tariffs.length} network tariffs)`,

@@ -9,7 +9,6 @@ import {
   sampleFromDaily,
   sampleKey,
 } from "../scripts/history.ts";
-import { evProviderId } from "../src/brands.ts";
 import type { BrandStat, DailyPrices, HistorySample, Station } from "../src/types.ts";
 
 const stations = new Map<string, Station>([
@@ -231,7 +230,8 @@ describe("compactHistoryForClient", () => {
 });
 
 describe("buildHistoryFile", () => {
-  const charger = (id: string, network: string, brand = "independent"): [string, Station] => [
+  // `brand` is the network id that assignNetworkBrands gives each charger.
+  const charger = (id: string, network: string, brand: string): [string, Station] => [
     id,
     {
       id,
@@ -252,9 +252,9 @@ describe("buildHistoryFile", () => {
     const withChargers = new Map([
       ...stations,
       charger("c1", "Ignitis LT", "ignitis-on"),
-      charger("c2", "Inbalance grid", "orlen"),
-      charger("c3", "In Balance grid, UAB"),
-      charger("c4", "Stuart Energy"),
+      charger("c2", "Inbalance grid", "inbalance-grid"),
+      charger("c3", "In Balance grid, UAB", "inbalance-grid"),
+      charger("c4", "Stuart Energy", "stuart-energy"),
     ]);
     const sample = sampleFromDaily(
       {
@@ -263,7 +263,7 @@ describe("buildHistoryFile", () => {
       },
       withChargers,
     );
-    // The Orlen-hosted Inbalance charger counts for Inbalance, which sets its price.
+    // Stuart Energy's only charger here is free, so it has no line.
     expect(sample.byFuel.EV).toEqual({
       "ignitis-on": p(0.39),
       "inbalance-grid": { min: 0.28, max: 0.36, avg: 0.32, median: 0.32 },
@@ -275,17 +275,5 @@ describe("buildHistoryFile", () => {
     expect(file.byFuel.D?.brands.neste).toEqual([1.6]);
     expect(buildHistoryFile([sample], "2026-09-14T12:00:00Z").spot).toBeUndefined();
     expect(compactHistoryForClient(file).spot).toEqual(spot);
-  });
-});
-
-describe("evProviderId", () => {
-  it("names a network by brand when known, else by its name", () => {
-    expect(evProviderId("Ignitis LT")).toBe("ignitis-on");
-    expect(evProviderId("Eleport UAB")).toBe("eleport");
-    expect(evProviderId("Inbalance grid")).toBe("inbalance-grid");
-    expect(evProviderId("In Balance grid, UAB")).toBe("inbalance-grid");
-    expect(evProviderId("Stuart Energy, UAB")).toBe("stuart-energy");
-    expect(evProviderId("Elektrum Drive")).toBe("elektrum-drive");
-    expect(evProviderId(undefined)).toBe("independent");
   });
 });
