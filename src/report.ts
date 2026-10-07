@@ -2,6 +2,11 @@
 
 /** The cron worker's endpoint, which files the issue with the maintainer's token. */
 export const REPORT_ENDPOINT = "https://kur-degalai-cron.almantusk.workers.dev/report";
+/** Where reports land, newest first; offered when the worker has not answered in time. */
+export const REPORTS_LIST_URL =
+  "https://github.com/Almantask/Degalai-web/issues?q=is%3Aissue+label%3Auser-report";
+/** How long the form waits for the issue's number; the form tells the visitor so. */
+export const REPORT_TIMEOUT_MS = 60_000;
 /** Same bounds as the worker; shorter text is rejected before sending. */
 export const MIN_REPORT_CHARS = 10;
 export const MAX_REPORT_CHARS = 2000;
@@ -41,19 +46,24 @@ export type ReportResult =
       /** `false` when a picture was sent but the worker could not store it. */
       imageSaved?: boolean;
     }
-  | { ok: false; reason: "rate" | "failed" };
+  /** `timeout`: no answer in time, though the issue may well have been filed. */
+  | { ok: false; reason: "rate" | "failed" | "timeout" };
 
 export async function sendReport(
   endpoint: string,
   form: ReportForm,
   context: ReportContext,
   fetchImpl: typeof fetch = fetch,
+  timeoutMs = REPORT_TIMEOUT_MS,
 ): Promise<ReportResult> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetchImpl(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, ...context }),
+      signal: controller.signal,
     });
     if (res.status === 429) return { ok: false, reason: "rate" };
     if (!res.ok) return { ok: false, reason: "failed" };
@@ -65,7 +75,9 @@ export async function sendReport(
       imageSaved: typeof body.imageSaved === "boolean" ? body.imageSaved : undefined,
     };
   } catch {
-    return { ok: false, reason: "failed" };
+    return { ok: false, reason: controller.signal.aborted ? "timeout" : "failed" };
+  } finally {
+    clearTimeout(timer);
   }
 }
 

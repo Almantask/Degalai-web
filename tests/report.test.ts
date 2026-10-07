@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   isEmail,
   REPORT_ENDPOINT,
+  REPORT_TIMEOUT_MS,
   sendReport,
   type ReportContext,
   type ReportForm,
@@ -71,6 +72,21 @@ describe("sendReport", () => {
     });
   });
 
+  it("gives up after the time limit and says so, rather than calling it a failure", async () => {
+    const hanging = vi.fn(
+      (_url: RequestInfo | URL, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(new DOMException("The operation was aborted.", "AbortError")),
+          );
+        }),
+    );
+    expect(await sendReport(ENDPOINT, bug, context, hanging, 20)).toEqual({
+      ok: false,
+      reason: "timeout",
+    });
+  });
+
   it("tells a rate limit apart from other failures", async () => {
     const limited = vi.fn(async () => new Response(null, { status: 429 }));
     expect(await sendReport(ENDPOINT, bug, context, limited)).toEqual({
@@ -120,6 +136,10 @@ describe("REPORT_ENDPOINT", () => {
     const url = new URL(REPORT_ENDPOINT);
     expect(url.protocol).toBe("https:");
     expect(url.pathname).toBe("/report");
+  });
+
+  it("waits a minute, as the form promises", () => {
+    expect(REPORT_TIMEOUT_MS).toBe(60_000);
   });
 });
 

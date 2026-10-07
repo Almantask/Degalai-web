@@ -101,6 +101,8 @@ test("feedback picks bug or suggestion, checks text and email, and files it thro
     if (route.request().method() === "OPTIONS")
       return route.fulfill({ status: 204, headers: cors });
     sent.push(route.request().postDataJSON() as Record<string, unknown>);
+    // GitHub takes a moment: the form shows it is waiting meanwhile.
+    await new Promise((resolve) => setTimeout(resolve, 1500));
     return route.fulfill({
       status: 201,
       headers: cors,
@@ -175,6 +177,11 @@ test("feedback picks bug or suggestion, checks text and email, and files it thro
 
   await email.fill(" vardas@pastas.lt ");
   await page.getByRole("button", { name: "Siųsti" }).click();
+  const waiting = page
+    .getByRole("status")
+    .filter({ hasText: "Laukiame, kol pranešimas atsiras GitHub'e" });
+  await expect(waiting).toBeVisible();
+  await expect(waiting).toContainText("palaukite – tai gali užtrukti iki minutės");
   const link = page.getByRole("link", { name: /Atidaryti #51 GitHub'e/ });
   await expect(link).toBeFocused();
   await expect(link).toHaveAttribute("href", "https://github.com/Almantask/Degalai-web/issues/51");

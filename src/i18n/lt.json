@@ -167,7 +167,6 @@
   "report.placeholder.feature": "Pvz.: pranešti, kai pigiausia degalinė šalia manęs atpinga.",
   "report.public": "Tekstas ir paveikslėlis bus paskelbti viešai GitHub'e kartu su puslapio adresu, naršykle ir ekrano dydžiu. Nerašykite ir nerodykite asmeninių duomenų.",
   "report.send": "Siųsti",
-  "report.sending": "Siunčiama…",
   "report.short": "Aprašykite plačiau – bent {n} simbolių.",
   "report.sent": "Ačiū! Užregistruota kaip #{n}.",
   "report.rate": "Per daug žinučių iš karto. Pabandykite po minutės.",
@@ -199,5 +198,9 @@
   "report.emailHint": "Neskelbiamas. Jį matys tik svetainės autorius, kad galėtų jums atsakyti.",
   "report.emailInvalid": "Įveskite tikrą el. pašto adresą, pvz., vardas@pastas.lt.",
   "report.copyLink": "Kopijuoti nuorodą",
-  "report.copied": "Nukopijuota ✓"
+  "report.copied": "Nukopijuota ✓",
+  "report.waiting": "Išsiųsta! Laukiame, kol pranešimas atsiras GitHub'e…",
+  "report.waitingHint": "Jei norite gauti nuorodą į sukurtą pranešimą, palaukite – tai gali užtrukti iki minutės.",
+  "report.timeout": "Per minutę atsakymo nesulaukėme. Žinutė greičiausiai vis tiek užregistruota – ją rasite tarp naujausių pranešimų GitHub'e.",
+  "report.latest": "Naujausi pranešimai GitHub'e"
 }

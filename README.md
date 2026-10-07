@@ -212,8 +212,12 @@ the site and needs no GitHub account. A bug is labelled `bug` and `user-report` 
 `[bug] …`), a suggestion `enhancement` and `user-report` (title `[feature] …`). The
 issue also lists the page, language, fuel, data time, browser and screen size. Visitor
 text sits in code blocks, so it cannot @mention anyone or reference other
-repositories. After sending, the form shows the issue's number, a button to open it
-and its address with a copy button.
+repositories. While the worker files the issue, the form shows a spinner and says the
+link comes within a minute; then it shows the issue's number, a button to open it and
+its address with a copy button. With no answer after a minute it stops waiting, says
+the message was most likely filed and links to the latest reports, keeping the draft
+in case it was not. Closing the form while it waits loses nothing: reopening shows
+the outcome.
 
 **Email.** Required, and checked in the browser and by the worker
 (something@somewhere.tld). Issues are public, so the address never goes into one: the
