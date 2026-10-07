@@ -6,6 +6,19 @@ on:
   schedule:
     - cron: "23 5 * * *"
   workflow_dispatch:
+  # Any branch, when code that calls a dependency (or the tests) changes.
+  push:
+    paths:
+      - "tests/deps/**"
+      - "vitest.deps.config.ts"
+      - "scripts/adapters/**"
+      - "scripts/osm.ts"
+      - "scripts/geocode.ts"
+      - "src/routing.ts"
+      - "src/map.ts"
+      - "worker/**"
+      - ".github/workflows/**"
+      - ".github/ISSUE_TEMPLATE/**"
 
 permissions:
   contents: read
