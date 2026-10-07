@@ -783,6 +783,44 @@ test("station popup has no navigate or updated text", async ({ page }) => {
 
 type LonLat = [number, number];
 
+/** The browser's location answers at once with this point. */
+async function fakeLocation(page: Page, latitude: number, longitude: number): Promise<void> {
+  await page.addInitScript(
+    ([lat, lon]) => {
+      const pos = {
+        coords: {
+          latitude: lat,
+          longitude: lon,
+          accuracy: 10,
+          altitude: null,
+          altitudeAccuracy: null,
+          heading: null,
+          speed: null,
+        },
+        timestamp: Date.now(),
+      };
+      navigator.geolocation.getCurrentPosition = (ok) => ok(pos as GeolocationPosition);
+    },
+    [latitude, longitude],
+  );
+}
+
+/** Photon: every search finds Kaunas, and every tapped point is in Vilnius. */
+async function photonVilniusKaunas(page: Page): Promise<void> {
+  await page.route("https://photon.komoot.io/**", async (route) => {
+    const reverse = route.request().url().includes("/reverse");
+    await route.fulfill({
+      json: {
+        features: [
+          reverse
+            ? { geometry: { coordinates: [25.28, 54.687] }, properties: { name: "Vilnius" } }
+            : { geometry: { coordinates: [23.9, 54.9] }, properties: { name: "Kaunas" } },
+        ],
+      },
+    });
+  });
+}
+
 function haversineM([lon1, lat1]: LonLat, [lon2, lat2]: LonLat): number {
   const rad = Math.PI / 180;
   const h =
@@ -805,21 +843,7 @@ function osrmTable(url: string, legM: (a: LonLat, b: LonLat) => number = haversi
 }
 
 test("destination draws a route from the current location", async ({ page }) => {
-  await page.addInitScript(() => {
-    const pos = {
-      coords: {
-        latitude: 54.687,
-        longitude: 25.28,
-        accuracy: 10,
-        altitude: null,
-        altitudeAccuracy: null,
-        heading: null,
-        speed: null,
-      },
-      timestamp: Date.now(),
-    };
-    navigator.geolocation.getCurrentPosition = (ok) => ok(pos as GeolocationPosition);
-  });
+  await fakeLocation(page, 54.687, 25.28);
   await page.route("https://photon.komoot.io/**", async (route) => {
     const url = route.request().url();
     if (url.includes("/reverse")) {
@@ -928,21 +952,7 @@ test("Kaunas: pick a route first, then stations on it and the cheapest on a dash
   // Vienybės a. → Pramonės pr. 3. The fastest route climbs over Žaliakalnis; the other runs along
   // the river past Neste on Tunelio g. and Circle K on K. Baršausko g., whose pumps are across
   // the road for this trip.
-  await page.addInitScript(() => {
-    const pos = {
-      coords: {
-        latitude: 54.8987,
-        longitude: 23.9118,
-        accuracy: 10,
-        altitude: null,
-        altitudeAccuracy: null,
-        heading: null,
-        speed: null,
-      },
-      timestamp: Date.now(),
-    };
-    navigator.geolocation.getCurrentPosition = (ok) => ok(pos as GeolocationPosition);
-  });
+  await fakeLocation(page, 54.8987, 23.9118);
   const neste = "osm:node:13686908424";
   const circleKId = "osm:way:264954098";
   await page.route("**/data/prices/*.json", async (route) => {
@@ -1270,33 +1280,8 @@ test.describe("route fields", () => {
   test.use({ serviceWorkers: "block" });
 
   test("swap start and destination, and clear with the browser's own ✕", async ({ page }) => {
-    await page.addInitScript(() => {
-      const pos = {
-        coords: {
-          latitude: 54.687,
-          longitude: 25.28,
-          accuracy: 10,
-          altitude: null,
-          altitudeAccuracy: null,
-          heading: null,
-          speed: null,
-        },
-        timestamp: Date.now(),
-      };
-      navigator.geolocation.getCurrentPosition = (ok) => ok(pos as GeolocationPosition);
-    });
-    await page.route("https://photon.komoot.io/**", async (route) => {
-      const reverse = route.request().url().includes("/reverse");
-      await route.fulfill({
-        json: {
-          features: [
-            reverse
-              ? { geometry: { coordinates: [25.28, 54.687] }, properties: { name: "Vilnius" } }
-              : { geometry: { coordinates: [23.9, 54.9] }, properties: { name: "Kaunas" } },
-          ],
-        },
-      });
-    });
+    await fakeLocation(page, 54.687, 25.28);
+    await photonVilniusKaunas(page);
     await page.route("https://router.project-osrm.org/**", (route) =>
       route.fulfill({
         json: {
@@ -1355,33 +1340,8 @@ test.describe("point the route must pass", () => {
   test.use({ serviceWorkers: "block" });
 
   test("places a point under From / To, routes through it, and removes it", async ({ page }) => {
-    await page.addInitScript(() => {
-      const pos = {
-        coords: {
-          latitude: 54.687,
-          longitude: 25.28,
-          accuracy: 10,
-          altitude: null,
-          altitudeAccuracy: null,
-          heading: null,
-          speed: null,
-        },
-        timestamp: Date.now(),
-      };
-      navigator.geolocation.getCurrentPosition = (ok) => ok(pos as GeolocationPosition);
-    });
-    await page.route("https://photon.komoot.io/**", async (route) => {
-      const reverse = route.request().url().includes("/reverse");
-      await route.fulfill({
-        json: {
-          features: [
-            reverse
-              ? { geometry: { coordinates: [25.28, 54.687] }, properties: { name: "Vilnius" } }
-              : { geometry: { coordinates: [23.9, 54.9] }, properties: { name: "Kaunas" } },
-          ],
-        },
-      });
-    });
+    await fakeLocation(page, 54.687, 25.28);
+    await photonVilniusKaunas(page);
     /** Route requests: their waypoints and whether stations are reached on the curb side. */
     const asked: Array<{ points: LonLat[]; curb: boolean }> = [];
     await page.route("https://router.project-osrm.org/**", async (route) => {
