@@ -70,9 +70,10 @@ minimise for a full map.
 - Switch LT / EN in the header. **Donate** goes to
   [almantask.github.io/donate-me](https://almantask.github.io/donate-me/).
 - Install it as a PWA. Offline, the last known prices still show.
-- Send **feedback** (the speech-bubble icon in the header): report a bug or suggest a
-  feature without a GitHub account, with a picture if you like. It becomes a public
-  GitHub issue, and the form links to it; see [Feedback](#feedback).
+- Send **feedback** (the speech-bubble icon in the header): report a bug or make a
+  suggestion without a GitHub account, with a picture if you like. It becomes a public
+  GitHub issue (your email stays private), and the form links to it; see
+  [Feedback](#feedback).
 
 Settings store consumption (l/100 km) and value of time. Ranking on the map and
 on a route is still by pump price.
@@ -203,42 +204,43 @@ groups its charge points into sites and shows the cheapest price per site.
 ## Feedback
 
 The header's **Atsiliepimai / Feedback** icon opens a short form. The visitor first
-picks **Bug** or **Feature idea**, then writes the text. It posts to `POST /report`
-on the cron worker (`worker/src/report.ts`), which files a GitHub issue: a bug is
-labelled `bug` and `user-report` (title `[bug] …`), an idea `enhancement` and
-`user-report` (title `[feature] …`). The issue also lists the page, language, fuel,
-data time, browser and screen size. Visitor text sits in code blocks, so it cannot
-@mention anyone or reference other repositories. A post without a category (a page
-cached before ideas existed) counts as a bug. After sending, the form links to the
-new issue.
+picks **Klaida / Bug** (red) or **Pasiūlymas / Suggestion** (green), writes the text
+and gives an email address. It posts to `POST /report` on the cron worker
+(`worker/src/report.ts`, `https://kur-degalai-cron.almantusk.workers.dev`), which
+files the GitHub issue itself with the maintainer's token; the visitor never leaves
+the site and needs no GitHub account. A bug is labelled `bug` and `user-report` (title
+`[bug] …`), a suggestion `enhancement` and `user-report` (title `[feature] …`). The
+issue also lists the page, language, fuel, data time, browser and screen size. Visitor
+text sits in code blocks, so it cannot @mention anyone or reference other
+repositories. After sending, the form shows the issue's number, a button to open it
+and its address with a copy button.
+
+**Email.** Required, and checked in the browser and by the worker
+(something@somewhere.tld). Issues are public, so the address never goes into one: the
+worker keeps it for a year in the `REPORT_CONTACTS` KV namespace under a random key,
+and the issue's **Contact** section names that key. To reply, open the Cloudflare
+dashboard → **Storage & Databases → KV → kur-degalai-report-contacts** and look up the
+key.
 
 **Pictures.** The visitor can attach a picture or paste a screenshot (Ctrl+V). The
 browser redraws it as WebP (JPEG where WebP cannot be written), at most 1600 px on
 the longer side and 1.5 MB; redrawing also drops EXIF data such as a phone photo's GPS
 position. The worker accepts only PNG, JPEG or WebP whose bytes match the type, stores
 it in the `REPORT_IMAGES` KV namespace for a year, and shows it in the issue from
-`GET /report/image/<id>.<ext>` on the worker. If it cannot be stored (for example the
-free plan's 1,000 KV writes a day are used up), the issue is still filed and says the
-picture is missing. To take a picture down early, delete its key in the Cloudflare
-dashboard (**Storage & Databases → KV → kur-degalai-report-images**). The picture
-button only shows when the worker is set up; GitHub's new-issue link cannot carry
-one.
+`GET /report/image/<id>.<ext>` on the worker. To take a picture down early, delete its
+key in **kur-degalai-report-images**.
 
-The worker only takes posts from `REPORT_ORIGINS` (`worker/wrangler.jsonc`), allows 3
-reports a minute per IP and 10 a minute in total (Workers rate limiting), and
-quietly drops forms whose hidden honeypot field is filled in.
+If KV cannot store a picture or an address (for example the free plan's 1,000 KV
+writes a day are used up), the issue is still filed and says what is missing. The
+worker only takes posts from `REPORT_ORIGINS` (`worker/wrangler.jsonc`), allows 3
+reports a minute per IP and 10 a minute in total (Workers rate limiting), and quietly
+drops forms whose hidden honeypot field is filled in.
 
-Setup, once:
-
-1. The worker's `GITHUB_TOKEN` (from the `WORKFLOW_DISPATCH_TOKEN` secret) needs
-   **Issues: Read and write** on this repository besides **Actions: Read and
-   write**. A classic token with `repo` scope already has both.
-2. After the worker deploys, add a repository **variable** `REPORT_URL` set to
-   `https://kur-degalai-cron.<your-subdomain>.workers.dev/report` (the deploy log
-   prints the URL). The hourly build passes it to the site as `VITE_REPORT_URL`.
-
-Without `REPORT_URL` (local dev too), the form opens a prefilled GitHub issue
-instead, and a failed send offers the same link.
+The worker's `GITHUB_TOKEN` (from the `WORKFLOW_DISPATCH_TOKEN` secret) needs
+**Issues: Read and write** on this repository besides **Actions: Read and write**; a
+classic token with `repo` scope has both. To try the form against a local
+`wrangler dev`, build the site with `VITE_REPORT_URL=http://127.0.0.1:8787/report` and
+add the dev origin to `REPORT_ORIGINS`.
 
 ## Routing
 

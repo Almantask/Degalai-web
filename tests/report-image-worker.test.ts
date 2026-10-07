@@ -117,6 +117,7 @@ describe("handleReport with a picture", () => {
   const form = {
     category: "bug",
     description: "The list shows the wrong price for this station",
+    email: "vardas@pastas.lt",
     website: "",
   };
 

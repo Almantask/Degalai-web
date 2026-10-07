@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  githubIssueLink,
-  ISSUES_NEW_URL,
+  isEmail,
+  REPORT_ENDPOINT,
   sendReport,
   type ReportContext,
   type ReportForm,
@@ -18,10 +18,15 @@ const context: ReportContext = {
 };
 
 const ENDPOINT = "https://kur-degalai-cron.example.workers.dev/report";
-const bug: ReportForm = { category: "bug", description: "Map does not load", website: "" };
+const bug: ReportForm = {
+  category: "bug",
+  description: "Map does not load",
+  email: "vardas@pastas.lt",
+  website: "",
+};
 
 describe("sendReport", () => {
-  it("posts the category, description, honeypot and context as JSON", async () => {
+  it("posts the category, description, email, honeypot and context as JSON", async () => {
     const fetchImpl = vi.fn(async () =>
       Response.json(
         { ok: true, number: 7, url: "https://github.com/Almantask/Degalai-web/issues/7" },
@@ -40,6 +45,7 @@ describe("sendReport", () => {
     expect(JSON.parse(init.body as string)).toEqual({
       category: "bug",
       description: "Map does not load",
+      email: "vardas@pastas.lt",
       website: "",
       ...context,
     });
@@ -86,26 +92,34 @@ describe("sendReport", () => {
   });
 });
 
-describe("githubIssueLink", () => {
-  it("prefills a new issue with the text and context", () => {
-    const link = new URL(
-      githubIssueLink({ category: "bug", description: "  Wrong price\nat Viada  " }, context),
-    );
-    expect(`${link.origin}${link.pathname}`).toBe(ISSUES_NEW_URL);
-    expect(link.searchParams.get("title")).toBe("[bug] Wrong price");
-    expect(link.searchParams.get("labels")).toBe("bug");
-    const body = link.searchParams.get("body")!;
-    expect(body.startsWith("Wrong price\nat Viada\n")).toBe(true);
-    expect(body).toContain(`Page: ${context.page}`);
-    expect(body).toContain("Screen: 1280×800");
+describe("isEmail", () => {
+  it("takes ordinary addresses", () => {
+    expect(isEmail("vardas@pastas.lt")).toBe(true);
+    expect(isEmail("first.last+degalai@mail.example.co.uk")).toBe(true);
   });
 
-  it("labels a feature idea as an enhancement", () => {
-    const link = new URL(
-      githubIssueLink({ category: "feature", description: "Show a price alert" }, context),
-    );
-    expect(link.searchParams.get("title")).toBe("[feature] Show a price alert");
-    expect(link.searchParams.get("labels")).toBe("enhancement");
+  it("refuses text that is not an address", () => {
+    for (const bad of [
+      "",
+      "vardas",
+      "vardas@",
+      "@pastas.lt",
+      "vardas@pastas",
+      "va rdas@pastas.lt",
+    ]) {
+      expect(isEmail(bad)).toBe(false);
+    }
+    expect(isEmail("a@b.c")).toBe(false);
+    expect(isEmail("x<y>@pastas.lt")).toBe(false);
+    expect(isEmail(`${"a".repeat(250)}@pastas.lt`)).toBe(false);
+  });
+});
+
+describe("REPORT_ENDPOINT", () => {
+  it("is the worker's report route over HTTPS", () => {
+    const url = new URL(REPORT_ENDPOINT);
+    expect(url.protocol).toBe("https:");
+    expect(url.pathname).toBe("/report");
   });
 });
 

@@ -36,6 +36,11 @@
       "binding": "REPORT_IMAGES",
       "id": "3fed5675c00346a6b978182d69b9db1f",
     },
+    // Senders' email addresses, kept out of the public issues (which give the key).
+    {
+      "binding": "REPORT_CONTACTS",
+      "id": "129f1a0b817841e9a662db89c1d53cf2",
+    },
   ],
   // GITHUB_TOKEN is a secret, set by .github/workflows/worker.yml from WORKFLOW_DISPATCH_TOKEN.
   // It starts the workflow and files the reports, so it needs Actions and Issues write access.

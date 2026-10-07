@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { REPORT_ENDPOINT } from "../src/report.ts";
 
 test("PWA can be installed as a standalone mobile app", async ({ page }) => {
   await page.goto("/");
@@ -85,14 +86,35 @@ test("settings button stays inside the header when switching language", async ({
   await expectSettingsInsideHeader(page);
 });
 
-test("feedback asks bug or idea, checks the text, then opens a prefilled GitHub issue", async ({
+test("feedback picks bug or suggestion, checks text and email, and files it through the worker", async ({
   page,
   context,
 }) => {
-  // Built without VITE_REPORT_URL, as in CI: the form falls back to GitHub's new-issue page.
-  await context.route("https://github.com/**", (route) =>
-    route.fulfill({ status: 200, contentType: "text/html", body: "<p>issue form</p>" }),
-  );
+  // Stand in for the worker; nothing must open GitHub or reach the real endpoint.
+  const sent: Record<string, unknown>[] = [];
+  await page.route(REPORT_ENDPOINT, async (route) => {
+    const cors = {
+      "Access-Control-Allow-Origin": new URL(page.url()).origin,
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+    };
+    if (route.request().method() === "OPTIONS")
+      return route.fulfill({ status: 204, headers: cors });
+    sent.push(route.request().postDataJSON() as Record<string, unknown>);
+    return route.fulfill({
+      status: 201,
+      headers: cors,
+      contentType: "application/json",
+      body: JSON.stringify({
+        ok: true,
+        number: 51,
+        url: "https://github.com/Almantask/Degalai-web/issues/51",
+      }),
+    });
+  });
+  const popups: string[] = [];
+  context.on("page", (p) => popups.push(p.url()));
+
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   const open = page.getByRole("button", { name: "Atsiliepimai" });
@@ -103,7 +125,7 @@ test("feedback asks bug or idea, checks the text, then opens a prefilled GitHub 
   await expect(open).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByRole("heading", { name: "Atsiliepimai" })).toBeVisible();
 
-  // Nothing to type until a category is picked.
+  // Nothing to type until a category is picked; each category has its own colour.
   const bug = page.getByRole("radio", { name: "Klaida" });
   const idea = page.getByRole("radio", { name: "Pasiūlymas" });
   await expect(bug).toBeFocused();
@@ -112,38 +134,63 @@ test("feedback asks bug or idea, checks the text, then opens a prefilled GitHub 
   await expect(page.getByRole("textbox")).toHaveCount(0);
 
   await page.getByText("Klaida", { exact: true }).click();
+  await expect(page.locator(".report-kind .kind-bug")).toHaveCSS(
+    "background-color",
+    "rgb(180, 35, 24)",
+  );
   const bugText = page.getByRole("textbox", { name: "Kas neveikia arba rodoma neteisingai?" });
-  await expect(bugText).toBeVisible();
   await bugText.fill("Neveikia");
-  await page.getByRole("button", { name: "Tęsti GitHub'e" }).click();
+  await page.getByRole("button", { name: "Siųsti" }).click();
   await expect(page.getByRole("alert")).toContainText("bent 10 simbolių");
 
-  // Switching category keeps the text and changes the question.
+  // Switching category keeps the text, changes the question and turns the pill green.
   await bugText.fill("Žemėlapyje nerodoma degalinė Vilniuje");
   await page.getByText("Pasiūlymas", { exact: true }).click();
   await expect(idea).toBeChecked();
+  await expect(page.locator(".report-kind .kind-feature")).toHaveCSS(
+    "background-color",
+    "rgb(15, 138, 75)",
+  );
   const ideaText = page.getByRole("textbox", { name: "Ką programėlė galėtų daryti?" });
   await expect(ideaText).toHaveValue("Žemėlapyje nerodoma degalinė Vilniuje");
   await ideaText.fill("Pranešti, kai degalai atpinga");
 
-  const popupOpened = page.waitForEvent("popup");
-  await page.getByRole("button", { name: "Tęsti GitHub'e" }).click();
-  const popup = await popupOpened;
-  const url = new URL(popup.url());
-  expect(`${url.origin}${url.pathname}`).toBe(
-    "https://github.com/Almantask/Degalai-web/issues/new",
-  );
-  expect(url.searchParams.get("title")).toBe("[feature] Pranešti, kai degalai atpinga");
-  expect(url.searchParams.get("labels")).toBe("enhancement");
-  expect(url.searchParams.get("body")).toContain("Fuel: D");
+  // The email is required and has to look like one.
+  const email = page.getByRole("textbox", { name: "Jūsų el. paštas" });
+  await page.getByRole("button", { name: "Siųsti" }).click();
+  await expect(page.getByRole("alert")).toContainText("el. pašto adresą");
+  await expect(email).toBeFocused();
+  await email.fill("vardas@pastas");
+  await page.getByRole("button", { name: "Siųsti" }).click();
+  await expect(email).toHaveAttribute("aria-invalid", "true");
+  expect(sent).toHaveLength(0);
 
-  // The settings button swaps the panel; category and text are still there when coming back.
+  // The settings button swaps the panel; everything typed is still there when coming back.
   await page.getByRole("button", { name: "Nustatymai" }).click();
   await expect(page.getByRole("heading", { name: "Nustatymai" })).toBeVisible();
   await open.click();
   await expect(idea).toBeChecked();
   await expect(ideaText).toHaveValue("Pranešti, kai degalai atpinga");
-  await expect(ideaText).toBeFocused();
+  await expect(email).toHaveValue("vardas@pastas");
+
+  await email.fill(" vardas@pastas.lt ");
+  await page.getByRole("button", { name: "Siųsti" }).click();
+  const link = page.getByRole("link", { name: /Atidaryti #51 GitHub'e/ });
+  await expect(link).toBeFocused();
+  await expect(link).toHaveAttribute("href", "https://github.com/Almantask/Degalai-web/issues/51");
+  await expect(page.locator(".report-issue-address")).toHaveText(
+    "https://github.com/Almantask/Degalai-web/issues/51",
+  );
+  await expect(page.getByRole("button", { name: "Kopijuoti nuorodą" })).toBeVisible();
+  expect(sent).toHaveLength(1);
+  expect(sent[0]).toMatchObject({
+    category: "feature",
+    description: "Pranešti, kai degalai atpinga",
+    email: "vardas@pastas.lt",
+    website: "",
+    fuel: "D",
+  });
+  expect(popups).toEqual([]);
 });
 
 test("history button opens provider averages by date and time", async ({ page }) => {

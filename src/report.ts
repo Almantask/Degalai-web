@@ -1,9 +1,13 @@
 /** Feedback, a bug or a feature idea: posted to worker/src/report.ts, which files an issue. */
 
-export const ISSUES_NEW_URL = "https://github.com/Almantask/Degalai-web/issues/new";
+/** The cron worker's endpoint, which files the issue with the maintainer's token. */
+export const REPORT_ENDPOINT = "https://kur-degalai-cron.almantusk.workers.dev/report";
 /** Same bounds as the worker; shorter text is rejected before sending. */
 export const MIN_REPORT_CHARS = 10;
 export const MAX_REPORT_CHARS = 2000;
+export const MAX_EMAIL_CHARS = 254;
+/** The worker's rule (worker/src/report.ts): something@somewhere.tld, no spaces. */
+const EMAIL = /^[^\s@<>()[\]\\,;:"]+@[^\s@<>()[\]\\,;:"]+\.[^\s@<>()[\]\\,;:".]{2,}$/;
 export const REPORT_CATEGORIES = ["bug", "feature"] as const;
 export type ReportCategory = (typeof REPORT_CATEGORIES)[number];
 
@@ -11,6 +15,8 @@ export type ReportCategory = (typeof REPORT_CATEGORIES)[number];
 export interface ReportForm {
   category: ReportCategory;
   description: string;
+  /** For the maintainer's reply; the worker keeps it out of the public issue. */
+  email: string;
   /** The hidden honeypot field; people leave it empty. */
   website: string;
   /** An attached picture as a data URL (see report-image.ts). */
@@ -63,27 +69,6 @@ export async function sendReport(
   }
 }
 
-/** A prefilled "new issue" page, for when the worker is not set up or cannot be reached. */
-export function githubIssueLink(
-  { category, description }: Pick<ReportForm, "category" | "description">,
-  context: ReportContext,
-): string {
-  const body = [
-    description.trim(),
-    "",
-    "---",
-    `Page: ${context.page}`,
-    `Language: ${context.locale}`,
-    `Fuel: ${context.fuel}`,
-    `Data: ${context.dataDate}`,
-    `Browser: ${context.userAgent}`,
-    `Screen: ${context.viewport}`,
-  ].join("\n");
-  const firstLine = description.trim().split("\n", 1)[0].slice(0, 80);
-  const params = new URLSearchParams({
-    title: `[${category}] ${firstLine}`,
-    body,
-    labels: category === "feature" ? "enhancement" : "bug",
-  });
-  return `${ISSUES_NEW_URL}?${params}`;
+export function isEmail(value: string): boolean {
+  return value.length <= MAX_EMAIL_CHARS && EMAIL.test(value);
 }

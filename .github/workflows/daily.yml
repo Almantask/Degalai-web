@@ -63,9 +63,6 @@ jobs:
       - run: npx vite build
         env:
           BASE_URL: /Degalai-web/
-          # The cron worker's report endpoint (https://kur-degalai-cron.<subdomain>.workers.dev/report).
-          # Unset, the "Report a problem" form opens a prefilled GitHub issue instead.
-          VITE_REPORT_URL: ${{ vars.REPORT_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
