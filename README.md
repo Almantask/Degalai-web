@@ -286,6 +286,11 @@ npm run test:e2e
 npm run test:deps         # dependency tests (needs network)
 ```
 
+**CI** (`ci.yml`) runs `check` on every pull request and push to `main`. Run it on
+any branch from Actions → CI → Run workflow (`gh workflow run ci.yml --ref <branch>`);
+a run started that way also runs the Playwright tests. Claude Code sessions check
+changes this way rather than locally (`.claude/skills/ci-checks/SKILL.md`).
+
 **Dependency tests** (`tests/deps/`) check that everything needed to call each
 outside service is there. `wiring` is offline and runs in CI: every `env` name the
 cron worker reads is set in `wrangler.jsonc` or as a secret by `worker.yml`, the
