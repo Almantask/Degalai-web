@@ -3,8 +3,8 @@
   "name": "kur-degalai-cron",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-01",
-  // Cron only: no public URL.
-  "workers_dev": false,
+  // The cron, plus POST /report on workers.dev for the site's "Report a problem" form.
+  "workers_dev": true,
   "preview_urls": false,
   "triggers": {
     // UTC. Off the :00 mark, matching the old GitHub schedule.
@@ -14,7 +14,30 @@
     "GITHUB_REPO": "Almantask/Degalai-web",
     "GITHUB_WORKFLOW": "daily.yml",
     "GITHUB_REF": "main",
+    // Pages allowed to file reports. Comma-separated; no trailing slash.
+    "REPORT_ORIGINS": "https://almantask.github.io",
   },
+  // Limits count per Cloudflare location and settle within seconds: a brake, not an exact cap.
+  "ratelimits": [
+    {
+      "name": "REPORT_IP_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 3, "period": 60 },
+    },
+    {
+      "name": "REPORT_ALL_LIMITER",
+      "namespace_id": "1002",
+      "simple": { "limit": 10, "period": 60 },
+    },
+  ],
+  // Pictures attached to feedback, shown in the issues from GET /report/image/<id>.
+  "kv_namespaces": [
+    {
+      "binding": "REPORT_IMAGES",
+      "id": "3fed5675c00346a6b978182d69b9db1f",
+    },
+  ],
   // GITHUB_TOKEN is a secret, set by .github/workflows/worker.yml from WORKFLOW_DISPATCH_TOKEN.
+  // It starts the workflow and files the reports, so it needs Actions and Issues write access.
   "observability": { "enabled": true },
 }

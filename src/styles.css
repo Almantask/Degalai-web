@@ -1130,6 +1130,154 @@ body,
   cursor: pointer;
 }
 
+.panel textarea {
+  min-height: 6.5rem;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font: inherit;
+  color: inherit;
+  resize: vertical;
+}
+
+.panel textarea:focus {
+  outline: 2px solid rgb(15 138 75 / 35%);
+  border-color: var(--green);
+}
+
+.report-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-form .hint,
+.report-msg,
+.report-done {
+  margin: 0;
+}
+
+.report-kind {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.report-kind legend {
+  padding: 0;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.report-kind-options {
+  display: flex;
+  gap: 6px;
+}
+
+/* Two pills like the fuel filter; the radio stays in the DOM for keyboards and screen readers. */
+.panel .report-kind label {
+  position: relative;
+  flex: 1 1 0;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.report-kind input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.panel .report-kind label:has(input:checked) {
+  background: var(--green-dark);
+  border-color: var(--green-dark);
+  color: #fff;
+}
+
+.panel .report-kind label:has(input:focus-visible) {
+  outline: 2px solid rgb(15 138 75 / 35%);
+  outline-offset: 2px;
+}
+
+.report-msg {
+  color: #9a3412;
+  font-size: 0.85rem;
+}
+
+.report-done a,
+.panel button.link-btn {
+  color: var(--green-dark);
+  font-weight: 600;
+}
+
+.panel button.link-btn {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  text-decoration: underline;
+}
+
+.report-image {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.report-image img {
+  width: 96px;
+  height: 72px;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.panel button.report-attach {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.panel button:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.report-issue-link {
+  display: block;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--green);
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+
+.report-issue-link:hover,
+.report-issue-link:focus-visible {
+  background: var(--green-dark);
+}
+
+/* Honeypot: off-screen rather than display: none, which some bots skip. */
+.report-hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 #banner {
   position: absolute;
   z-index: 5;
@@ -1551,9 +1699,9 @@ body,
   }
 }
 
-/* Phones wrap the topbar anyway: keep refresh and settings on the title row, which has room,
-   so the extra button never pushes the language and view links onto another line. */
-@media (max-width: 459px) {
+/* Phones wrap the topbar anyway: keep the tool buttons on the title row, which has room,
+   so they never push the language and view links onto another line. */
+@media (max-width: 479px) {
   .topbar-tools {
     order: 1;
     margin-left: auto;
@@ -1569,33 +1717,8 @@ body,
   }
 }
 
-/* Widths where the topbar only just fits on one row: trim a little spacing so the
-   refresh button does not wrap it. */
-@media (min-width: 460px) and (max-width: 499px) {
-  .topbar,
-  .topbar-end,
-  .topbar-tools,
-  .lang {
-    gap: 2px;
-  }
-
-  .logo {
-    padding-inline: 2px;
-  }
-
-  .lang a,
-  .header .donate-btn {
-    padding-inline: 6px;
-  }
-
-  .nav-views .icon-btn,
-  .icon-tool {
-    padding-inline: 5px;
-  }
-}
-
 /* Narrow desktop header (100% - 400px): reuse the tablet sizing until the row fits. */
-@media (min-width: 900px) and (max-width: 979px) {
+@media (min-width: 900px) and (max-width: 1009px) {
   .nav-views .icon-btn {
     padding: 6px 7px;
     font-size: 0.78rem;
@@ -1619,6 +1742,32 @@ body,
 
   .icon-tool {
     padding: 6px 7px;
+  }
+}
+
+/* Headers (viewport - 24px, or - 400px beside the desktop list) where the topbar only just fits
+   on one row: trim a little spacing so the tool buttons do not wrap it. After the narrow desktop
+   block, which it overrides at 900-924px. */
+@media (min-width: 480px) and (max-width: 549px), (min-width: 900px) and (max-width: 924px) {
+  .topbar,
+  .topbar-end,
+  .topbar-tools,
+  .lang {
+    gap: 2px;
+  }
+
+  .logo {
+    padding-inline: 2px;
+  }
+
+  .lang a,
+  .header .donate-btn {
+    padding-inline: 6px;
+  }
+
+  .nav-views .icon-btn,
+  .icon-tool {
+    padding-inline: 5px;
   }
 }
 

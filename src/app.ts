@@ -81,6 +81,16 @@ import {
   persistInstallDismissed,
 } from "./pwa.ts";
 import { browserRefreshDeps, refreshWebsite } from "./refresh.ts";
+import {
+  githubIssueLink,
+  MAX_REPORT_CHARS,
+  MIN_REPORT_CHARS,
+  REPORT_CATEGORIES,
+  sendReport,
+  type ReportCategory,
+  type ReportContext,
+} from "./report.ts";
+import { blobToDataUrl, shrinkImage } from "./report-image.ts";
 import DOMPurify from "dompurify";
 import {
   allHistoryBrandsOn,
@@ -124,6 +134,8 @@ const SPOT_SOURCE_URL = "https://dashboard.elering.ee/";
 const REGISTER_SOURCE_URL = "https://ev.vialietuva.lt/en/data-provision";
 const REPORTS_SOURCE_URL =
   "https://github.com/Almantask/Degalai-web/issues/new?template=wrong-price.yml";
+/** The cron worker's POST /report; unset in dev, where the form opens GitHub instead. */
+const REPORT_URL = import.meta.env.VITE_REPORT_URL ?? "";
 
 const DONATE_HEART = `<svg class="donate-heart" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
   <path fill="currentColor" d="M7.97 14s-5.3-3.18-6.76-6C.02 5.36 1.3 2.2 4.2 2.2c1.4 0 2.5.8 3.77 2.16C9.24 3 10.34 2.2 11.75 2.2c2.9 0 4.18 3.16 2.99 5.8C13.28 10.82 7.97 14 7.97 14z"/>
@@ -146,6 +158,18 @@ const SWAP_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18
   <path d="M3 8l4-4 4 4"/>
   <path d="M17 20V4"/>
   <path d="M21 16l-4 4-4-4"/>
+</svg>`;
+
+const REPORT_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  <path d="M7 8h10"/>
+  <path d="M7 12h6"/>
+</svg>`;
+
+const IMAGE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <rect width="18" height="18" x="3" y="3" rx="2"/>
+  <circle cx="9" cy="9" r="2"/>
+  <path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>
 </svg>`;
 
 const REFRESH_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -203,6 +227,8 @@ interface RouteStationRow {
 }
 
 type DestStatus = "idle" | "locating" | "routing" | "denied" | "not-found";
+type Panel = "settings" | "report";
+type ReportStatus = "idle" | "short" | "sending" | "sent" | "rate" | "failed";
 
 export async function startApp(root: HTMLElement): Promise<void> {
   // Fetch data alongside the map style and tiles instead of before them.
@@ -217,7 +243,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let view: View = parsed.view;
   let userLocation: LngLat | null = null;
   let pickMode: "dest-start" | null = null;
-  let settingsOpen = false;
+  let openPanel: Panel | null = null;
+  /** Panel markup last written, so a re-render does not wipe the focus or a half-typed report. */
+  let panelsHtml = "";
+  /** Bug or feature idea; the form asks for it before the text box shows. */
+  let reportCategory: ReportCategory | null = null;
+  let reportDraft = "";
+  let reportStatus: ReportStatus = "idle";
+  let reportIssue: { number?: number; url?: string; imageSaved?: boolean } | null = null;
+  /** The attached picture, already shrunk; `url` is an object URL for the preview. */
+  let reportImage: { blob: Blob; url: string } | null = null;
+  let reportImageState: "idle" | "reading" | "failed" = "idle";
   let listMinimized = false;
   let headerMinimized = false;
   let historyMinimized = false;
@@ -436,7 +472,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       } else if (act === "view") {
         view = tEl.dataset.view === "history" ? "history" : "map";
         headerMinimized = false;
-        settingsOpen = false;
+        openPanel = null;
         if (view === "history") historyMinimized = false;
         navigate(view, locale, settings.fuel);
         render();
@@ -458,14 +494,21 @@ export async function startApp(root: HTMLElement): Promise<void> {
         persistFuel();
         onFuelChange();
       } else if (act === "settings") {
-        settingsOpen = !settingsOpen;
+        openPanel = openPanel === "settings" ? null : "settings";
         render();
+      } else if (act === "report") {
+        openPanel = openPanel === "report" ? null : "report";
+        if (reportStatus !== "sending") reportStatus = "idle";
+        render();
+        root
+          .querySelector<HTMLElement>(reportCategory ? "#report-text" : "input[name='report-kind']")
+          ?.focus();
       } else if (act === "refresh") {
         tEl.setAttribute("disabled", "true");
         tEl.setAttribute("aria-busy", "true");
         void refreshWebsite(browserRefreshDeps());
       } else if (act === "close-panel") {
-        settingsOpen = false;
+        openPanel = null;
         render();
       } else if (act === "station") {
         openStation(tEl.dataset.id!);
@@ -509,7 +552,31 @@ export async function startApp(root: HTMLElement): Promise<void> {
       } else if (act === "history-spot" && !historySpot) {
         historySpot = true;
         render();
+      } else if (act === "report-image-pick") {
+        root.querySelector<HTMLInputElement>("#report-image")?.click();
+      } else if (act === "report-image-remove") {
+        clearReportImage();
+        renderPanels();
+        root.querySelector<HTMLElement>("[data-act='report-image-pick']")?.focus();
+      } else if (act === "report-github") {
+        const form = { category: reportCategory ?? "bug", description: reportDraft } as const;
+        window.open(githubIssueLink(form, reportContext()), "_blank", "noopener");
       }
+    });
+
+    // A screenshot pasted while writing feedback becomes its picture; pasted text stays text.
+    root.addEventListener("paste", (e) => {
+      if (openPanel !== "report" || !reportCategory || !REPORT_URL) return;
+      const file = [...(e.clipboardData?.files ?? [])].find((f) => f.type.startsWith("image/"));
+      if (!file) return;
+      e.preventDefault();
+      void attachReportImage(file);
+    });
+
+    root.addEventListener("submit", (e) => {
+      if ((e.target as HTMLElement).id !== "report-form") return;
+      e.preventDefault();
+      void submitReport();
     });
 
     root.addEventListener("input", (e) => {
@@ -524,6 +591,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       else if (el.id === "set-ev-cons")
         settings.evConsumption = num(el.value, DEFAULT_SETTINGS.evConsumption);
       else if (el.id === "set-time") settings.timeValue = num(el.value, 0);
+      else if (el.id === "report-text") reportDraft = el.value;
     });
     // The browser's own ✕ in a search field fires `search` with an empty value (so does Enter on
     // an empty field). Capture it: the event does not reach `root` by bubbling in every browser.
@@ -539,6 +607,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
     root.addEventListener("change", (e) => {
       const el = e.target as HTMLInputElement;
+      if (el.id === "report-image") {
+        const file = el.files?.[0];
+        el.value = "";
+        void attachReportImage(file);
+        return;
+      }
+      if (el.name === "report-kind") {
+        reportCategory = REPORT_CATEGORIES.find((c) => c === el.value) ?? null;
+        renderPanels();
+        // The re-render replaced the radio: keep focus on it so arrow keys still switch options.
+        root.querySelector<HTMLInputElement>(`#report-kind-${el.value}`)?.focus();
+        return;
+      }
       if (el.id === "set-high-accuracy") {
         settings.highAccuracyLocation = el.checked;
         saveSettings(settings);
@@ -697,7 +778,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     endHit = hit;
     endIsHere = false;
     destQuery = hit.label;
-    settingsOpen = false;
+    openPanel = null;
     pendingDest = true;
     if (!routeOrigin()) {
       destStatus = locateStatus === "denied" ? "denied" : "locating";
@@ -847,7 +928,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function collapseForMapFocus(): void {
     headerMinimized = true;
     listMinimized = true;
-    settingsOpen = false;
+    openPanel = null;
     render();
   }
 
@@ -965,7 +1046,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     destStatus = "idle";
     headerMinimized = true;
     listMinimized = false;
-    settingsOpen = false;
+    openPanel = null;
     refreshMap();
     render();
     // The list stays open beside or under the map, so fit around it, not under it.
@@ -1267,8 +1348,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const header = root.querySelector("#header")!;
     header.innerHTML = headerHtml();
     applyHeaderMinimized();
-    const panels = root.querySelector("#panels")!;
-    panels.innerHTML = settingsOpen ? settingsHtml() : "";
+    renderPanels();
     renderList();
     const banner = root.querySelector("#banner")!;
     banner.innerHTML = statusHtml();
@@ -1679,8 +1759,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
             </a>
           </div>
           <div class="topbar-tools">
+            <button type="button" class="icon-btn icon-tool icon-report ${openPanel === "report" ? "on" : ""}" data-act="report" aria-label="${escapeHtml(t("report.open"))}" title="${escapeHtml(t("report.open"))}" aria-expanded="${openPanel === "report" ? "true" : "false"}">${REPORT_ICON}</button>
             <button type="button" class="icon-btn icon-tool icon-refresh" data-act="refresh" aria-label="${escapeHtml(t("action.refresh"))}" title="${escapeHtml(t("action.refresh"))}">${REFRESH_ICON}</button>
-            <button type="button" class="icon-btn icon-tool icon-settings ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">${SETTINGS_ICON}</button>
+            <button type="button" class="icon-btn icon-tool icon-settings ${openPanel === "settings" ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">${SETTINGS_ICON}</button>
           </div>
         </div>
         <div class="fuel-filter" role="group" aria-label="${escapeHtml(t("fuel.filter"))}">
@@ -1770,6 +1851,176 @@ export async function startApp(root: HTMLElement): Promise<void> {
         </ul>
       </fieldset>
     </section>`;
+  }
+
+  function renderPanels(): void {
+    const html =
+      openPanel === "settings" ? settingsHtml() : openPanel === "report" ? reportHtml() : "";
+    if (html === panelsHtml) return;
+    panelsHtml = html;
+    const panels = root.querySelector<HTMLElement>("#panels")!;
+    panels.innerHTML = html;
+    // The draft is set here, not in the markup, so typing does not change what render() compares.
+    const text = panels.querySelector<HTMLTextAreaElement>("#report-text");
+    if (text) text.value = reportDraft;
+  }
+
+  function reportHtml(): string {
+    const title = escapeHtml(t("report.title"));
+    const head = `<header><h2>${title}</h2><button type="button" data-act="close-panel">${escapeHtml(t("action.close"))}</button></header>`;
+    if (reportStatus === "sent") {
+      const issue = reportIssue;
+      const done =
+        issue?.url && issue.number
+          ? `<p class="report-done" role="status">${escapeHtml(t("report.sent", { n: issue.number }))}</p>
+      <p class="hint">${escapeHtml(t("report.follow"))}</p>
+      <a class="report-issue-link" href="${escapeHtml(issue.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("report.openIssue", { n: issue.number }))} ↗</a>`
+          : `<p class="report-done" role="status">${escapeHtml(t("report.thanks"))}</p>`;
+      const lost =
+        issue?.imageSaved === false
+          ? `<p class="report-msg">${escapeHtml(t("report.imageLost"))}</p>`
+          : "";
+      return `<section class="panel report-panel" aria-label="${title}">
+      ${head}
+      ${done}
+      ${lost}
+    </section>`;
+    }
+    const sending = reportStatus === "sending";
+    const reading = reportImageState === "reading";
+    const category = reportCategory;
+    const message =
+      reportStatus === "short"
+        ? escapeHtml(t("report.short", { n: MIN_REPORT_CHARS }))
+        : reportStatus === "rate"
+          ? escapeHtml(t("report.rate"))
+          : reportStatus === "failed"
+            ? `${escapeHtml(t("report.failed"))} <button type="button" class="link-btn" data-act="report-github">${escapeHtml(t("report.viaGithub"))}</button>`
+            : "";
+    const submit = sending
+      ? t("report.sending")
+      : REPORT_URL
+        ? t("report.send")
+        : t("report.viaGithub");
+    const kinds = REPORT_CATEGORIES.map(
+      (c) =>
+        `<label><input type="radio" id="report-kind-${c}" name="report-kind" value="${c}"${category === c ? " checked" : ""}${sending ? " disabled" : ""} />${escapeHtml(t(`report.kind.${c}` as MessageKey))}</label>`,
+    ).join("");
+    const fields = category
+      ? `<label>${escapeHtml(t(`report.label.${category}` as MessageKey))}<textarea id="report-text" rows="5" maxlength="${MAX_REPORT_CHARS}" placeholder="${escapeHtml(t(`report.placeholder.${category}` as MessageKey))}"${sending ? " disabled" : ""}></textarea></label>
+        ${REPORT_URL ? reportImageHtml(sending) : ""}
+        <div class="report-hp" aria-hidden="true"><label>Website<input id="report-website" name="website" type="text" tabindex="-1" autocomplete="off" /></label></div>
+        <p class="hint">${escapeHtml(t("report.public"))}</p>
+        ${message ? `<p class="report-msg" role="alert">${message}</p>` : ""}
+        <button type="submit" class="primary"${sending || reading ? " disabled" : ""}>${escapeHtml(submit)}</button>`
+      : "";
+    return `<section class="panel report-panel" aria-label="${title}">
+      ${head}
+      <form id="report-form" class="report-form" novalidate>
+        <fieldset class="report-kind">
+          <legend>${escapeHtml(t("report.kind"))}</legend>
+          <div class="report-kind-options">${kinds}</div>
+        </fieldset>
+        ${fields}
+      </form>
+    </section>`;
+  }
+
+  /** Picture picker, or the chosen picture's preview. Only with the worker: GitHub links take none. */
+  function reportImageHtml(sending: boolean): string {
+    if (reportImage) {
+      return `<div class="report-image">
+          <img src="${escapeHtml(reportImage.url)}" alt="${escapeHtml(t("report.imageAlt"))}" />
+          <button type="button" data-act="report-image-remove"${sending ? " disabled" : ""}>${escapeHtml(t("report.imageRemove"))}</button>
+        </div>`;
+    }
+    const reading = reportImageState === "reading";
+    const label = t(reading ? "report.imageReading" : "report.imageAdd");
+    return `<div class="report-image">
+          <button type="button" class="report-attach" data-act="report-image-pick" title="${escapeHtml(t("report.imageAddTitle"))}"${reading || sending ? " disabled" : ""}>${IMAGE_ICON}${escapeHtml(label)}</button>
+          <input type="file" id="report-image" accept="image/*" hidden />
+        </div>
+        ${reportImageState === "failed" ? `<p class="report-msg" role="alert">${escapeHtml(t("report.imageFailed"))}</p>` : ""}`;
+  }
+
+  async function attachReportImage(file: File | undefined): Promise<void> {
+    if (!file) return;
+    reportImageState = "reading";
+    renderPanels();
+    try {
+      const blob = await shrinkImage(file);
+      clearReportImage();
+      reportImage = { blob, url: URL.createObjectURL(blob) };
+      reportImageState = "idle";
+    } catch {
+      reportImageState = "failed";
+    }
+    renderPanels();
+  }
+
+  function clearReportImage(): void {
+    if (reportImage) URL.revokeObjectURL(reportImage.url);
+    reportImage = null;
+    reportImageState = "idle";
+  }
+
+  function reportContext(): ReportContext {
+    return {
+      page: window.location.href,
+      locale,
+      fuel: settings.fuel,
+      dataDate: lastUpdatedAt(data) ?? data.meta?.date ?? "",
+      userAgent: navigator.userAgent,
+      viewport: `${window.innerWidth}×${window.innerHeight}`,
+    };
+  }
+
+  async function submitReport(): Promise<void> {
+    const category = reportCategory;
+    if (reportStatus === "sending" || reportImageState === "reading" || !category) return;
+    const text = reportDraft.trim();
+    if (text.length < MIN_REPORT_CHARS) {
+      reportStatus = "short";
+      renderPanels();
+      root.querySelector<HTMLTextAreaElement>("#report-text")?.focus();
+      return;
+    }
+    if (!REPORT_URL) {
+      window.open(
+        githubIssueLink({ category, description: text }, reportContext()),
+        "_blank",
+        "noopener",
+      );
+      return;
+    }
+    const website = root.querySelector<HTMLInputElement>("#report-website")?.value ?? "";
+    reportStatus = "sending";
+    renderPanels();
+    let image: string | undefined;
+    try {
+      image = reportImage ? await blobToDataUrl(reportImage.blob) : undefined;
+    } catch {
+      reportStatus = "failed";
+      renderPanels();
+      return;
+    }
+    const result = await sendReport(
+      REPORT_URL,
+      { category, description: text, website, image },
+      reportContext(),
+    );
+    if (result.ok) {
+      reportStatus = "sent";
+      reportIssue = { number: result.number, url: result.url, imageSaved: result.imageSaved };
+      reportDraft = "";
+      reportCategory = null;
+      clearReportImage();
+    } else {
+      reportStatus = result.reason;
+    }
+    renderPanels();
+    // The form is gone after a send: move focus to the issue link rather than losing it.
+    if (result.ok) root.querySelector<HTMLElement>(".report-issue-link")?.focus();
   }
 
   function statusHtml(): string {

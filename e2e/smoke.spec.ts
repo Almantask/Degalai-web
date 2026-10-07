@@ -85,6 +85,67 @@ test("settings button stays inside the header when switching language", async ({
   await expectSettingsInsideHeader(page);
 });
 
+test("feedback asks bug or idea, checks the text, then opens a prefilled GitHub issue", async ({
+  page,
+  context,
+}) => {
+  // Built without VITE_REPORT_URL, as in CI: the form falls back to GitHub's new-issue page.
+  await context.route("https://github.com/**", (route) =>
+    route.fulfill({ status: 200, contentType: "text/html", body: "<p>issue form</p>" }),
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  const open = page.getByRole("button", { name: "Atsiliepimai" });
+  await expect(open).toBeVisible();
+  await expectInsideHeader(page, ".icon-report");
+  await expectSettingsInsideHeader(page);
+  await open.click();
+  await expect(open).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("heading", { name: "Atsiliepimai" })).toBeVisible();
+
+  // Nothing to type until a category is picked.
+  const bug = page.getByRole("radio", { name: "Klaida" });
+  const idea = page.getByRole("radio", { name: "Pasiūlymas" });
+  await expect(bug).toBeFocused();
+  await expect(bug).not.toBeChecked();
+  await expect(idea).not.toBeChecked();
+  await expect(page.getByRole("textbox")).toHaveCount(0);
+
+  await page.getByText("Klaida", { exact: true }).click();
+  const bugText = page.getByRole("textbox", { name: "Kas neveikia arba rodoma neteisingai?" });
+  await expect(bugText).toBeVisible();
+  await bugText.fill("Neveikia");
+  await page.getByRole("button", { name: "Tęsti GitHub'e" }).click();
+  await expect(page.getByRole("alert")).toContainText("bent 10 simbolių");
+
+  // Switching category keeps the text and changes the question.
+  await bugText.fill("Žemėlapyje nerodoma degalinė Vilniuje");
+  await page.getByText("Pasiūlymas", { exact: true }).click();
+  await expect(idea).toBeChecked();
+  const ideaText = page.getByRole("textbox", { name: "Ką programėlė galėtų daryti?" });
+  await expect(ideaText).toHaveValue("Žemėlapyje nerodoma degalinė Vilniuje");
+  await ideaText.fill("Pranešti, kai degalai atpinga");
+
+  const popupOpened = page.waitForEvent("popup");
+  await page.getByRole("button", { name: "Tęsti GitHub'e" }).click();
+  const popup = await popupOpened;
+  const url = new URL(popup.url());
+  expect(`${url.origin}${url.pathname}`).toBe(
+    "https://github.com/Almantask/Degalai-web/issues/new",
+  );
+  expect(url.searchParams.get("title")).toBe("[feature] Pranešti, kai degalai atpinga");
+  expect(url.searchParams.get("labels")).toBe("enhancement");
+  expect(url.searchParams.get("body")).toContain("Fuel: D");
+
+  // The settings button swaps the panel; category and text are still there when coming back.
+  await page.getByRole("button", { name: "Nustatymai" }).click();
+  await expect(page.getByRole("heading", { name: "Nustatymai" })).toBeVisible();
+  await open.click();
+  await expect(idea).toBeChecked();
+  await expect(ideaText).toHaveValue("Pranešti, kai degalai atpinga");
+  await expect(ideaText).toBeFocused();
+});
+
 test("history button opens provider averages by date and time", async ({ page }) => {
   const historyUrls: string[] = [];
   const priceUrls: string[] = [];
@@ -312,9 +373,13 @@ test("minimised search chip keeps a long destination inside the card", async ({ 
 });
 
 async function expectSettingsInsideHeader(page: Page): Promise<void> {
-  const fit = await page.evaluate(() => {
+  await expectInsideHeader(page, ".icon-settings");
+}
+
+async function expectInsideHeader(page: Page, selector: string): Promise<void> {
+  const fit = await page.evaluate((selector) => {
     const header = document.querySelector("#header");
-    const btn = document.querySelector(".icon-settings");
+    const btn = document.querySelector(selector);
     if (!header || !btn) return false;
     const h = header.getBoundingClientRect();
     const b = btn.getBoundingClientRect();
@@ -325,7 +390,7 @@ async function expectSettingsInsideHeader(page: Page): Promise<void> {
       b.bottom <= h.bottom + 1 &&
       h.right <= window.innerWidth + 1
     );
-  });
+  }, selector);
   expect(fit).toBe(true);
 }
 
