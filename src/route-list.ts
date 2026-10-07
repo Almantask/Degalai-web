@@ -5,8 +5,39 @@ export interface PricedRouteRow {
 }
 
 export const TOP_CHEAP_COUNT = 5;
-/** Stations this close to the trip polyline count as on the way. */
+/** Without a road detour, stations this close to the trip polyline count as on the way. */
 export const ON_ROUTE_KM = 0.5;
+/** Stations this close to the trip polyline get a road detour check. */
+export const DETOUR_CORRIDOR_KM = 2;
+/** Road detour checks per route, closest to the polyline first. */
+export const MAX_DETOUR_CHECKS = 150;
+/** A station is on the way when stopping there adds at most this much road. */
+export const ON_ROUTE_DETOUR_KM = 2;
+
+/** Stations worth a road detour check: inside the corridor, closest to the route first. */
+export function detourCandidates<T extends { lineKm: number }>(
+  rows: T[],
+  limit = MAX_DETOUR_CHECKS,
+): T[] {
+  return rows
+    .filter((r) => r.lineKm <= DETOUR_CORRIDOR_KM)
+    .sort((a, b) => a.lineKm - b.lineKm)
+    .slice(0, limit);
+}
+
+/**
+ * On the way by road when the router answered (null: it cannot reach the station). A station
+ * across a hill or river from the route is close to the line yet far by road, and one on a
+ * parallel street can be on the way though the line misses it. Without an answer (offline, or
+ * past the check limit), fall back to distance from the line.
+ */
+export function isOnTheWay(
+  lineKm: number,
+  detour: { extraKm: number } | null | undefined,
+): boolean {
+  if (detour === undefined) return lineKm <= ON_ROUTE_KM;
+  return detour != null && detour.extraKm <= ON_ROUTE_DETOUR_KM;
+}
 
 export function byPrice<T extends { price: number; station: { id: string } }>(a: T, b: T): number {
   return a.price - b.price || a.station.id.localeCompare(b.station.id);

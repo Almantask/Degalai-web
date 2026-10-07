@@ -46,9 +46,23 @@ import {
   stationsInView,
   routeStationEmphasis,
 } from "./map.ts";
-import { mapRouteStationIds, ON_ROUTE_KM, orderRouteRows } from "./route-list.ts";
+import {
+  DETOUR_CORRIDOR_KM,
+  detourCandidates,
+  isOnTheWay,
+  mapRouteStationIds,
+  orderRouteRows,
+} from "./route-list.ts";
 import { hrefFor, navigate, parsePath, pathFor, type View } from "./router.ts";
-import { fetchRoute, geocode, reverseGeocode, type GeoHit, type RouteResult } from "./routing.ts";
+import {
+  fetchDetours,
+  fetchRoute,
+  geocode,
+  reverseGeocode,
+  type Detour,
+  type GeoHit,
+  type RouteResult,
+} from "./routing.ts";
 import {
   installOffer,
   isIosSafari,
@@ -146,6 +160,13 @@ function priceBenefit(
   });
 }
 
+/** A priced station within the detour corridor, with its distance from the route line. */
+interface NearbyStation {
+  station: Station;
+  price: number;
+  lineKm: number;
+}
+
 interface RouteStationRow {
   station: Station;
   price: number;
@@ -188,6 +209,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let routeRows: RouteStationRow[] = [];
   let extraMapStationIds = new Set<string>();
   let routeLine: RouteResult | null = null;
+  /** Road detours for routeLine by station id; null when the router cannot reach one. */
+  let routeDetours: { route: RouteResult; byId: Map<string, Detour | null> } | null = null;
+  let routeEvalSeq = 0;
   let startHit: GeoHit | null = null;
   let startQuery = "";
   let startIsGps = true;
@@ -888,9 +912,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     extraMapStationIds = new Set();
     routeLine = res;
-    destStatus = "idle";
+    // The last route's stations must not show on this one while its detours load.
+    routeRows = [];
     setEndpointMarkers(start, end);
     await evaluateRouteStations(res);
+    if (routeLine !== res) return;
+    destStatus = "idle";
     refreshMap();
     focusRoute();
   }
@@ -903,30 +930,35 @@ export async function startApp(root: HTMLElement): Promise<void> {
       extraMapStationIds = new Set();
       return;
     }
-    const onWay: RouteStationRow[] = [];
+    const seq = ++routeEvalSeq;
+    const nearby: NearbyStation[] = [];
     for (const s of includedStations()) {
       const price = data.prices?.prices[s.id]?.[settings.fuel]?.price;
       if (price == null) continue;
-      const p = { lat: s.lat, lon: s.lon };
-      const d = distanceToPolylineKm(p, res.geometry);
-      if (d > ON_ROUTE_KM) continue;
-      const nearest = nearestPointOnPolyline(p, res.geometry);
-      const along = distanceAlongLineKm(res.geometry, nearest.index, nearest.point);
-      onWay.push({
-        station: s,
-        price,
-        kind: "on",
-        distFromStartKm: along,
-        extraKm: 0,
-        extraMin: 0,
-        benefit: priceBenefit(price, price, settings.fuel),
-      });
+      const lineKm = distanceToPolylineKm({ lat: s.lat, lon: s.lon }, res.geometry);
+      if (lineKm <= DETOUR_CORRIDOR_KM) nearby.push({ station: s, price, lineKm });
     }
-    const baselinePrice = onWay.length ? Math.min(...onWay.map((r) => r.price)) : undefined;
-    for (const row of onWay) {
-      if (baselinePrice == null) continue;
-      row.benefit = priceBenefit(baselinePrice, row.price, settings.fuel);
+    if (routeDetours?.route !== res) routeDetours = { route: res, byId: new Map() };
+    const detours = routeDetours.byId;
+    const unchecked = detourCandidates(nearby).filter((c) => !detours.has(c.station.id));
+    if (unchecked.length) {
+      // Show what is already known for this fuel while the router answers for the rest.
+      const pending = new Set(unchecked.map((c) => c.station.id));
+      routeRows = onTheWayRows(
+        res,
+        nearby.filter((c) => !pending.has(c.station.id)),
+        detours,
+      );
+      const fetched = await fetchDetours(
+        start,
+        end,
+        unchecked.map((c) => c.station),
+      );
+      if (fetched) unchecked.forEach((c, i) => detours.set(c.station.id, fetched[i] ?? null));
+      // A newer route, fuel or brand filter has taken over while the router answered.
+      if (seq !== routeEvalSeq || routeLine !== res) return;
     }
+    const onWay = onTheWayRows(res, nearby, detours);
     routeRows = onWay;
     extraMapStationIds = new Set(
       [...extraMapStationIds].filter((id) => onWay.some((r) => r.station.id === id)),
@@ -935,6 +967,38 @@ export async function startApp(root: HTMLElement): Promise<void> {
     await Promise.all(
       onWay.filter((row) => mapIds.has(row.station.id)).map((row) => attachViaRoute(row, res)),
     );
+  }
+
+  function onTheWayRows(
+    res: RouteResult,
+    nearby: NearbyStation[],
+    detours: Map<string, Detour | null>,
+  ): RouteStationRow[] {
+    const onWay: RouteStationRow[] = [];
+    for (const { station: s, price, lineKm } of nearby) {
+      const detour = detours.get(s.id);
+      if (!isOnTheWay(lineKm, detour)) continue;
+      let distFromStartKm = detour?.toKm;
+      if (distFromStartKm == null) {
+        const nearest = nearestPointOnPolyline({ lat: s.lat, lon: s.lon }, res.geometry);
+        distFromStartKm = distanceAlongLineKm(res.geometry, nearest.index, nearest.point);
+      }
+      onWay.push({
+        station: s,
+        price,
+        kind: "on",
+        distFromStartKm,
+        extraKm: detour?.extraKm ?? 0,
+        extraMin: detour?.extraMin ?? 0,
+        benefit: priceBenefit(price, price, settings.fuel),
+      });
+    }
+    const baselinePrice = onWay.length ? Math.min(...onWay.map((r) => r.price)) : undefined;
+    for (const row of onWay) {
+      if (baselinePrice == null) continue;
+      row.benefit = priceBenefit(baselinePrice, row.price, settings.fuel);
+    }
+    return onWay;
   }
 
   async function attachViaRoute(row: RouteStationRow, res: RouteResult): Promise<void> {
@@ -1266,7 +1330,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
                     km: r.extraKm.toFixed(1),
                     save: formatMoney(r.benefit.netBenefit),
                   })
-                : "";
+                : r.extraKm >= 0.1
+                  ? t("route.detour", { km: formatKm(r.extraKm) })
+                  : "";
             const pinned = isCheapestOn || isCheapestOverall;
             const rowClass = [
               pinned && i < 2 ? "is-pick" : "",
@@ -1280,7 +1346,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       );
       return;
     }
-    if (routeLine && endHit && routeRows.length === 0) {
+    if (routeLine && endHit && routeRows.length === 0 && destStatus !== "routing") {
       setList(listWrap([], t(isEv() ? "route.noChargers" : "route.noStations")));
       return;
     }
@@ -1361,7 +1427,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     badges = "",
   ): string {
     const dist = distKm != null ? formatKm(distKm) : "";
-    const metaLine = [dist, extra].filter(Boolean).join(" ");
+    const metaLine = [dist, extra].filter(Boolean).join(" · ");
     const addr = stationAddress(s);
     const cls = ["station-row", className].filter(Boolean).join(" ");
     return `<li><button type="button" class="${cls}" data-act="station" data-id="${escapeHtml(s.id)}">

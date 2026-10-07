@@ -662,6 +662,31 @@ test("station popup has no navigate or updated text", async ({ page }) => {
   expect(fit).toBe(true);
 });
 
+type LonLat = [number, number];
+
+function haversineM([lon1, lat1]: LonLat, [lon2, lat2]: LonLat): number {
+  const rad = Math.PI / 180;
+  const h =
+    Math.sin(((lat2 - lat1) * rad) / 2) ** 2 +
+    Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(((lon2 - lon1) * rad) / 2) ** 2;
+  return 2 * 6_371_000 * Math.asin(Math.sqrt(h));
+}
+
+/** OSRM table answer for the request: straight-line metres, plus `penaltyM` per leg touching a stop. */
+function osrmTable(url: string, penaltyM: (p: LonLat) => number = () => 0) {
+  const u = new URL(url);
+  const pts = u.pathname
+    .split("/driving/")[1]
+    .split(";")
+    .map((c) => c.split(",").map(Number) as LonLat);
+  const sources = u.searchParams.get("sources")!.split(";").map(Number);
+  const destinations = u.searchParams.get("destinations")!.split(";").map(Number);
+  const distances = sources.map((i) =>
+    destinations.map((j) => haversineM(pts[i], pts[j]) + penaltyM(pts[i]) + penaltyM(pts[j])),
+  );
+  return { code: "Ok", distances, durations: distances.map((row) => row.map((m) => m / 15)) };
+}
+
 test("destination draws a route from the current location", async ({ page }) => {
   await page.addInitScript(() => {
     const pos = {
@@ -705,8 +730,14 @@ test("destination draws a route from the current location", async ({ page }) => 
     });
   });
   let viaRoutes = 0;
+  let tables = 0;
   await page.route("https://router.project-osrm.org/**", async (route) => {
     const url = route.request().url();
+    if (url.includes("/table/")) {
+      tables += 1;
+      await route.fulfill({ json: osrmTable(url) });
+      return;
+    }
     const coords = url.split("/driving/")[1]?.split("?")[0] ?? "";
     if (coords.split(";").filter(Boolean).length >= 3) viaRoutes += 1;
     await route.fulfill({
@@ -745,6 +776,7 @@ test("destination draws a route from the current location", async ({ page }) => 
   const routeStations = await page.locator(".station-row").count();
   expect(routeStations).toBeGreaterThan(0);
   expect(routeStations).toBeLessThan(allStations);
+  expect(tables).toBeGreaterThan(0);
   await expect(page.locator(".station-row.is-detour")).toHaveCount(0);
   await expect(page.locator(".station-row.is-on-route")).toHaveCount(routeStations);
   const mapCount = Number(await page.locator("#map").getAttribute("data-station-count"));
@@ -771,6 +803,84 @@ test("destination draws a route from the current location", async ({ page }) => 
   await expect(page.locator(".sheet")).toHaveClass(/is-min/);
   await expect(page.locator(".list-body")).toBeHidden();
   await expect(page.locator(".maplibregl-popup")).toBeVisible();
+});
+
+test("on the way means a short road detour, not closeness to the route line", async ({ page }) => {
+  // Vienybės a. → Pramonės pr. 3, Kaunas. The fastest route crosses Žaliakalnis 400 m from
+  // Circle K on K. Baršausko g., which is down the hill and across the road. Neste on Tunelio g.
+  // is 800 m from that line but on the riverside road home.
+  await page.addInitScript(() => {
+    const pos = {
+      coords: {
+        latitude: 54.8987,
+        longitude: 23.9118,
+        accuracy: 10,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+      },
+      timestamp: Date.now(),
+    };
+    navigator.geolocation.getCurrentPosition = (ok) => ok(pos as GeolocationPosition);
+  });
+  await page.route("https://photon.komoot.io/**", async (route) => {
+    const reverse = route.request().url().includes("/reverse");
+    await route.fulfill({
+      json: {
+        features: [
+          reverse
+            ? { geometry: { coordinates: [23.9118, 54.8987] }, properties: { name: "Vienybės a." } }
+            : {
+                geometry: { coordinates: [23.9764, 54.9045] },
+                properties: { street: "Pramonės pr.", housenumber: "3", city: "Kaunas" },
+              },
+        ],
+      },
+    });
+  });
+  const circleK: LonLat = [23.9599257, 54.8990483];
+  const tableUrls: string[] = [];
+  await page.route("https://router.project-osrm.org/**", async (route) => {
+    const url = route.request().url();
+    if (url.includes("/table/")) {
+      tableUrls.push(url);
+      // Pumps on the far side: a turnaround to get in and another to get out.
+      const turnaround = (p: LonLat) => (haversineM(p, circleK) < 1 ? 1500 : 0);
+      await route.fulfill({ json: osrmTable(url, turnaround) });
+      return;
+    }
+    await route.fulfill({
+      json: {
+        code: "Ok",
+        routes: [
+          {
+            distance: 5500,
+            duration: 660,
+            geometry: {
+              coordinates: [
+                [23.9118, 54.8987],
+                [23.93, 54.901],
+                [23.95, 54.9025],
+                [23.965, 54.9025],
+                [23.9764, 54.9045],
+              ],
+            },
+          },
+        ],
+      },
+    });
+  });
+  await page.goto("/");
+  const dest = page.getByPlaceholder("Kur važiuojate?");
+  await dest.fill("Pramonės pr. 3");
+  await dest.press("Enter");
+  await expect(page.locator(".app")).toHaveClass(/has-route/, { timeout: 15_000 });
+  const neste = page.locator(".station-row", { hasText: "Neste „Tunelio“" });
+  await expect(neste).toHaveCount(1);
+  await expect(neste.locator(".station-eta")).toContainText("nusukimas +");
+  await expect(page.locator(".station-row", { hasText: "Circle K „Baršausko“" })).toHaveCount(0);
+  expect(new URL(tableUrls[0]).searchParams.get("approaches")).toContain("curb");
 });
 
 test.describe("EV", () => {

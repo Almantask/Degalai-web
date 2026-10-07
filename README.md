@@ -194,6 +194,15 @@ Geocoding is Photon, clipped to Lithuania. Routing uses OpenRouteService when
 (fastest). Detours fall back to haversine × a road factor when a via-route is
 unavailable.
 
+A station is **on the way** when stopping there adds at most 2 km of road. Every
+priced station within 2 km of the route line (up to 150, closest first) gets its
+real detour from one OSRM `table` request per 50 stations, reaching the station
+with it on the driver's side of the road (`approaches=curb`). So a station across
+the road or behind a hill drops out even when it is close to the line, and one on
+a parallel street you could just as well take stays in. The list shows that
+detour ("detour +0.8 km"). If the table request fails, stations within 500 m of
+the line count as on the way.
+
 ## Develop
 
 ```bash

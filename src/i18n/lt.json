@@ -52,6 +52,7 @@
   "route.worth": "Verta",
   "route.notWorth": "Neverta",
   "route.extra": "+{km} km, {save}",
+  "route.detour": "nusukimas +{km}",
   "route.noStations": "Šalia maršruto nėra degalinių su šiais degalais.",
   "route.myLocation": "Mano vieta",
   "settings.title": "Nustatymai",

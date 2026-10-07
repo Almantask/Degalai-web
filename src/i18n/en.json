@@ -52,6 +52,7 @@
   "route.worth": "Worth it",
   "route.notWorth": "Not worth it",
   "route.extra": "+{km} km, {save}",
+  "route.detour": "detour +{km}",
   "route.noStations": "No stations with this fuel along the route.",
   "route.myLocation": "My location",
   "settings.title": "Settings",

@@ -1,4 +1,10 @@
-import { mapRouteStationIds, orderRouteRows, topCheapStations } from "../src/route-list.ts";
+import {
+  detourCandidates,
+  isOnTheWay,
+  mapRouteStationIds,
+  orderRouteRows,
+  topCheapStations,
+} from "../src/route-list.ts";
 
 function row(id: string, price: number, kind: "on" | "detour") {
   return { station: { id }, price, kind };
@@ -97,5 +103,42 @@ describe("mapRouteStationIds", () => {
   it("ignores extra ids that are not on the way", () => {
     const ids = mapRouteStationIds([row("a", 1.2, "on")], new Set(["off-route"]));
     expect([...ids]).toEqual(["a"]);
+  });
+});
+
+describe("isOnTheWay", () => {
+  // Vienybės a. → Pramonės pr. 3, Kaunas: the fastest route crosses Žaliakalnis. Circle K on
+  // K. Baršausko g. is near that line but across the road and down the hill; Neste on Tunelio g.
+  // is a kilometre off the line yet on the riverside road home.
+  it("goes by road detour, not by distance from the route line", () => {
+    expect(isOnTheWay(0.3, { extraKm: 3.4 })).toBe(false);
+    expect(isOnTheWay(1.0, { extraKm: 0.8 })).toBe(true);
+  });
+
+  it("allows up to 2 km of extra road", () => {
+    expect(isOnTheWay(0.1, { extraKm: 2 })).toBe(true);
+    expect(isOnTheWay(0.1, { extraKm: 2.1 })).toBe(false);
+  });
+
+  it("drops a station the router cannot reach", () => {
+    expect(isOnTheWay(0.1, null)).toBe(false);
+  });
+
+  it("falls back to 500 m from the line without a router answer", () => {
+    expect(isOnTheWay(0.5, undefined)).toBe(true);
+    expect(isOnTheWay(0.6, undefined)).toBe(false);
+  });
+});
+
+describe("detourCandidates", () => {
+  it("keeps stations within 2 km of the line, closest first, up to the limit", () => {
+    const rows = [
+      { id: "far", lineKm: 2.5 },
+      { id: "b", lineKm: 1.2 },
+      { id: "a", lineKm: 0.1 },
+      { id: "c", lineKm: 1.9 },
+    ];
+    expect(detourCandidates(rows).map((r) => r.id)).toEqual(["a", "b", "c"]);
+    expect(detourCandidates(rows, 2).map((r) => r.id)).toEqual(["a", "b"]);
   });
 });
