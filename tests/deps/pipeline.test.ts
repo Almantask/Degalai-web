@@ -18,8 +18,8 @@ import { inLithuania } from "../../src/geo.ts";
 // Live: each service the hourly pipeline calls still answers its adapter with what it needs.
 
 const minRows = (source: string): number => SOURCE_META.find((m) => m.name === source)!.minRows;
-/** Overpass tries three mirrors, twice each, 30 s a request. */
-const OVERPASS_TIMEOUT_MS = 300_000;
+/** Overpass tries each endpoint up to twice, 30 s a request. */
+const OVERPASS_TIMEOUT_MS = 120_000;
 /** Home page, then the report: 120 s each. */
 const REGISTER_TIMEOUT_MS = 240_000;
 

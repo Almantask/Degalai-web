@@ -7,11 +7,8 @@ export const MIN_OSM_STATIONS = 500;
 /** Fewer public chargers than this means Overpass returned a partial answer. */
 export const MIN_OSM_CHARGERS = 100;
 
-const OVERPASS_ENDPOINTS = [
-  "https://overpass-api.de/api/interpreter",
-  "https://overpass.kumi.systems/api/interpreter",
-  "https://overpass.private.coffee/api/interpreter",
-];
+/** Tried in order. Two mirrors that never answered were dropped; see decision-log.md. */
+const OVERPASS_ENDPOINTS = ["https://overpass-api.de/api/interpreter"];
 
 const AREA_QUERY = `
 [out:json][timeout:90];
