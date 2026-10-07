@@ -258,7 +258,22 @@ npm run dev
 npm run check             # i18n keys, lint, unit tests, types
 npm run build
 npm run test:e2e
+npm run test:deps         # dependency tests (needs network)
 ```
+
+**Dependency tests** (`tests/deps/`) check that everything needed to call each
+outside service is there. `wiring` is offline and runs in CI: every `env` name the
+cron worker reads is set in `wrangler.jsonc` or as a secret by `worker.yml`, the
+dispatched workflow accepts `workflow_dispatch` and deploys from that ref, the
+build passes every `VITE_` variable the app needs, and the committed overrides
+load without dropping entries. The rest call the real services through the
+adapters: LEA's map bundle still holds the API address and token, the ena.lt page
+still links the workbook, Circle K, Via Lietuva, Elering, Overpass, Photon, OSRM
+and OpenFreeMap still answer the way the code reads them, and GitHub has the
+branch, enabled workflow and labels. The **Dependencies** workflow runs them daily.
+Optional: `GITHUB_TOKEN` (with admin rights, e.g. `gh auth token`, it also checks
+the Actions secrets and variables), `REPORT_URL` (checks the deployed feedback
+endpoint) and `VITE_ORS_KEY` (checks OpenRouteService).
 
 To refresh the README shots (preview must be running on port 4173):
 

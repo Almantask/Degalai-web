@@ -5,6 +5,9 @@ import type { LngLat } from "./geo.ts";
 import { formatMoney, formatPrice, formatPriceNumber, escapeHtml } from "./format.ts";
 import { brandLabel, chargerBrandLabel, t } from "./i18n/index.ts";
 
+/** OpenFreeMap vector style the map loads its tiles, glyphs and sprites from. */
+export const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
+
 const SOURCE = "stations";
 const CLUSTER = "stations-clusters";
 const CLUSTER_COUNT = "stations-cluster-count";
@@ -51,7 +54,7 @@ export function createMap(
 ): maplibregl.Map {
   const map = new maplibregl.Map({
     container,
-    style: "https://tiles.openfreemap.org/styles/positron",
+    style: MAP_STYLE_URL,
     center: LT_CENTER,
     zoom: 7,
     maxBounds: [

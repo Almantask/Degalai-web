@@ -17,6 +17,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:deps": "vitest run --config vitest.deps.config.ts",
     "test:e2e": "playwright test",
     "check": "npm run i18n:check && npm run lint && npm run test && npm run typecheck"
   },

@@ -1,0 +1,94 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { inLithuania } from "../../src/geo.ts";
+import { MAP_STYLE_URL } from "../../src/map.ts";
+import { fetchDetours, fetchRoute, geocode, reverseGeocode } from "../../src/routing.ts";
+import { reportOrigins } from "./repo.ts";
+
+// Live: each service the browser app calls still answers the way the app reads it.
+
+const vilnius = { lat: 54.6872, lon: 25.2797 };
+const kaunas = { lat: 54.8985, lon: 23.9036 };
+/** By the A1 between them. */
+const elektrenai = { lat: 54.7856, lon: 24.6676 };
+const trakai = { lat: 54.6378, lon: 24.9343 };
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
+describe("OpenFreeMap", () => {
+  it("serves the map style and vector tiles over Lithuania", async () => {
+    const res = await fetch(MAP_STYLE_URL);
+    expect(res.ok).toBe(true);
+    const style = (await res.json()) as {
+      layers: unknown[];
+      glyphs?: string;
+      sources: Record<string, { type: string; url?: string }>;
+    };
+    expect(style.layers.length).toBeGreaterThan(0);
+    expect(style.glyphs).toMatch(/^https:\/\//);
+    const vector = Object.values(style.sources).filter((s) => s.type === "vector" && s.url);
+    expect(vector).not.toEqual([]);
+    for (const source of vector) {
+      const tileJson = (await (await fetch(source.url!)).json()) as { tiles: string[] };
+      // Zoom 7 tile with central Lithuania in it.
+      const tile = await fetch(
+        tileJson.tiles[0].replace("{z}", "7").replace("{x}", "72").replace("{y}", "40"),
+      );
+      expect(tile.ok, source.url).toBe(true);
+      expect((await tile.arrayBuffer()).byteLength).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("Photon (search)", () => {
+  it("finds a destination in Lithuania", async () => {
+    const hits = await geocode("Kaunas", "lt");
+    expect(hits).not.toEqual([]);
+    expect(hits.every(inLithuania)).toBe(true);
+  });
+
+  it("names a point tapped on the map", async () => {
+    expect(await reverseGeocode(vilnius, "en")).not.toBeNull();
+  });
+});
+
+describe("OSRM (routing)", () => {
+  it("routes through a stop reached on the driver's side", async () => {
+    vi.stubEnv("VITE_ORS_KEY", "");
+    const route = await fetchRoute(vilnius, kaunas, "fastest", elektrenai);
+    expect(route).not.toBeNull();
+    expect(route!.profile).toBe("fastest");
+    expect(route!.distanceKm).toBeGreaterThan(80);
+    expect(route!.geometry.length).toBeGreaterThan(10);
+  });
+
+  it("measures detours through stops with the table service", async () => {
+    const detours = await fetchDetours(vilnius, kaunas, [elektrenai, trakai]);
+    expect(detours).not.toBeNull();
+    expect(detours!.every((d) => d !== null)).toBe(true);
+  });
+});
+
+describe("OpenRouteService (routing with VITE_ORS_KEY)", () => {
+  it.skipIf(!process.env.VITE_ORS_KEY)("routes with the key", async () => {
+    // OSRM, the fallback, would answer "fastest".
+    expect((await fetchRoute(vilnius, kaunas, "shortest"))?.profile).toBe("shortest");
+  });
+});
+
+describe("cron worker feedback endpoint (REPORT_URL)", () => {
+  it.skipIf(!process.env.REPORT_URL)("lets the site's origin post a report", async () => {
+    const origin = reportOrigins()[0];
+    const res = await fetch(process.env.REPORT_URL!, {
+      method: "OPTIONS",
+      headers: {
+        Origin: origin,
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "content-type",
+      },
+    });
+    expect(res.status).toBe(204);
+    expect(res.headers.get("access-control-allow-origin")).toBe(origin);
+  });
+});

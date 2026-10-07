@@ -1,0 +1,30 @@
+name: Dependencies
+
+# Calls every outside service the site, the data pipeline and the cron worker depend on, through
+# the same code (tests/deps/). A red run means one moved, changed shape or stopped answering.
+on:
+  schedule:
+    - cron: "23 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  issues: read
+
+jobs:
+  deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run test:deps
+        env:
+          # Lifts the GitHub API rate limit. It cannot list Actions secrets, so that check skips.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Unset, the deployed feedback endpoint check skips.
+          REPORT_URL: ${{ vars.REPORT_URL }}
