@@ -13,6 +13,8 @@ export interface ReportForm {
   description: string;
   /** The hidden honeypot field; people leave it empty. */
   website: string;
+  /** An attached picture as a data URL (see report-image.ts). */
+  image?: string;
 }
 
 /** What the page knew when the report was written, so a maintainer can reproduce it. */
@@ -26,7 +28,14 @@ export interface ReportContext {
 }
 
 export type ReportResult =
-  { ok: true; number?: number; url?: string } | { ok: false; reason: "rate" | "failed" };
+  | {
+      ok: true;
+      number?: number;
+      url?: string;
+      /** `false` when a picture was sent but the worker could not store it. */
+      imageSaved?: boolean;
+    }
+  | { ok: false; reason: "rate" | "failed" };
 
 export async function sendReport(
   endpoint: string,
@@ -42,11 +51,12 @@ export async function sendReport(
     });
     if (res.status === 429) return { ok: false, reason: "rate" };
     if (!res.ok) return { ok: false, reason: "failed" };
-    const body = (await res.json()) as { number?: unknown; url?: unknown };
+    const body = (await res.json()) as { number?: unknown; url?: unknown; imageSaved?: unknown };
     return {
       ok: true,
       number: typeof body.number === "number" ? body.number : undefined,
       url: typeof body.url === "string" && body.url.startsWith("https://") ? body.url : undefined,
+      imageSaved: typeof body.imageSaved === "boolean" ? body.imageSaved : undefined,
     };
   } catch {
     return { ok: false, reason: "failed" };

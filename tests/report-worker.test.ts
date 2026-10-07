@@ -219,7 +219,7 @@ describe("handleReport", () => {
     const fetchImpl = github();
     expect((await handleReport(post("{nope"), env(), fetchImpl)).status).toBe(400);
     expect((await handleReport(post({ description: "short" }), env(), fetchImpl)).status).toBe(400);
-    const huge = { ...form, userAgent: "x".repeat(9000) };
+    const huge = { ...form, userAgent: "x".repeat(2_200_000) };
     expect((await handleReport(post(huge), env(), fetchImpl)).status).toBe(413);
     expect(fetchImpl).not.toHaveBeenCalled();
   });

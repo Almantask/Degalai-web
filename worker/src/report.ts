@@ -1,5 +1,7 @@
 /** The site's feedback form: each POST /report (a bug or a feature idea) becomes a GitHub issue. */
 
+import { parseImage, storeImage, type ImageStore, type ReportImage } from "./report-image.ts";
+
 /** Workers rate limit binding (`ratelimits` in wrangler.jsonc). */
 export interface RateLimiter {
   limit(options: { key: string }): Promise<{ success: boolean }>;
@@ -14,6 +16,8 @@ export interface ReportEnv {
   REPORT_IP_LIMITER?: RateLimiter;
   /** All visitors together, so a botnet cannot flood the issue tracker either. */
   REPORT_ALL_LIMITER?: RateLimiter;
+  /** Workers KV for attached pictures. Without it, a picture is noted as lost in the issue. */
+  REPORT_IMAGES?: ImageStore;
 }
 
 export type ReportCategory = "bug" | "feature";
@@ -38,7 +42,8 @@ export interface Issue {
 export const MIN_DESCRIPTION = 10;
 export const MAX_DESCRIPTION = 2000;
 const MAX_FIELD = 300;
-const MAX_BODY_BYTES = 8_000;
+/** Text and context, plus a base64 picture of up to MAX_IMAGE_BYTES. */
+const MAX_BODY_BYTES = 2_100_000;
 const TITLE_CHARS = 80;
 export const REPORT_LABELS: Record<ReportCategory, string[]> = {
   bug: ["bug", "user-report"],
@@ -75,11 +80,15 @@ export function isHoneypotFilled(value: unknown): boolean {
   return typeof website === "string" && website.trim() !== "";
 }
 
+/** The attached picture: its URL on this worker, or `null` when it could not be stored. */
+export type IssueImage = { url: string | null } | undefined;
+
 /**
  * Issue text with everything the visitor typed inside code blocks: no @mentions that would ping
- * people, no `owner/repo#1` references that would show up in other repositories, no HTML.
+ * people, no `owner/repo#1` references that would show up in other repositories, no HTML. The
+ * picture URL is the worker's own, never the visitor's.
  */
-export function issueFromReport(report: Report): Issue {
+export function issueFromReport(report: Report, image?: IssueImage): Issue {
   const context = [
     `Page:     ${report.page || "-"}`,
     `Language: ${report.locale || "-"}`,
@@ -95,6 +104,16 @@ export function issueFromReport(report: Report): Issue {
       "",
       codeBlock(report.description),
       "",
+      ...(image
+        ? [
+            "### Picture",
+            "",
+            image.url
+              ? `![Picture from the reporter](${image.url})`
+              : "_A picture was attached but could not be stored._",
+            "",
+          ]
+        : []),
       "### Context",
       "",
       codeBlock(context),
@@ -109,7 +128,7 @@ export function issueFromReport(report: Report): Issue {
 export function issueTitle(description: string): string {
   const line = description.split("\n", 1)[0].replace(/\s+/g, " ").trim();
   const short = line.length > TITLE_CHARS ? `${line.slice(0, TITLE_CHARS - 1).trimEnd()}…` : line;
-  return short.replace(/[@#]/g, (c) => `${c}​`);
+  return short.replace(/[@#]/g, (c) => `${c}\u200b`);
 }
 
 /** A fenced block one backtick longer than any run inside, so the text cannot close it. */
@@ -154,6 +173,9 @@ export async function handleReport(
     return reply(429, { ok: false, error: "rate" });
   }
 
+  if (Number(request.headers.get("Content-Length") ?? 0) > MAX_BODY_BYTES) {
+    return reply(413, { ok: false, error: "size" });
+  }
   const text = await request.text();
   if (new TextEncoder().encode(text).length > MAX_BODY_BYTES) {
     return reply(413, { ok: false, error: "size" });
@@ -168,6 +190,16 @@ export async function handleReport(
   if (isHoneypotFilled(json)) return reply(201, { ok: true });
   const report = parseReport(json);
   if (!report) return reply(400, { ok: false, error: "invalid" });
+  const rawImage = (json as Record<string, unknown>).image;
+  let image: ReportImage | null = null;
+  if (rawImage !== undefined && rawImage !== null && rawImage !== "") {
+    image = parseImage(rawImage);
+    if (!image) return reply(400, { ok: false, error: "image" });
+  }
+  // A failed store still files the report, saying the picture is missing.
+  const issueImage: IssueImage = image
+    ? { url: await storeImage(env.REPORT_IMAGES, image, new URL(request.url).origin) }
+    : undefined;
 
   const res = await fetchImpl(`https://api.github.com/repos/${env.GITHUB_REPO}/issues`, {
     method: "POST",
@@ -178,7 +210,7 @@ export async function handleReport(
       "User-Agent": "kur-degalai-report",
       "X-GitHub-Api-Version": "2022-11-28",
     },
-    body: JSON.stringify(issueFromReport(report)),
+    body: JSON.stringify(issueFromReport(report, issueImage)),
   });
   if (!res.ok) {
     console.error(`Creating the issue failed: ${res.status} ${await res.text()}`);
@@ -186,7 +218,12 @@ export async function handleReport(
   }
   const issue = (await res.json()) as { number: number; html_url: string };
   console.log(`Filed report #${issue.number}`);
-  return reply(201, { ok: true, number: issue.number, url: issue.html_url });
+  return reply(201, {
+    ok: true,
+    number: issue.number,
+    url: issue.html_url,
+    ...(issueImage ? { imageSaved: issueImage.url !== null } : {}),
+  });
 }
 
 function allowedOrigins(env: ReportEnv): string[] {

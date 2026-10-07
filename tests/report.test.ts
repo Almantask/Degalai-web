@@ -6,6 +6,7 @@ import {
   type ReportContext,
   type ReportForm,
 } from "../src/report.ts";
+import { fitWithin } from "../src/report-image.ts";
 
 const context: ReportContext = {
   page: "https://almantask.github.io/Degalai-web/en/?fuel=ev",
@@ -42,6 +43,17 @@ describe("sendReport", () => {
       website: "",
       ...context,
     });
+  });
+
+  it("sends an attached picture and passes on whether it was saved", async () => {
+    const fetchImpl = vi.fn(async () =>
+      Response.json({ ok: true, number: 8, url: "https://x.test/8", imageSaved: false }),
+    );
+    const image = "data:image/webp;base64,UklGRg==";
+    const result = await sendReport(ENDPOINT, { ...bug, image }, context, fetchImpl);
+    expect(result).toMatchObject({ ok: true, number: 8, imageSaved: false });
+    const [, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect((JSON.parse(init.body as string) as { image: string }).image).toBe(image);
   });
 
   it("accepts a reply without an issue link", async () => {
@@ -94,5 +106,16 @@ describe("githubIssueLink", () => {
     );
     expect(link.searchParams.get("title")).toBe("[feature] Show a price alert");
     expect(link.searchParams.get("labels")).toBe("enhancement");
+  });
+});
+
+describe("fitWithin", () => {
+  it("scales the longer side down to the limit and keeps the shape", () => {
+    expect(fitWithin(3200, 1800, 1600)).toEqual({ width: 1600, height: 900 });
+    expect(fitWithin(1080, 2400, 1600)).toEqual({ width: 720, height: 1600 });
+  });
+
+  it("never scales a small picture up", () => {
+    expect(fitWithin(800, 600, 1600)).toEqual({ width: 800, height: 600 });
   });
 });

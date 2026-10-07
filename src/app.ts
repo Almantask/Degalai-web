@@ -80,6 +80,7 @@ import {
   type ReportCategory,
   type ReportContext,
 } from "./report.ts";
+import { blobToDataUrl, shrinkImage } from "./report-image.ts";
 import DOMPurify from "dompurify";
 import {
   allHistoryBrandsOn,
@@ -155,6 +156,12 @@ const REPORT_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="
   <path d="M7 12h6"/>
 </svg>`;
 
+const IMAGE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <rect width="18" height="18" x="3" y="3" rx="2"/>
+  <circle cx="9" cy="9" r="2"/>
+  <path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>
+</svg>`;
+
 const REFRESH_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
   <path d="M21 12a9 9 0 1 1-3.5-7.1"/>
   <path d="M21 3v6h-6"/>
@@ -219,7 +226,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let reportCategory: ReportCategory | null = null;
   let reportDraft = "";
   let reportStatus: ReportStatus = "idle";
-  let reportIssue: { number?: number; url?: string } | null = null;
+  let reportIssue: { number?: number; url?: string; imageSaved?: boolean } | null = null;
+  /** The attached picture, already shrunk; `url` is an object URL for the preview. */
+  let reportImage: { blob: Blob; url: string } | null = null;
+  let reportImageState: "idle" | "reading" | "failed" = "idle";
   let listMinimized = false;
   let headerMinimized = false;
   let historyMinimized = false;
@@ -511,10 +521,25 @@ export async function startApp(root: HTMLElement): Promise<void> {
       } else if (act === "history-spot" && !historySpot) {
         historySpot = true;
         render();
+      } else if (act === "report-image-pick") {
+        root.querySelector<HTMLInputElement>("#report-image")?.click();
+      } else if (act === "report-image-remove") {
+        clearReportImage();
+        renderPanels();
+        root.querySelector<HTMLElement>("[data-act='report-image-pick']")?.focus();
       } else if (act === "report-github") {
         const form = { category: reportCategory ?? "bug", description: reportDraft } as const;
         window.open(githubIssueLink(form, reportContext()), "_blank", "noopener");
       }
+    });
+
+    // A screenshot pasted while writing feedback becomes its picture; pasted text stays text.
+    root.addEventListener("paste", (e) => {
+      if (openPanel !== "report" || !reportCategory || !REPORT_URL) return;
+      const file = [...(e.clipboardData?.files ?? [])].find((f) => f.type.startsWith("image/"));
+      if (!file) return;
+      e.preventDefault();
+      void attachReportImage(file);
     });
 
     root.addEventListener("submit", (e) => {
@@ -551,6 +576,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
     root.addEventListener("change", (e) => {
       const el = e.target as HTMLInputElement;
+      if (el.id === "report-image") {
+        const file = el.files?.[0];
+        el.value = "";
+        void attachReportImage(file);
+        return;
+      }
       if (el.name === "report-kind") {
         reportCategory = REPORT_CATEGORIES.find((c) => c === el.value) ?? null;
         renderPanels();
@@ -1650,16 +1681,25 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const title = escapeHtml(t("report.title"));
     const head = `<header><h2>${title}</h2><button type="button" data-act="close-panel">${escapeHtml(t("action.close"))}</button></header>`;
     if (reportStatus === "sent") {
-      const link =
-        reportIssue?.url && reportIssue.number
-          ? ` <a href="${escapeHtml(reportIssue.url)}" target="_blank" rel="noopener noreferrer">#${reportIssue.number}</a>`
+      const issue = reportIssue;
+      const done =
+        issue?.url && issue.number
+          ? `<p class="report-done" role="status">${escapeHtml(t("report.sent", { n: issue.number }))}</p>
+      <p class="hint">${escapeHtml(t("report.follow"))}</p>
+      <a class="report-issue-link" href="${escapeHtml(issue.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("report.openIssue", { n: issue.number }))} ↗</a>`
+          : `<p class="report-done" role="status">${escapeHtml(t("report.thanks"))}</p>`;
+      const lost =
+        issue?.imageSaved === false
+          ? `<p class="report-msg">${escapeHtml(t("report.imageLost"))}</p>`
           : "";
       return `<section class="panel report-panel" aria-label="${title}">
       ${head}
-      <p class="report-done" role="status">${escapeHtml(t("report.sent"))}${link}</p>
+      ${done}
+      ${lost}
     </section>`;
     }
     const sending = reportStatus === "sending";
+    const reading = reportImageState === "reading";
     const category = reportCategory;
     const message =
       reportStatus === "short"
@@ -1680,10 +1720,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ).join("");
     const fields = category
       ? `<label>${escapeHtml(t(`report.label.${category}` as MessageKey))}<textarea id="report-text" rows="5" maxlength="${MAX_REPORT_CHARS}" placeholder="${escapeHtml(t(`report.placeholder.${category}` as MessageKey))}"${sending ? " disabled" : ""}></textarea></label>
+        ${REPORT_URL ? reportImageHtml(sending) : ""}
         <div class="report-hp" aria-hidden="true"><label>Website<input id="report-website" name="website" type="text" tabindex="-1" autocomplete="off" /></label></div>
         <p class="hint">${escapeHtml(t("report.public"))}</p>
         ${message ? `<p class="report-msg" role="alert">${message}</p>` : ""}
-        <button type="submit" class="primary"${sending ? " disabled" : ""}>${escapeHtml(submit)}</button>`
+        <button type="submit" class="primary"${sending || reading ? " disabled" : ""}>${escapeHtml(submit)}</button>`
       : "";
     return `<section class="panel report-panel" aria-label="${title}">
       ${head}
@@ -1695,6 +1736,44 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ${fields}
       </form>
     </section>`;
+  }
+
+  /** Picture picker, or the chosen picture's preview. Only with the worker: GitHub links take none. */
+  function reportImageHtml(sending: boolean): string {
+    if (reportImage) {
+      return `<div class="report-image">
+          <img src="${escapeHtml(reportImage.url)}" alt="${escapeHtml(t("report.imageAlt"))}" />
+          <button type="button" data-act="report-image-remove"${sending ? " disabled" : ""}>${escapeHtml(t("report.imageRemove"))}</button>
+        </div>`;
+    }
+    const reading = reportImageState === "reading";
+    const label = t(reading ? "report.imageReading" : "report.imageAdd");
+    return `<div class="report-image">
+          <button type="button" class="report-attach" data-act="report-image-pick" title="${escapeHtml(t("report.imageAddTitle"))}"${reading || sending ? " disabled" : ""}>${IMAGE_ICON}${escapeHtml(label)}</button>
+          <input type="file" id="report-image" accept="image/*" hidden />
+        </div>
+        ${reportImageState === "failed" ? `<p class="report-msg" role="alert">${escapeHtml(t("report.imageFailed"))}</p>` : ""}`;
+  }
+
+  async function attachReportImage(file: File | undefined): Promise<void> {
+    if (!file) return;
+    reportImageState = "reading";
+    renderPanels();
+    try {
+      const blob = await shrinkImage(file);
+      clearReportImage();
+      reportImage = { blob, url: URL.createObjectURL(blob) };
+      reportImageState = "idle";
+    } catch {
+      reportImageState = "failed";
+    }
+    renderPanels();
+  }
+
+  function clearReportImage(): void {
+    if (reportImage) URL.revokeObjectURL(reportImage.url);
+    reportImage = null;
+    reportImageState = "idle";
   }
 
   function reportContext(): ReportContext {
@@ -1710,7 +1789,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   async function submitReport(): Promise<void> {
     const category = reportCategory;
-    if (reportStatus === "sending" || !category) return;
+    if (reportStatus === "sending" || reportImageState === "reading" || !category) return;
     const text = reportDraft.trim();
     if (text.length < MIN_REPORT_CHARS) {
       reportStatus = "short";
@@ -1729,20 +1808,31 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const website = root.querySelector<HTMLInputElement>("#report-website")?.value ?? "";
     reportStatus = "sending";
     renderPanels();
+    let image: string | undefined;
+    try {
+      image = reportImage ? await blobToDataUrl(reportImage.blob) : undefined;
+    } catch {
+      reportStatus = "failed";
+      renderPanels();
+      return;
+    }
     const result = await sendReport(
       REPORT_URL,
-      { category, description: text, website },
+      { category, description: text, website, image },
       reportContext(),
     );
     if (result.ok) {
       reportStatus = "sent";
-      reportIssue = { number: result.number, url: result.url };
+      reportIssue = { number: result.number, url: result.url, imageSaved: result.imageSaved };
       reportDraft = "";
       reportCategory = null;
+      clearReportImage();
     } else {
       reportStatus = result.reason;
     }
     renderPanels();
+    // The form is gone after a send: move focus to the issue link rather than losing it.
+    if (result.ok) root.querySelector<HTMLElement>(".report-issue-link")?.focus();
   }
 
   function statusHtml(): string {

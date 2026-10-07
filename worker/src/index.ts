@@ -1,3 +1,4 @@
+import { serveImage } from "./report-image.ts";
 import { handleReport, type ReportEnv } from "./report.ts";
 
 interface Env extends ReportEnv {
@@ -35,6 +36,8 @@ export default {
 
   async fetch(request: Request, env: Env): Promise<Response> {
     if (new URL(request.url).pathname === "/report") return handleReport(request, env);
-    return new Response("Not found", { status: 404 });
+    return (
+      (await serveImage(request, env.REPORT_IMAGES)) ?? new Response("Not found", { status: 404 })
+    );
   },
 };

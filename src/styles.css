@@ -1052,11 +1052,6 @@ body,
   cursor: pointer;
 }
 
-.panel button.primary:disabled {
-  opacity: 0.6;
-  cursor: progress;
-}
-
 .panel textarea {
   min-height: 6.5rem;
   padding: 8px 10px;
@@ -1152,6 +1147,48 @@ body,
   padding: 0;
   font-size: inherit;
   text-decoration: underline;
+}
+
+.report-image {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.report-image img {
+  width: 96px;
+  height: 72px;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.panel button.report-attach {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.panel button:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.report-issue-link {
+  display: block;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--green);
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+
+.report-issue-link:hover,
+.report-issue-link:focus-visible {
+  background: var(--green-dark);
 }
 
 /* Honeypot: off-screen rather than display: none, which some bots skip. */

@@ -30,6 +30,13 @@
       "simple": { "limit": 10, "period": 60 },
     },
   ],
+  // Pictures attached to feedback, shown in the issues from GET /report/image/<id>.
+  "kv_namespaces": [
+    {
+      "binding": "REPORT_IMAGES",
+      "id": "3fed5675c00346a6b978182d69b9db1f",
+    },
+  ],
   // GITHUB_TOKEN is a secret, set by .github/workflows/worker.yml from WORKFLOW_DISPATCH_TOKEN.
   // It starts the workflow and files the reports, so it needs Actions and Issues write access.
   "observability": { "enabled": true },

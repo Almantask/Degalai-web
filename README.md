@@ -61,8 +61,8 @@ minimise for a full map.
   [almantask.github.io/donate-me](https://almantask.github.io/donate-me/).
 - Install it as a PWA. Offline, the last known prices still show.
 - Send **feedback** (the speech-bubble icon in the header): report a bug or suggest a
-  feature without a GitHub account. It becomes a public GitHub issue; see
-  [Feedback](#feedback).
+  feature without a GitHub account, with a picture if you like. It becomes a public
+  GitHub issue, and the form links to it; see [Feedback](#feedback).
 
 Settings store consumption (l/100 km) and value of time. Ranking on the map and
 on a route is still by pump price.
@@ -199,7 +199,20 @@ labelled `bug` and `user-report` (title `[bug] …`), an idea `enhancement` and
 `user-report` (title `[feature] …`). The issue also lists the page, language, fuel,
 data time, browser and screen size. Visitor text sits in code blocks, so it cannot
 @mention anyone or reference other repositories. A post without a category (a page
-cached before ideas existed) counts as a bug.
+cached before ideas existed) counts as a bug. After sending, the form links to the
+new issue.
+
+**Pictures.** The visitor can attach a picture or paste a screenshot (Ctrl+V). The
+browser redraws it as WebP (JPEG where WebP cannot be written), at most 1600 px on
+the longer side and 1.5 MB; redrawing also drops EXIF data such as a phone photo's GPS
+position. The worker accepts only PNG, JPEG or WebP whose bytes match the type, stores
+it in the `REPORT_IMAGES` KV namespace for a year, and shows it in the issue from
+`GET /report/image/<id>.<ext>` on the worker. If it cannot be stored (for example the
+free plan's 1,000 KV writes a day are used up), the issue is still filed and says the
+picture is missing. To take a picture down early, delete its key in the Cloudflare
+dashboard (**Storage & Databases → KV → kur-degalai-report-images**). The picture
+button only shows when the worker is set up; GitHub's new-issue link cannot carry
+one.
 
 The worker only takes posts from `REPORT_ORIGINS` (`worker/wrangler.jsonc`), allows 3
 reports a minute per IP and 10 a minute in total (Workers rate limiting), and
