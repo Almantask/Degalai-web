@@ -1,7 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { inLithuania } from "../../src/geo.ts";
 import { MAP_STYLE_URL } from "../../src/map.ts";
-import { fetchDetours, fetchRoute, geocode, reverseGeocode } from "../../src/routing.ts";
+import { detourWindow } from "../../src/route-list.ts";
+import {
+  fetchDetours,
+  fetchRoute,
+  fetchRoutes,
+  geocode,
+  reverseGeocode,
+} from "../../src/routing.ts";
 
 // Live: each service the browser app calls still answers the way the app reads it.
 
@@ -53,17 +60,32 @@ describe("Photon (search)", () => {
 });
 
 describe("OSRM (routing)", () => {
+  it("offers the route to pick from", async () => {
+    vi.stubEnv("VITE_ORS_KEY", "");
+    const routes = await fetchRoutes(vilnius, kaunas, "fastest");
+    expect(routes).not.toEqual([]);
+    expect(routes[0].profile).toBe("fastest");
+    expect(routes[0].distanceKm).toBeGreaterThan(80);
+  });
+
   it("routes through a stop reached on the driver's side", async () => {
     vi.stubEnv("VITE_ORS_KEY", "");
     const route = await fetchRoute(vilnius, kaunas, "fastest", elektrenai);
     expect(route).not.toBeNull();
-    expect(route!.profile).toBe("fastest");
     expect(route!.distanceKm).toBeGreaterThan(80);
     expect(route!.geometry.length).toBeGreaterThan(10);
   });
 
-  it("measures detours through stops with the table service", async () => {
-    const detours = await fetchDetours(vilnius, kaunas, [elektrenai, trakai]);
+  it("measures detours off the route with the table service", async () => {
+    vi.stubEnv("VITE_ORS_KEY", "");
+    const [route] = await fetchRoutes(vilnius, kaunas, "fastest");
+    expect(route).toBeDefined();
+    // As the app does: leave the route before the stop and rejoin it after.
+    const trips = [elektrenai, trakai].map((stop) => {
+      const { leave, rejoin } = detourWindow(route.geometry, stop);
+      return { leave, stop, rejoin };
+    });
+    const detours = await fetchDetours(trips);
     expect(detours).not.toBeNull();
     expect(detours!.every((d) => d !== null)).toBe(true);
   });

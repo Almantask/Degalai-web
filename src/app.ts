@@ -4,16 +4,18 @@ import { netBenefit } from "./calc.ts";
 import { cheapestHourRanges, filterSeries, formatCheapRanges } from "./cheap-hours.ts";
 import { swapEndpoints, type Endpoints } from "./endpoints.ts";
 import { loadAppData, lastUpdatedAt, loadChargers, loadHistory, type AppData } from "./data.ts";
+import { chargerFits, evPricesFor, isEvFilterOn, type EvFilter } from "./ev-filter.ts";
 import {
   formatDate,
   formatDateTime,
+  formatDuration,
   formatKm,
-  formatMoney,
   formatPrice,
   escapeHtml,
   shortAddress,
 } from "./format.ts";
 import {
+  boundsAround,
   distanceAlongLineKm,
   distanceToPolylineKm,
   inLithuania,
@@ -36,9 +38,12 @@ import {
   createMap,
   fitRoute,
   flyToStation,
+  openListPadding,
   overlayPadding,
   setMapGeolocateAccuracy,
+  ROUTE_OPTION_COLORS,
   setRouteData,
+  setRouteOptions,
   setStationData,
   freeReasonText,
   stationPopupHtml,
@@ -47,8 +52,13 @@ import {
   routeStationEmphasis,
 } from "./map.ts";
 import {
+  byPrice,
+  cheapestOnDashed,
+  DASHED_ROUTE_KM,
   DETOUR_CORRIDOR_KM,
+  MAX_DASHED_CHECKS,
   detourCandidates,
+  detourWindow,
   isOnTheWay,
   mapRouteStationIds,
   orderRouteRows,
@@ -57,6 +67,7 @@ import { hrefFor, navigate, parsePath, pathFor, type View } from "./router.ts";
 import {
   fetchDetours,
   fetchRoute,
+  fetchRoutes,
   geocode,
   reverseGeocode,
   type Detour,
@@ -91,11 +102,14 @@ import {
   toggleHistoryBrand,
 } from "./history-series.ts";
 import {
+  clampDetourKm,
   excludedFor,
   fuelFromUrl,
   isBrandIncluded,
   loadSettings,
   locationPositionOptions,
+  MAX_DETOUR_KM_RANGE,
+  minKwFromUrl,
   saveSettings,
   uniqueBrands,
 } from "./settings.ts";
@@ -107,6 +121,7 @@ import {
   type MinimizeSign,
 } from "./sheet-gesture.ts";
 import type {
+  DailyPrices,
   FuelGroup,
   FuelType,
   HistoryFile,
@@ -114,7 +129,7 @@ import type {
   HistoryStat,
   Station,
 } from "./types.ts";
-import { DEFAULT_SETTINGS, FUEL_GROUPS, HISTORY_STATS } from "./types.ts";
+import { DEFAULT_SETTINGS, EV_MIN_KW, FUEL_GROUPS, HISTORY_STATS, PLUG_GROUPS } from "./types.ts";
 
 const DONATE_URL = "https://almantask.github.io/donate-me/";
 const LEA_SOURCE_URL = "https://degalukainos.ena.lt/";
@@ -184,6 +199,15 @@ function priceBenefit(
   });
 }
 
+/** A station near a dashed via-route, with its road detour from that line once checked. */
+interface DashedCandidate {
+  station: Station;
+  price: number;
+  dashedKm: number;
+  detourKm: number | null | undefined;
+  detourMin: number;
+}
+
 /** A priced station within the detour corridor, with its distance from the route line. */
 interface NearbyStation {
   station: Station;
@@ -198,8 +222,13 @@ interface RouteStationRow {
   distFromStartKm: number;
   extraKm: number;
   extraMin: number;
+  /** extraKm and extraMin are the road detour from the route, not from the via-route. */
+  roadDetour: boolean;
   benefit: ReturnType<typeof netBenefit>;
   viaGeometry?: LngLat[];
+  /** What the via-route through this station adds over the route. */
+  viaExtraKm?: number;
+  viaExtraMin?: number;
 }
 
 type DestStatus = "idle" | "locating" | "routing" | "denied" | "not-found";
@@ -215,6 +244,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   setLocale(locale);
   const urlFuel = fuelFromUrl(window.location.search);
   if (urlFuel) settings.fuel = urlFuel;
+  // A link that names EV carries its power preset; none means any power.
+  if (urlFuel === "EV") settings.evMinKw = minKwFromUrl(window.location.search);
 
   let view: View = parsed.view;
   let userLocation: LngLat | null = null;
@@ -245,6 +276,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let routeRows: RouteStationRow[] = [];
   let extraMapStationIds = new Set<string>();
   let routeLine: RouteResult | null = null;
+  /** Routes from the last search; with more than one, the driver picks routeLine from them. */
+  let routeOptions: RouteResult[] = [];
+  /** On each dashed via-route, the cheapest station on it that is not on the way itself. */
+  let dashedRows: RouteStationRow[] = [];
   /** Road detours for routeLine by station id; null when the router cannot reach one. */
   let routeDetours: { route: RouteResult; byId: Map<string, Detour | null> } | null = null;
   let routeEvalSeq = 0;
@@ -264,7 +299,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let installDismissed = loadInstallDismissed();
   let installPrompt: { prompt: () => Promise<void> } | null = null;
   let listHtml = "";
-  let includedCache: { excluded: string[]; source: Station[]; stations: Station[] } | null = null;
+  let includedCache: {
+    excluded: string[];
+    source: Station[];
+    ev: EvFilter | null;
+    stations: Station[];
+  } | null = null;
+  let evPricesCache: {
+    prices: DailyPrices;
+    chargers: Station[];
+    ev: EvFilter;
+    out: DailyPrices;
+  } | null = null;
   /** EV chargers, fetched the first time the EV chip is on. */
   let chargers: Station[] | null = null;
   let chargersLoading = false;
@@ -285,6 +331,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       onMapClick: (ll) => {
         if (dataReady) handleMapPick(ll);
       },
+      onRouteClick: (index) => void chooseRoute(index),
     },
     settings.highAccuracyLocation,
   );
@@ -310,6 +357,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     setLocale(locale);
     const f = fuelFromUrl(window.location.search);
     if (f) settings.fuel = f;
+    if (f === "EV") settings.evMinKw = minKwFromUrl(window.location.search);
     void ensureChargers();
     render();
     refreshMap();
@@ -445,7 +493,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         headerMinimized = false;
         openPanel = null;
         if (view === "history") historyMinimized = false;
-        navigate(view, locale, settings.fuel);
+        navigate(view, locale, settings.fuel, false, settings.evMinKw);
         render();
       } else if (act === "locale") {
         const loc = tEl.dataset.locale as Locale;
@@ -453,7 +501,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         setLocale(loc);
         settings.locale = loc;
         saveSettings(settings);
-        navigate(view, loc, settings.fuel);
+        navigate(view, loc, settings.fuel, false, settings.evMinKw);
         document.documentElement.lang = loc;
         updateHreflang();
         render();
@@ -464,6 +512,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
         settings.fuel = FUEL_BY_GROUP[g][0];
         persistFuel();
         onFuelChange();
+      } else if (act === "ev-kw") {
+        const kw = EV_MIN_KW.find((k) => String(k) === tEl.dataset.kw);
+        if (kw == null || kw === settings.evMinKw) return;
+        settings.evMinKw = kw;
+        persistFuel();
+        popup?.remove();
+        applyStationFilter();
+        render();
       } else if (act === "settings") {
         openPanel = openPanel === "settings" ? null : "settings";
         render();
@@ -483,6 +539,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
         render();
       } else if (act === "station") {
         openStation(tEl.dataset.id!);
+      } else if (act === "route") {
+        void chooseRoute(Number(tEl.dataset.index));
       } else if (act === "clear-dest") {
         clearDestination();
       } else if (act === "clear-start") {
@@ -596,6 +654,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
         if (startIsGps) requestLocation(true);
         return;
       }
+      if (el.id === "set-detour") {
+        settings.maxDetourKm = clampDetourKm(el.value);
+        el.value = String(settings.maxDetourKm);
+        saveSettings(settings);
+        // Detours are cached per route, so this only re-sorts stations already checked.
+        if (routeLine) {
+          void evaluateRouteStations(routeLine).then(() => {
+            refreshMap();
+            renderList();
+          });
+        }
+        return;
+      }
       if (el.id.startsWith("set-brand-") && el.dataset.brand) {
         const brand = el.dataset.brand;
         const next = new Set(excludedFor(settings));
@@ -605,7 +676,20 @@ export async function startApp(root: HTMLElement): Promise<void> {
         if (isEv()) settings.excludedEvBrands = [...next].sort();
         else settings.excludedBrands = [...next].sort();
         saveSettings(settings);
-        applyBrandFilter();
+        applyStationFilter();
+        return;
+      }
+      if (el.id.startsWith("set-plug-")) {
+        const off = new Set(settings.excludedPlugs);
+        const plug = PLUG_GROUPS.find((g) => g === el.dataset.plug);
+        if (!plug) return;
+        if (el.checked) off.delete(plug);
+        else off.add(plug);
+        // A new array, so the station and price caches see the change.
+        settings.excludedPlugs = PLUG_GROUPS.filter((g) => off.has(g));
+        saveSettings(settings);
+        popup?.remove();
+        applyStationFilter();
         return;
       }
       if (el.id.startsWith("set-")) saveSettings(settings);
@@ -766,7 +850,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     pendingDest = false;
     destStatus = "idle";
     routeLine = null;
+    routeOptions = [];
     routeRows = [];
+    dashedRows = [];
     extraMapStationIds = new Set();
     pickMode = pickMode === "dest-start" ? null : pickMode;
     headerMinimized = false;
@@ -784,7 +870,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function persistFuel(): void {
     saveSettings(settings);
-    navigate(view, locale, settings.fuel, true);
+    navigate(view, locale, settings.fuel, true, settings.evMinKw);
   }
 
   function isEv(): boolean {
@@ -808,21 +894,59 @@ export async function startApp(root: HTMLElement): Promise<void> {
     render();
   }
 
-  /** Brand filter is replaced, never mutated, so the array identity keys the cache. */
+  /** Plugs and least power for EV; null for pump fuels. */
+  function evFilter(): EvFilter | null {
+    return isEv() ? { excludedPlugs: settings.excludedPlugs, minKw: settings.evMinKw } : null;
+  }
+
+  function sameEvFilter(a: EvFilter | null, b: EvFilter | null): boolean {
+    return a?.excludedPlugs === b?.excludedPlugs && a?.minKw === b?.minKw;
+  }
+
+  /** Brand and plug filters are replaced, never mutated, so array identity keys the cache. */
   function includedStations(): Station[] {
     const source = activeStations();
     const excluded = excludedFor(settings);
-    if (includedCache?.excluded !== excluded || includedCache.source !== source) {
+    const ev = evFilter();
+    if (
+      includedCache?.excluded !== excluded ||
+      includedCache.source !== source ||
+      !sameEvFilter(includedCache.ev, ev)
+    ) {
       includedCache = {
         excluded,
         source,
-        stations: source.filter((s) => isBrandIncluded(s.brand, excluded)),
+        ev,
+        stations: source.filter(
+          (s) => isBrandIncluded(s.brand, excluded) && (!ev || chargerFits(s, ev)),
+        ),
       };
     }
     return includedCache.stations;
   }
 
-  function applyBrandFilter(): void {
+  /** Today's prices; with a plug or power filter on, chargers carry the AC or DC price that fits. */
+  function activePrices(): DailyPrices | null {
+    const ev = evFilter();
+    if (!data.prices || !chargers || !ev || !isEvFilterOn(ev)) return data.prices;
+    const c = evPricesCache;
+    if (c?.prices !== data.prices || c.chargers !== chargers || !sameEvFilter(c.ev, ev)) {
+      evPricesCache = {
+        prices: data.prices,
+        chargers,
+        ev,
+        out: evPricesFor(data.prices, chargers, ev),
+      };
+    }
+    return evPricesCache!.out;
+  }
+
+  function evFilterOn(): boolean {
+    const ev = evFilter();
+    return Boolean(ev && isEvFilterOn(ev));
+  }
+
+  function applyStationFilter(): void {
     if (routeLine) {
       void evaluateRouteStations(routeLine).then(() => {
         refreshMap();
@@ -849,10 +973,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
     render();
   }
 
+  function choosingRoute(): boolean {
+    return !routeLine && routeOptions.length > 1;
+  }
+
   function refreshMap(): void {
-    const routeIds = routeLine ? mapStationIds() : null;
+    // While the driver picks a route, no station is weighed yet.
+    const routeIds = routeLine ? mapStationIds() : choosingRoute() ? new Set<string>() : null;
     const stations = stationsForRouteMap(includedStations(), routeIds);
-    const shown = routeLine ? routeRows.filter((r) => routeIds?.has(r.station.id)) : [];
+    const shown = routeLine
+      ? [...routeRows, ...dashedRows].filter((r) => routeIds?.has(r.station.id))
+      : [];
     const cheapestOnId = shown.length ? orderRouteRows(shown).cheapestOn?.station.id : undefined;
     const emphasis = routeLine
       ? Object.fromEntries(
@@ -862,14 +993,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
           ]),
         )
       : undefined;
-    setStationData(map, stations, data.prices, settings.fuel, settings, emphasis);
-    if (routeLine) {
-      setRouteData(map, routeLine.geometry, viaGeometries());
-    }
+    setStationData(map, stations, activePrices(), settings.fuel, settings, emphasis);
+    setRouteData(map, routeLine?.geometry ?? null, routeLine ? viaGeometries() : []);
+    setRouteOptions(
+      map,
+      routeOptions.length > 1 ? routeOptions.map((r) => r.geometry) : [],
+      routeLine ? routeOptions.indexOf(routeLine) : null,
+    );
   }
 
   function mapStationIds(): Set<string> {
-    return mapRouteStationIds(routeRows, extraMapStationIds);
+    const ids = mapRouteStationIds(routeRows, extraMapStationIds);
+    for (const r of dashedRows) ids.add(r.station.id);
+    return ids;
   }
 
   function viaGeometries(): LngLat[][] {
@@ -979,23 +1115,56 @@ export async function startApp(root: HTMLElement): Promise<void> {
     pendingDest = false;
     pickMode = null;
     render();
-    const res = await fetchRoute(start, end, settings.routePreference);
-    if (!res) {
-      routeLine = null;
-      routeRows = [];
-      extraMapStationIds = new Set();
+    const routes = await fetchRoutes(start, end, settings.routePreference);
+    routeLine = null;
+    routeOptions = routes;
+    routeRows = [];
+    dashedRows = [];
+    extraMapStationIds = new Set();
+    if (!routes.length) {
       destStatus = "not-found";
-      setRouteData(map, null);
       setEndpointMarkers(null, null);
       refreshMap();
       render();
       return;
     }
-    extraMapStationIds = new Set();
+    setEndpointMarkers(start, end);
+    if (routes.length === 1) {
+      await chooseRoute(0);
+      return;
+    }
+    // Several ways there: the driver picks one before any station is weighed.
+    destStatus = "idle";
+    headerMinimized = true;
+    listMinimized = false;
+    openPanel = null;
+    refreshMap();
+    render();
+    // The list stays open beside or under the map, so fit around it, not under it.
+    const box = (sel: string) => root.querySelector<HTMLElement>(sel)?.getBoundingClientRect();
+    fitRoute(
+      map,
+      routes[0].geometry,
+      routes.slice(1).map((r) => r.geometry),
+      openListPadding(
+        mapDiv.getBoundingClientRect(),
+        box("#header") ?? null,
+        box(".sheet") ?? null,
+      ),
+    );
+  }
+
+  async function chooseRoute(index: number): Promise<void> {
+    const res = routeOptions[index];
+    if (!res || res === routeLine) return;
     routeLine = res;
     // The last route's stations must not show on this one while its detours load.
     routeRows = [];
-    setEndpointMarkers(start, end);
+    dashedRows = [];
+    extraMapStationIds = new Set();
+    destStatus = "routing";
+    refreshMap();
+    render();
     await evaluateRouteStations(res);
     if (routeLine !== res) return;
     destStatus = "idle";
@@ -1012,9 +1181,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
       return;
     }
     const seq = ++routeEvalSeq;
+    // Dashed lines are redrawn below; until then the old picks would carry stale prices.
+    dashedRows = [];
     const nearby: NearbyStation[] = [];
+    const prices = activePrices();
     for (const s of includedStations()) {
-      const price = data.prices?.prices[s.id]?.[settings.fuel]?.price;
+      const price = prices?.prices[s.id]?.[settings.fuel]?.price;
       if (price == null) continue;
       const lineKm = distanceToPolylineKm({ lat: s.lat, lon: s.lon }, res.geometry);
       if (lineKm <= DETOUR_CORRIDOR_KM) nearby.push({ station: s, price, lineKm });
@@ -1031,9 +1203,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
         detours,
       );
       const fetched = await fetchDetours(
-        start,
-        end,
-        unchecked.map((c) => c.station),
+        unchecked.map((c) => {
+          const { leave, rejoin } = detourWindow(res.geometry, c.station);
+          return { leave, stop: c.station, rejoin };
+        }),
       );
       if (fetched) unchecked.forEach((c, i) => detours.set(c.station.id, fetched[i] ?? null));
       // A newer route, fuel or brand filter has taken over while the router answered.
@@ -1048,6 +1221,78 @@ export async function startApp(root: HTMLElement): Promise<void> {
     await Promise.all(
       onWay.filter((row) => mapIds.has(row.station.id)).map((row) => attachViaRoute(row, res)),
     );
+    if (seq !== routeEvalSeq || routeLine !== res) return;
+    const dashed = await dashedLineRows();
+    if (seq !== routeEvalSeq || routeLine !== res) return;
+    dashedRows = dashed;
+  }
+
+  /**
+   * On each dashed via-route on the map, the one station worth marking (cheapestOnDashed): the
+   * cheapest few near each line get a road detour check against that line, so one across the
+   * road from it is left out.
+   */
+  async function dashedLineRows(): Promise<RouteStationRow[]> {
+    const onWayIds = new Set(routeRows.map((r) => r.station.id));
+    const ids = mapRouteStationIds(routeRows, extraMapStationIds);
+    const priced: Array<{ station: Station; price: number }> = [];
+    const prices = activePrices();
+    for (const s of includedStations()) {
+      const price = prices?.prices[s.id]?.[settings.fuel]?.price;
+      if (price != null && !onWayIds.has(s.id)) priced.push({ station: s, price });
+    }
+    const lines: Array<{ target: RouteStationRow; line: LngLat[]; candidates: DashedCandidate[] }> =
+      [];
+    for (const target of routeRows) {
+      const line = target.viaGeometry;
+      if (!ids.has(target.station.id) || !line || line.length < 2) continue;
+      const box = boundsAround(line, DASHED_ROUTE_KM);
+      const candidates = priced
+        .filter(({ station: s, price }) => price < target.price && box.contains(s))
+        .map(({ station, price }) => ({
+          station,
+          price,
+          dashedKm: distanceToPolylineKm(station, line),
+          detourKm: undefined as number | null | undefined,
+          detourMin: 0,
+        }))
+        .filter((c) => c.dashedKm <= DASHED_ROUTE_KM)
+        .sort(byPrice)
+        .slice(0, MAX_DASHED_CHECKS);
+      if (candidates.length) lines.push({ target, line, candidates });
+    }
+    const checks = lines.flatMap(({ line, candidates }) => candidates.map((c) => ({ line, c })));
+    const fetched = await fetchDetours(
+      checks.map(({ line, c }) => {
+        const { leave, rejoin } = detourWindow(line, c.station);
+        return { leave, stop: c.station, rejoin };
+      }),
+    );
+    if (fetched) {
+      checks.forEach(({ c }, i) => {
+        c.detourKm = fetched[i]?.extraKm ?? null;
+        c.detourMin = fetched[i]?.extraMin ?? 0;
+      });
+    }
+    const rows = new Map<string, RouteStationRow>();
+    for (const { target, line, candidates } of lines) {
+      const pick = cheapestOnDashed(target.price, candidates, settings.maxDetourKm);
+      if (!pick || rows.has(pick.station.id)) continue;
+      const nearest = nearestPointOnPolyline(pick.station, line);
+      rows.set(pick.station.id, {
+        station: pick.station,
+        price: pick.price,
+        kind: "detour",
+        distFromStartKm: distanceAlongLineKm(line, nearest.index, nearest.point),
+        // Taking the dashed route, then stopping on it.
+        extraKm: (target.viaExtraKm ?? target.extraKm) + (pick.detourKm ?? 0),
+        extraMin: (target.viaExtraMin ?? target.extraMin) + pick.detourMin,
+        roadDetour: true,
+        benefit: priceBenefit(target.price, pick.price, settings.fuel),
+        viaGeometry: line,
+      });
+    }
+    return [...rows.values()];
   }
 
   function onTheWayRows(
@@ -1058,19 +1303,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const onWay: RouteStationRow[] = [];
     for (const { station: s, price, lineKm } of nearby) {
       const detour = detours.get(s.id);
-      if (!isOnTheWay(lineKm, detour)) continue;
-      let distFromStartKm = detour?.toKm;
-      if (distFromStartKm == null) {
-        const nearest = nearestPointOnPolyline({ lat: s.lat, lon: s.lon }, res.geometry);
-        distFromStartKm = distanceAlongLineKm(res.geometry, nearest.index, nearest.point);
-      }
+      if (!isOnTheWay(lineKm, detour, settings.maxDetourKm)) continue;
+      const nearest = nearestPointOnPolyline({ lat: s.lat, lon: s.lon }, res.geometry);
       onWay.push({
         station: s,
         price,
         kind: "on",
-        distFromStartKm,
+        distFromStartKm: distanceAlongLineKm(res.geometry, nearest.index, nearest.point),
         extraKm: detour?.extraKm ?? 0,
         extraMin: detour?.extraMin ?? 0,
+        roadDetour: detour != null,
         benefit: priceBenefit(price, price, settings.fuel),
       });
     }
@@ -1090,8 +1332,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const via = { lat: row.station.lat, lon: row.station.lon };
     const viaRoute = await fetchRoute(start, end, settings.routePreference, via);
     if (viaRoute) {
-      row.extraKm = Math.max(0, viaRoute.distanceKm - res.distanceKm);
-      row.extraMin = Math.max(0, viaRoute.durationMin - res.durationMin);
+      row.viaExtraKm = Math.max(0, viaRoute.distanceKm - res.distanceKm);
+      row.viaExtraMin = Math.max(0, viaRoute.durationMin - res.durationMin);
+      if (!row.roadDetour) {
+        row.extraKm = row.viaExtraKm;
+        row.extraMin = row.viaExtraMin;
+      }
       row.viaGeometry = viaRoute.geometry;
     } else {
       row.viaGeometry = [start, via, end];
@@ -1149,10 +1395,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
   async function revealStation(id: string): Promise<void> {
     const s = activeStations().find((x) => x.id === id);
     if (!s) return;
-    const routeRow = routeRows.find((r) => r.station.id === id);
-    if (routeLine && routeRow) {
+    const routeRow =
+      routeRows.find((r) => r.station.id === id) ?? dashedRows.find((r) => r.station.id === id);
+    if (routeLine && routeRow?.kind === "on") {
+      const res = routeLine;
       extraMapStationIds.add(id);
-      await attachViaRoute(routeRow, routeLine);
+      await attachViaRoute(routeRow, res);
+      const seq = routeEvalSeq;
+      const dashed = await dashedLineRows();
+      if (seq === routeEvalSeq && routeLine === res) dashedRows = dashed;
       refreshMap();
     }
     const origin = originForDistance();
@@ -1175,7 +1426,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         DOMPurify.sanitize(
           stationPopupHtml(
             s,
-            data.prices,
+            activePrices(),
             distKm != null ? { distLabel: formatKm(distKm) } : undefined,
           ),
           { USE_PROFILES: { html: true } },
@@ -1382,14 +1633,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
       listHtml = html;
       list.innerHTML = html;
     };
-    if (routeLine && routeRows.length) {
-      const { cheapestOn, cheapestOverall, ordered } = orderRouteRows(routeRows);
+    if (choosingRoute()) {
+      setList(routeChoiceHtml());
+      return;
+    }
+    const rows = [...routeRows, ...dashedRows];
+    if (routeLine && rows.length) {
+      const { cheapestOn, cheapestOverall, ordered } = orderRouteRows(rows);
       setList(
         listWrap(
           ordered.map((r, i) => {
             const isCheapestOn = cheapestOn?.station.id === r.station.id;
             const isCheapestOverall = cheapestOverall?.station.id === r.station.id;
-            const detourWorth = r.benefit.netBenefit > 0 ? t("route.worth") : t("route.notWorth");
             const badges = [
               isCheapestOn
                 ? `<span class="badge">${escapeHtml(t("route.cheapestBadge"))}</span>`
@@ -1400,19 +1655,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
               !isCheapestOn && r.kind === "on"
                 ? `<span class="badge muted">${escapeHtml(t("route.onTheWay"))}</span>`
                 : "",
-              !isCheapestOverall && r.kind === "detour"
-                ? `<span class="badge">${escapeHtml(detourWorth)}</span>`
+              r.kind === "detour"
+                ? `<span class="badge">${escapeHtml(t("route.cheapestDashed"))}</span>`
                 : "",
             ].join("");
-            const extra =
-              r.kind === "detour"
-                ? t("route.extra", {
-                    km: r.extraKm.toFixed(1),
-                    save: formatMoney(r.benefit.netBenefit),
-                  })
-                : r.extraKm >= 0.1
-                  ? t("route.detour", { km: formatKm(r.extraKm) })
-                  : "";
+            const extra = r.extraKm >= 0.1 ? t("route.detour", { km: formatKm(r.extraKm) }) : "";
             const pinned = isCheapestOn || isCheapestOverall;
             const rowClass = [
               pinned && i < 2 ? "is-pick" : "",
@@ -1422,21 +1669,27 @@ export async function startApp(root: HTMLElement): Promise<void> {
               .join(" ");
             return stationRow(r.station, r.price, r.distFromStartKm, extra, rowClass, badges);
           }),
+          undefined,
+          routeSwitchHtml(),
         ),
       );
       return;
     }
-    if (routeLine && endHit && routeRows.length === 0 && destStatus !== "routing") {
-      setList(listWrap([], t(isEv() ? "route.noChargers" : "route.noStations")));
+    if (routeLine && endHit && rows.length === 0 && destStatus !== "routing") {
+      const empty = isEv()
+        ? t(evFilterOn() ? "route.noChargersFilter" : "route.noChargers")
+        : t("route.noStations");
+      setList(listWrap([], empty, routeSwitchHtml()));
       return;
     }
     if (isEv() && !chargers) {
       setList(listWrap([], t("list.loadingChargers")));
       return;
     }
+    const prices = activePrices();
     const inView = stationsInView(map, includedStations()).map((s) => ({
       s,
-      price: data.prices?.prices[s.id]?.[settings.fuel]?.price,
+      price: prices?.prices[s.id]?.[settings.fuel]?.price,
     }));
     const priced = inView
       .filter((r): r is { s: Station; price: number } => r.price != null)
@@ -1448,7 +1701,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
           .sort((a, b) => a.s.name.localeCompare(b.s.name) || a.s.id.localeCompare(b.s.id))
       : [];
     if (priced.length === 0 && unpriced.length === 0) {
-      setList(listWrap([], t(isEv() ? "list.emptyEv" : "list.empty")));
+      const empty = isEv() ? (evFilterOn() ? "list.emptyEvFilter" : "list.emptyEv") : "list.empty";
+      setList(listWrap([], t(empty)));
       return;
     }
     const last = priced.length - 1;
@@ -1476,15 +1730,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
     return `<p class="list-meta" title="${escapeHtml(text)}"><span class="list-updated">${escapeHtml(text)}</span></p>`;
   }
 
-  function listWrap(items: string[], empty?: string): string {
+  function listWrap(items: string[], empty?: string, lead = ""): string {
     const count = items.length;
     const ev = isEv();
     const base = t(ev ? "list.titleEv" : "list.title");
     const title = count ? `${base} · ${tPlural(ev ? "chargers" : "stations", count)}` : base;
-    const meta = updatedMetaHtml();
     const body = empty
       ? `<p class="empty">${escapeHtml(empty)}</p>`
       : `<ul class="station-list">${items.join("")}</ul>`;
+    return sheetHtml(title, updatedMetaHtml(), lead + body);
+  }
+
+  function sheetHtml(title: string, meta: string, body: string): string {
     return `<div class="sheet${listMinimized ? " is-min" : ""}">
       <button type="button" class="list-head" data-act="toggle-list" aria-expanded="${listMinimized ? "false" : "true"}" aria-label="${escapeHtml(listMinimized ? t("list.expand") : t("list.collapse"))}">
         <span class="list-handle" aria-hidden="true"></span>
@@ -1496,6 +1753,35 @@ export async function startApp(root: HTMLElement): Promise<void> {
       </button>
       <div class="list-body">${body}</div>
     </div>`;
+  }
+
+  /** The routes to pick from, best first, each in its color on the map. */
+  function routeChoiceHtml(): string {
+    const items = routeOptions.map((r, i) => {
+      const color = ROUTE_OPTION_COLORS[i % ROUTE_OPTION_COLORS.length];
+      const note = i === 0 && r.profile === "fastest" ? t("route.fastest") : "";
+      return `<li><button type="button" class="route-option" data-act="route" data-index="${i}">
+        <span class="route-swatch" style="background:${color}" aria-hidden="true"></span>
+        <span class="route-option-main">
+          <strong>${escapeHtml(t("route.option", { n: i + 1 }))}</strong>
+          ${note ? `<small>${escapeHtml(note)}</small>` : ""}
+        </span>
+        <span class="route-option-meta">${escapeHtml(formatKm(r.distanceKm))} · ${escapeHtml(formatDuration(r.durationMin))}</span>
+      </button></li>`;
+    });
+    const hint = `<p class="list-meta">${escapeHtml(t("route.chooseHint"))}</p>`;
+    return sheetHtml(t("route.choose"), hint, `<ul class="route-options">${items.join("")}</ul>`);
+  }
+
+  /** Once a route is picked, the others stay one tap away above its stations. */
+  function routeSwitchHtml(): string {
+    if (!routeLine || routeOptions.length < 2) return "";
+    const chosen = routeOptions.indexOf(routeLine);
+    const chips = routeOptions.map(
+      (r, i) =>
+        `<button type="button" class="route-chip${i === chosen ? " is-on" : ""}" data-act="route" data-index="${i}" aria-pressed="${i === chosen ? "true" : "false"}">${escapeHtml(t("route.option", { n: i + 1 }))} · ${escapeHtml(formatDuration(r.durationMin))}</button>`,
+    );
+    return `<div class="route-switch" role="group" aria-label="${escapeHtml(t("route.choose"))}">${chips.join("")}</div>`;
   }
 
   function stationRow(
@@ -1558,12 +1844,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
           <a class="logo" data-act="view" data-view="map" href="${pathFor("map", locale)}">${escapeHtml(t("app.name"))}</a>
           <div class="topbar-end">
             <div class="lang">
-              <a data-act="locale" data-locale="lt" href="${escapeHtml(hrefFor(view, "lt", settings.fuel))}" hreflang="lt" class="${locale === "lt" ? "on" : ""}">LT</a>
-              <a data-act="locale" data-locale="en" href="${escapeHtml(hrefFor(view, "en", settings.fuel))}" hreflang="en" class="${locale === "en" ? "on" : ""}">EN</a>
+              <a data-act="locale" data-locale="lt" href="${escapeHtml(hrefFor(view, "lt", settings.fuel, settings.evMinKw))}" hreflang="lt" class="${locale === "lt" ? "on" : ""}">LT</a>
+              <a data-act="locale" data-locale="en" href="${escapeHtml(hrefFor(view, "en", settings.fuel, settings.evMinKw))}" hreflang="en" class="${locale === "en" ? "on" : ""}">EN</a>
             </div>
             <nav class="nav-views">
-              <a class="icon-btn ${view === "map" ? "on" : ""}" data-act="view" data-view="map" href="${escapeHtml(hrefFor("map", locale, settings.fuel))}">${escapeHtml(t("nav.stations"))}</a>
-              <a class="icon-btn ${view === "history" ? "on" : ""}" data-act="view" data-view="history" href="${escapeHtml(hrefFor("history", locale, settings.fuel))}">${escapeHtml(t("nav.history"))}</a>
+              <a class="icon-btn ${view === "map" ? "on" : ""}" data-act="view" data-view="map" href="${escapeHtml(hrefFor("map", locale, settings.fuel, settings.evMinKw))}">${escapeHtml(t("nav.stations"))}</a>
+              <a class="icon-btn ${view === "history" ? "on" : ""}" data-act="view" data-view="history" href="${escapeHtml(hrefFor("history", locale, settings.fuel, settings.evMinKw))}">${escapeHtml(t("nav.history"))}</a>
             </nav>
             <a class="icon-btn donate-btn" href="${DONATE_URL}" target="_blank" rel="noopener noreferrer">
               ${DONATE_HEART}
@@ -1582,6 +1868,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
               `<button type="button" class="${g === group ? "on" : ""}" data-act="fuel-group" data-group="${group}">${escapeHtml(t(`fuel.group.${group}` as MessageKey))}</button>`,
           ).join("")}
         </div>
+        ${isEv() && view === "map" ? evPowerHtml() : ""}
         <div class="dest">
           <div class="dest-field">
             <span class="dest-pin dest-pin-start" aria-hidden="true"></span>
@@ -1604,6 +1891,30 @@ export async function startApp(root: HTMLElement): Promise<void> {
         <span class="header-chevron" aria-hidden="true">${headerMinimized ? "▾" : "▴"}</span>
       </button>
     `;
+  }
+
+  /** Any power, fast or ultra-fast: a per-trip choice, so it sits under the EV chip. */
+  function evPowerHtml(): string {
+    const chips = EV_MIN_KW.map((kw) => {
+      const on = settings.evMinKw === kw;
+      const label = kw === 0 ? t("ev.power.any") : t("ev.power.min", { kw });
+      const title = kw === 0 ? "" : ` title="${escapeHtml(t("ev.power.hint"))}"`;
+      return `<button type="button" class="${on ? "on" : ""}" data-act="ev-kw" data-kw="${kw}" aria-pressed="${on ? "true" : "false"}"${title}>${escapeHtml(label)}</button>`;
+    });
+    return `<div class="ev-power" role="group" aria-label="${escapeHtml(t("ev.power"))}">${chips.join("")}</div>`;
+  }
+
+  /** The car's plugs rarely change, so they live in Settings next to the networks. */
+  function plugsHtml(): string {
+    const checks = PLUG_GROUPS.map((plug) => {
+      const on = !settings.excludedPlugs.includes(plug);
+      return `<label class="check"><input id="set-plug-${plug}" data-plug="${plug}" type="checkbox"${on ? " checked" : ""} />${escapeHtml(t(`plug.${plug}`))}</label>`;
+    }).join("");
+    return `<fieldset class="brand-filter plug-filter">
+        <legend>${escapeHtml(t("settings.plugs"))}</legend>
+        ${checks}
+        <p class="hint">${escapeHtml(t("settings.plugsHint"))}</p>
+      </fieldset>`;
   }
 
   function settingsHtml(): string {
@@ -1649,9 +1960,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
       }
       <label>${escapeHtml(t("settings.timeValue"))}<input id="set-time" type="number" min="0" max="50" step="1" value="${escapeHtml(String(settings.timeValue))}" /></label>
       <div class="setting-block">
+        <label>${escapeHtml(t("settings.maxDetour"))}<input id="set-detour" type="number" min="${MAX_DETOUR_KM_RANGE.min}" max="${MAX_DETOUR_KM_RANGE.max}" step="0.1" value="${escapeHtml(String(settings.maxDetourKm))}" /></label>
+        <p class="hint">${escapeHtml(t("settings.maxDetourHint"))}</p>
+      </div>
+      <div class="setting-block">
         <label class="check"><input id="set-high-accuracy" type="checkbox"${settings.highAccuracyLocation ? " checked" : ""} />${escapeHtml(t("settings.highAccuracy"))}</label>
         <p class="hint">${escapeHtml(t("settings.highAccuracyHint"))}</p>
       </div>
+      ${ev ? plugsHtml() : ""}
       <fieldset class="brand-filter">
         <legend>${escapeHtml(t(ev ? "settings.networks" : "settings.providers"))}</legend>
         ${checks}

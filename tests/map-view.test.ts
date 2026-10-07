@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { setLocale } from "../src/i18n/index.ts";
 import {
   freeReasonText,
+  openListPadding,
   overlayPadding,
   percentile,
   stationPopupHtml,
@@ -30,6 +31,37 @@ describe("overlayPadding", () => {
 
   it("keeps a minimum edge when chrome is missing", () => {
     expect(overlayPadding(0, 0)).toEqual({ top: 24, bottom: 24, left: 24, right: 24 });
+  });
+});
+
+describe("openListPadding", () => {
+  const box = (left: number, top: number, width: number, height: number) => ({
+    left,
+    top,
+    width,
+    height,
+    right: left + width,
+    bottom: top + height,
+  });
+  const map = box(0, 0, 1280, 720);
+
+  it("keeps a fit beside a list panel on the right", () => {
+    expect(openListPadding(map, box(16, 10, 240, 44), box(904, 16, 360, 688))).toEqual({
+      top: 66,
+      bottom: 24,
+      left: 24,
+      right: 388,
+    });
+  });
+
+  it("keeps a fit above a bottom sheet", () => {
+    const phone = box(0, 0, 390, 844);
+    expect(openListPadding(phone, box(12, 10, 228, 68), box(12, 642, 366, 192))).toEqual({
+      top: 90,
+      bottom: 214,
+      left: 24,
+      right: 24,
+    });
   });
 });
 
@@ -240,6 +272,19 @@ describe("charger popup", () => {
 
   it("dedupes socket names", () => {
     expect(socketLabels(["type2", "type2_cable", "chademo"])).toEqual(["Type 2", "CHAdeMO"]);
+  });
+
+  it("gives each socket its own power when known, and drops a repeated top power", () => {
+    expect(
+      socketLabels(["type2", "type2_cable", "type2_combo"], { type2: 11, type2_cable: 22 }),
+    ).toEqual(["Type 2 22 kW", "CCS"]);
+    setLocale("en");
+    const html = stationPopupHtml(
+      { ...charger, ev: { ...charger.ev!, kwBySocket: { type2: 22, type2_combo: 150 } } },
+      null,
+    );
+    expect(html).toContain("Type 2 22 kW, CCS 150 kW");
+    expect(html).not.toContain("up to");
   });
 });
 

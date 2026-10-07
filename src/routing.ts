@@ -89,24 +89,48 @@ export async function fetchRoute(
     const ors = await openRoute(start, end, preference, orsKey, via);
     if (ors) return ors;
   }
-  const osrm = await osrmRoute(start, end, via);
-  if (osrm) return { ...osrm, profile: "fastest" };
-  return null;
+  const [osrm] = await osrmRoutes(start, end, via);
+  return osrm ?? null;
 }
 
-async function osrmRoute(
+/** Routes offered to choose from: the best one first. */
+export const MAX_ROUTES = 3;
+
+/**
+ * The route and, from OSRM, up to two alternatives, best first; empty when routing fails.
+ * OpenRouteService answers with its one route.
+ */
+export async function fetchRoutes(
+  start: LngLat,
+  end: LngLat,
+  preference: "shortest" | "fastest",
+): Promise<RouteResult[]> {
+  const orsKey = import.meta.env.VITE_ORS_KEY as string | undefined;
+  if (orsKey) {
+    const ors = await openRoute(start, end, preference, orsKey);
+    if (ors) return [ors];
+  }
+  const routes = await osrmRoutes(start, end, undefined, MAX_ROUTES - 1);
+  if (routes.length) return routes.slice(0, MAX_ROUTES);
+  // A server that refuses alternatives still answers a plain route.
+  return osrmRoutes(start, end);
+}
+
+async function osrmRoutes(
   start: LngLat,
   end: LngLat,
   via?: LngLat,
-): Promise<Omit<RouteResult, "profile"> | null> {
+  alternatives = 0,
+): Promise<RouteResult[]> {
   const parts = [start, via, end].filter(Boolean) as LngLat[];
   const coords = parts.map((p) => `${p.lon},${p.lat}`).join(";");
   // Reach a station with it on the driver's side, as fetchDetours does.
   const approaches = via ? "&approaches=unrestricted;curb;unrestricted" : "";
-  const url = `${OSRM}/route/v1/driving/${coords}?overview=full&geometries=geojson${approaches}`;
+  const alts = alternatives > 0 ? `&alternatives=${alternatives}` : "";
+  const url = `${OSRM}/route/v1/driving/${coords}?overview=full&geometries=geojson${approaches}${alts}`;
   try {
     const res = await fetch(url);
-    if (!res.ok) return null;
+    if (!res.ok) return [];
     const json = (await res.json()) as {
       code?: string;
       routes?: Array<{
@@ -115,15 +139,14 @@ async function osrmRoute(
         geometry: { coordinates: [number, number][] };
       }>;
     };
-    const r = json.routes?.[0];
-    if (!r) return null;
-    return {
+    return (json.routes ?? []).map((r) => ({
       geometry: r.geometry.coordinates.map(([lon, lat]) => ({ lon, lat })),
       distanceKm: r.distance / 1000,
       durationMin: r.duration / 60,
-    };
+      profile: "fastest" as const,
+    }));
   } catch {
-    return null;
+    return [];
   }
 }
 
@@ -165,11 +188,16 @@ async function openRoute(
 }
 
 export interface Detour {
-  /** Road distance from the start to the stop. */
-  toKm: number;
-  /** What start → stop → end adds over start → end. */
+  /** What leave → stop → rejoin adds over leave → rejoin. */
   extraKm: number;
   extraMin: number;
+}
+
+/** A stop and the route points where the trip leaves for it and rejoins. */
+export interface DetourTrip {
+  leave: LngLat & { bearing: number };
+  stop: LngLat;
+  rejoin: LngLat & { bearing: number };
 }
 
 interface OsrmTable {
@@ -178,41 +206,54 @@ interface OsrmTable {
   distances?: Array<Array<number | null>>;
 }
 
-/** Stops per table request; osrm-routed caps a table at 100 coordinates by default. */
-const TABLE_CHUNK = 50;
+/** Stops per table request: 90 coordinates and a 60 × 60 table, under osrm-routed's 100. */
+const TABLE_CHUNK = 30;
+/** How far a route point's road may turn from the route heading and still be the route. */
+const BEARING_RANGE = 60;
 
 /**
- * Road detour through each stop, from OSRM's table service: one request per 50 stops instead
- * of a via-route each. Stops are reached and left on the driver's side of the road
- * (`approaches=curb`), so a station across the road costs its turnaround. Null when the service
- * fails; a stop the router cannot reach is null.
+ * Road detour for each stop from OSRM's table service: leave the route, visit the stop, rejoin
+ * the route, against driving straight through. The route points keep the route's heading, and
+ * stops are reached and left on the driver's side of the road (`approaches=curb`), so a station
+ * across the road costs its turnaround. Null when the service fails; a stop the router cannot
+ * reach is null.
  */
-export async function fetchDetours(
-  start: LngLat,
-  end: LngLat,
-  stops: LngLat[],
-): Promise<Array<Detour | null> | null> {
-  if (stops.length === 0) return [];
-  const chunks: LngLat[][] = [];
-  for (let i = 0; i < stops.length; i += TABLE_CHUNK) chunks.push(stops.slice(i, i + TABLE_CHUNK));
-  const parts = await Promise.all(chunks.map((chunk) => osrmDetours(start, end, chunk)));
+export async function fetchDetours(trips: DetourTrip[]): Promise<Array<Detour | null> | null> {
+  if (trips.length === 0) return [];
+  const chunks: DetourTrip[][] = [];
+  for (let i = 0; i < trips.length; i += TABLE_CHUNK) chunks.push(trips.slice(i, i + TABLE_CHUNK));
+  const parts = await Promise.all(chunks.map(osrmDetours));
   if (parts.some((p) => p == null)) return null;
   return (parts as Array<Array<Detour | null>>).flat();
 }
 
-async function osrmDetours(
-  start: LngLat,
-  end: LngLat,
-  stops: LngLat[],
-): Promise<Array<Detour | null> | null> {
-  const n = stops.length;
-  const coords = [start, ...stops, end].map((p) => `${p.lon},${p.lat}`).join(";");
+async function osrmDetours(trips: DetourTrip[]): Promise<Array<Detour | null> | null> {
+  const n = trips.length;
+  // Coordinates: every leave point, then every stop, then every rejoin point.
+  const points = [
+    ...trips.map((t) => t.leave),
+    ...trips.map((t) => t.stop),
+    ...trips.map((t) => t.rejoin),
+  ];
+  const coords = points.map((p) => `${p.lon},${p.lat}`).join(";");
   const indices = (from: number, to: number): string =>
-    Array.from({ length: to - from + 1 }, (_, i) => from + i).join(";");
-  const approaches = ["unrestricted", ...stops.map(() => "curb"), "unrestricted"].join(";");
+    Array.from({ length: to - from }, (_, i) => from + i).join(";");
+  const heading = (p: { bearing: number }): string =>
+    `${Math.round(p.bearing) % 360},${BEARING_RANGE}`;
+  const bearings = [
+    ...trips.map((t) => heading(t.leave)),
+    ...trips.map(() => ""),
+    ...trips.map((t) => heading(t.rejoin)),
+  ].join(";");
+  const approaches = [
+    ...trips.map(() => "unrestricted"),
+    ...trips.map(() => "curb"),
+    ...trips.map(() => "unrestricted"),
+  ].join(";");
   const url =
-    `${OSRM}/table/v1/driving/${coords}?sources=${indices(0, n)}` +
-    `&destinations=${indices(1, n + 1)}&annotations=duration,distance&approaches=${approaches}`;
+    `${OSRM}/table/v1/driving/${coords}?sources=${indices(0, 2 * n)}` +
+    `&destinations=${indices(n, 3 * n)}&annotations=duration,distance` +
+    `&bearings=${bearings}&approaches=${approaches}`;
   try {
     const res = await fetch(url);
     if (!res.ok) return null;
@@ -223,25 +264,24 @@ async function osrmDetours(
 }
 
 /**
- * Sources are [start, ...stops] and destinations [...stops, end], so row 0 is start → each
- * stop, column n is each stop → end, and [0][n] is the direct trip.
+ * Sources are [...leave, ...stops] and destinations [...stops, ...rejoin], so for stop k:
+ * leave → stop is [k][k], stop → rejoin is [n + k][n + k], and leave → rejoin is [k][n + k].
  */
 export function detoursFromTable(json: OsrmTable, n: number): Array<Detour | null> | null {
   const { durations: s, distances: m } = json;
   if (json.code !== "Ok" || !s || !m) return null;
-  const directS = s[0]?.[n];
-  const directM = m[0]?.[n];
-  if (directS == null || directM == null) return null;
   return Array.from({ length: n }, (_, k) => {
-    const toS = s[0]?.[k];
-    const toM = m[0]?.[k];
-    const fromS = s[k + 1]?.[n];
-    const fromM = m[k + 1]?.[n];
-    if (toS == null || toM == null || fromS == null || fromM == null) return null;
+    const toS = s[k]?.[k];
+    const toM = m[k]?.[k];
+    const backS = s[n + k]?.[n + k];
+    const backM = m[n + k]?.[n + k];
+    const directS = s[k]?.[n + k];
+    const directM = m[k]?.[n + k];
+    if (toS == null || toM == null || backS == null || backM == null) return null;
+    if (directS == null || directM == null) return null;
     return {
-      toKm: toM / 1000,
-      extraKm: Math.max(0, (toM + fromM - directM) / 1000),
-      extraMin: Math.max(0, (toS + fromS - directS) / 60),
+      extraKm: Math.max(0, (toM + backM - directM) / 1000),
+      extraMin: Math.max(0, (toS + backS - directS) / 60),
     };
   });
 }

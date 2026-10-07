@@ -1,4 +1,5 @@
 import { KNOWN_BRANDS, networkSlug } from "../src/brands.ts";
+import { addSocketKw } from "../src/ev-filter.ts";
 import { haversineKm } from "../src/geo.ts";
 import type { Station } from "../src/types.ts";
 
@@ -11,7 +12,7 @@ export const SAME_SITE_KM = 0.3;
 /**
  * Chargers from the national register first; OSM fills in places the register lacks. An OSM
  * charger near a register site is dropped, but its `charge` tag stays on the site as a lower-ranked
- * price and its sockets fill gaps.
+ * price and its sockets and their power fill gaps.
  */
 export function mergeChargers(
   register: Station[],
@@ -42,6 +43,9 @@ export function mergeChargers(
     if (ev.chargeTag == null && o.ev?.chargeTag != null) ev.chargeTag = o.ev.chargeTag;
     if (ev.sockets.length === 0 && o.ev?.sockets.length) ev.sockets = [...o.ev.sockets];
     if (ev.maxKw == null && o.ev?.maxKw != null) ev.maxKw = o.ev.maxKw;
+    for (const [k, kw] of Object.entries(o.ev?.kwBySocket ?? {})) {
+      if (ev.sockets.includes(k) && ev.kwBySocket?.[k] == null) addSocketKw(ev, k, kw);
+    }
     if (!best.address && o.address) best.address = o.address;
     if (!best.city && o.city) best.city = o.city;
     best.sourceIds = { ...best.sourceIds, ...o.sourceIds };

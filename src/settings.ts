@@ -1,9 +1,13 @@
 import {
   DEFAULT_SETTINGS,
+  EV_MIN_KW,
   FUEL_TYPES,
   HISTORY_STATS,
+  PLUG_GROUPS,
+  type EvMinKw,
   type FuelType,
   type HistoryStat,
+  type PlugGroup,
   type Station,
   type UserSettings,
 } from "./types.ts";
@@ -19,6 +23,12 @@ const HISTORY_STAT_SET = new Set<string>(HISTORY_STATS);
 const LOCALE_SET = new Set<string>(["lt", "en"]);
 const PREFERENCE_SET = new Set<string>(["shortest", "fastest"]);
 const RADIUS_SET = new Set<number>(AROUND_RADIUS_KM);
+
+/**
+ * Bounds for the on-the-way detour. Stations are searched within 2 km of the route, and going
+ * out and back makes about twice that the most a detour can usefully be.
+ */
+export const MAX_DETOUR_KM_RANGE = { min: 0.1, max: 4 } as const;
 
 function clampNumber(value: unknown, fallback: number, min: number, max: number): number {
   let n = Number.NaN;
@@ -59,7 +69,7 @@ export function sanitizeSettings(raw: unknown): UserSettings {
     roadFactor: clampNumber(parsed.roadFactor, DEFAULT_SETTINGS.roadFactor, 1, 2),
     aroundRadiusKm,
     aroundReturn: asBoolean(parsed.aroundReturn, DEFAULT_SETTINGS.aroundReturn),
-    routeDetourKm: clampNumber(parsed.routeDetourKm, DEFAULT_SETTINGS.routeDetourKm, 1, 15),
+    maxDetourKm: clampDetourKm(parsed.maxDetourKm),
     hideUnpriced: asBoolean(parsed.hideUnpriced, DEFAULT_SETTINGS.hideUnpriced),
     highAccuracyLocation: asBoolean(
       parsed.highAccuracyLocation,
@@ -67,9 +77,16 @@ export function sanitizeSettings(raw: unknown): UserSettings {
     ),
     excludedBrands: sanitizeExcludedBrands(parsed.excludedBrands),
     excludedEvBrands: sanitizeExcludedBrands(parsed.excludedEvBrands),
+    excludedPlugs: sanitizePlugs(parsed.excludedPlugs),
+    evMinKw: asMinKw(parsed.evMinKw) ?? DEFAULT_SETTINGS.evMinKw,
     historyStat,
     ...(locale ? { locale } : {}),
   };
+}
+
+export function clampDetourKm(value: unknown): number {
+  const { min, max } = MAX_DETOUR_KM_RANGE;
+  return clampNumber(value, DEFAULT_SETTINGS.maxDetourKm, min, max);
 }
 
 /** Options for `navigator.geolocation` based on the high-accuracy setting. */
@@ -96,6 +113,17 @@ function sanitizeExcludedBrands(value: unknown): string[] {
   return out.sort();
 }
 
+/** Known plug groups in `PLUG_GROUPS` order, each once. */
+function sanitizePlugs(value: unknown): PlugGroup[] {
+  if (!Array.isArray(value)) return [];
+  return PLUG_GROUPS.filter((g) => value.includes(g));
+}
+
+function asMinKw(value: unknown): EvMinKw | null {
+  const n = typeof value === "string" ? Number(value) : value;
+  return EV_MIN_KW.find((kw) => kw === n) ?? null;
+}
+
 /** The provider filter of the selected fuel: charging networks for EV, fuel brands otherwise. */
 export function excludedFor(settings: UserSettings): string[] {
   return settings.fuel === "EV" ? settings.excludedEvBrands : settings.excludedBrands;
@@ -110,7 +138,7 @@ export function uniqueBrands(stations: Station[]): string[] {
 }
 
 function copyDefaults(): UserSettings {
-  return { ...DEFAULT_SETTINGS, excludedBrands: [], excludedEvBrands: [] };
+  return { ...DEFAULT_SETTINGS, excludedBrands: [], excludedEvBrands: [], excludedPlugs: [] };
 }
 
 export function loadSettings(): UserSettings {
@@ -141,6 +169,11 @@ export function fuelFromUrl(search: string): FuelType | null {
   if (v === "gas" || v === "lpg" || v === "LPG") return "LPG";
   if (v === "ev" || v === "EV") return "EV";
   return null;
+}
+
+/** `?kw=50` or `?kw=150`; anything else is any power. Read only when the URL names EV. */
+export function minKwFromUrl(search: string): EvMinKw {
+  return asMinKw(new URLSearchParams(search).get("kw")) ?? 0;
 }
 
 export function fuelToUrl(fuel: FuelType): string {

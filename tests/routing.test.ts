@@ -1,32 +1,36 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { detoursFromTable, fetchDetours } from "../src/routing.ts";
+import { detoursFromTable, fetchDetours, fetchRoute, fetchRoutes } from "../src/routing.ts";
 
 const start = { lat: 54.8987, lon: 23.9118 };
 const end = { lat: 54.9045, lon: 23.9764 };
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 describe("detoursFromTable", () => {
-  it("subtracts the direct trip from start → stop → end", () => {
-    // Rows: start, stop 0, stop 1. Columns: stop 0, stop 1, end.
+  it("compares leave → stop → rejoin with leave → rejoin", () => {
+    // Sources: leave 0, leave 1, stop 0, stop 1. Destinations: stop 0, stop 1, rejoin 0, rejoin 1.
     const detours = detoursFromTable(
       {
         code: "Ok",
         distances: [
-          [2100, 3000, 5500],
-          [0, 0, 4200],
-          [0, 0, 5900],
+          [1000, 0, 2000, 0],
+          [0, 2600, 0, 2000],
+          [0, 0, 1050, 0],
+          [0, 0, 0, 2800],
         ],
         durations: [
-          [180, 270, 480],
-          [0, 0, 330],
-          [0, 0, 510],
+          [80, 0, 150, 0],
+          [0, 200, 0, 150],
+          [0, 0, 100, 0],
+          [0, 0, 0, 250],
         ],
       },
       2,
     );
-    expect(detours?.[0]?.toKm).toBeCloseTo(2.1);
-    expect(detours?.[0]?.extraKm).toBeCloseTo(0.8);
+    expect(detours?.[0]?.extraKm).toBeCloseTo(0.05);
     expect(detours?.[0]?.extraMin).toBeCloseTo(0.5);
-    expect(detours?.[1]?.toKm).toBeCloseTo(3);
     expect(detours?.[1]?.extraKm).toBeCloseTo(3.4);
     expect(detours?.[1]?.extraMin).toBeCloseTo(5);
   });
@@ -36,20 +40,22 @@ describe("detoursFromTable", () => {
       {
         code: "Ok",
         distances: [
-          [null, 2000, 5000],
-          [0, 0, 4000],
-          [0, 0, 2990],
+          [null, 0, 2000, 0],
+          [0, 900, 0, 2000],
+          [0, 0, 0, 0],
+          [0, 0, 0, 1000],
         ],
         durations: [
-          [null, 150, 400],
-          [0, 0, 300],
-          [0, 0, 249],
+          [null, 0, 150, 0],
+          [0, 70, 0, 150],
+          [0, 0, 0, 0],
+          [0, 0, 0, 75],
         ],
       },
       2,
     );
     expect(detours?.[0]).toBeNull();
-    expect(detours?.[1]).toEqual({ toKm: 2, extraKm: 0, extraMin: 0 });
+    expect(detours?.[1]).toEqual({ extraKm: 0, extraMin: 0 });
   });
 
   it("rejects an error or a table without distances", () => {
@@ -59,21 +65,25 @@ describe("detoursFromTable", () => {
 });
 
 describe("fetchDetours", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
+  /** Every stop: 1 km to it, 1.5 km back, 2 km straight through. */
   function tableFor(url: string): object {
-    const n = new URL(url).searchParams.get("sources")!.split(";").length - 1;
-    const row = (v: number) => Array.from({ length: n + 1 }, () => v);
-    return {
-      code: "Ok",
-      distances: [row(1000), ...Array.from({ length: n }, () => row(1500))],
-      durations: [row(60), ...Array.from({ length: n }, () => row(90))],
-    };
+    const n = new URL(url).searchParams.get("sources")!.split(";").length / 2;
+    const matrix = (to: number, back: number, direct: number) =>
+      Array.from({ length: 2 * n }, (_, i) =>
+        Array.from({ length: 2 * n }, (_, j) =>
+          i < n && j === i ? to : i >= n && j === i ? back : i < n && j === n + i ? direct : 0,
+        ),
+      );
+    return { code: "Ok", distances: matrix(1000, 1500, 2000), durations: matrix(60, 90, 120) };
   }
 
-  it("asks for each stop on the driver's side, 50 stops per request", async () => {
+  const trip = (i: number) => ({
+    leave: { lat: 54.9, lon: 23.9 + i / 1000, bearing: 89.6 },
+    stop: { lat: 54.901, lon: 23.905 + i / 1000 },
+    rejoin: { lat: 54.9, lon: 23.91 + i / 1000, bearing: 90.4 },
+  });
+
+  it("leaves along the route, reaches each stop on the driver's side, 30 stops per request", async () => {
     const urls: string[] = [];
     vi.stubGlobal(
       "fetch",
@@ -82,21 +92,29 @@ describe("fetchDetours", () => {
         return new Response(JSON.stringify(tableFor(url)));
       }),
     );
-    const stops = Array.from({ length: 51 }, (_, i) => ({ lat: 54.9, lon: 23.9 + i / 1000 }));
-    const detours = await fetchDetours(start, end, stops);
-    expect(detours).toHaveLength(51);
-    expect(detours?.[50]).toEqual({ toKm: 1, extraKm: 1.5, extraMin: 1.5 });
+    const detours = await fetchDetours(Array.from({ length: 31 }, (_, i) => trip(i)));
+    expect(detours).toHaveLength(31);
+    expect(detours?.[30]?.extraKm).toBeCloseTo(0.5);
+    expect(detours?.[30]?.extraMin).toBeCloseTo(0.5);
     expect(urls).toHaveLength(2);
     const first = new URL(urls[0]);
-    expect(first.pathname).toMatch(/^\/table\/v1\/driving\/23\.9118,54\.8987;/);
-    expect(first.searchParams.get("sources")?.split(";")).toHaveLength(51);
-    expect(first.searchParams.get("destinations")?.split(";")[0]).toBe("1");
+    const coords = first.pathname.split("/driving/")[1].split(";");
+    expect(coords).toHaveLength(90);
+    expect(coords[0]).toBe("23.9,54.9");
+    expect(coords[30]).toBe("23.905,54.901");
+    expect(first.searchParams.get("sources")?.split(";")).toHaveLength(60);
+    expect(first.searchParams.get("destinations")?.split(";")[0]).toBe("30");
     expect(first.searchParams.get("annotations")).toBe("duration,distance");
+    const bearings = first.searchParams.get("bearings")?.split(";");
+    expect(bearings?.[0]).toBe("90,60");
+    expect(bearings?.[30]).toBe("");
+    expect(bearings?.[60]).toBe("90,60");
     const approaches = first.searchParams.get("approaches")?.split(";");
-    expect(approaches).toHaveLength(52);
-    expect(approaches?.[0]).toBe("unrestricted");
-    expect(approaches?.[1]).toBe("curb");
-    expect(approaches?.[51]).toBe("unrestricted");
+    expect([approaches?.[0], approaches?.[30], approaches?.[60]]).toEqual([
+      "unrestricted",
+      "curb",
+      "unrestricted",
+    ]);
     expect(new URL(urls[1]).searchParams.get("sources")).toBe("0;1");
   });
 
@@ -105,13 +123,80 @@ describe("fetchDetours", () => {
       "fetch",
       vi.fn(async () => new Response("", { status: 429 })),
     );
-    expect(await fetchDetours(start, end, [{ lat: 54.9, lon: 23.95 }])).toBeNull();
+    expect(await fetchDetours([trip(0)])).toBeNull();
   });
 
   it("skips the request without stops", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
-    expect(await fetchDetours(start, end, [])).toEqual([]);
+    expect(await fetchDetours([])).toEqual([]);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("fetchRoutes", () => {
+  const route = (km: number) => ({
+    distance: km * 1000,
+    duration: km * 120,
+    geometry: {
+      coordinates: [
+        [start.lon, start.lat],
+        [end.lon, end.lat],
+      ],
+    },
+  });
+
+  it("offers the route and up to two alternatives", async () => {
+    const urls: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        urls.push(url);
+        const routes = [route(5.5), route(6.6), route(7), route(9)];
+        return new Response(JSON.stringify({ code: "Ok", routes }));
+      }),
+    );
+    const routes = await fetchRoutes(start, end, "fastest");
+    expect(routes.map((r) => r.distanceKm)).toEqual([5.5, 6.6, 7]);
+    expect(routes[1].durationMin).toBeCloseTo(13.2);
+    expect(new URL(urls[0]).searchParams.get("alternatives")).toBe("2");
+  });
+
+  it("asks a plain route when alternatives are refused", async () => {
+    const urls: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        urls.push(url);
+        if (url.includes("alternatives")) return new Response("", { status: 400 });
+        return new Response(JSON.stringify({ code: "Ok", routes: [route(5.5)] }));
+      }),
+    );
+    expect((await fetchRoutes(start, end, "fastest")).map((r) => r.distanceKm)).toEqual([5.5]);
+    expect(urls).toHaveLength(2);
+  });
+
+  it("is empty when routing fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("", { status: 500 })),
+    );
+    expect(await fetchRoutes(start, end, "fastest")).toEqual([]);
+  });
+
+  it("asks one route through a station, reached on the driver's side", async () => {
+    const urls: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        urls.push(url);
+        return new Response(JSON.stringify({ code: "Ok", routes: [route(6)] }));
+      }),
+    );
+    const via = { lat: 54.8948, lon: 23.9442 };
+    expect((await fetchRoute(start, end, "fastest", via))?.distanceKm).toBe(6);
+    const url = new URL(urls[0]);
+    expect(url.searchParams.get("approaches")).toBe("unrestricted;curb;unrestricted");
+    expect(url.searchParams.has("alternatives")).toBe(false);
   });
 });

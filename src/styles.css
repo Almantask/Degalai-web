@@ -303,6 +303,35 @@ body,
   color: #fff;
 }
 
+/* EV power presets: one segmented pill under the fuel chips, a step quieter than them. */
+.ev-power {
+  display: flex;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.header .ev-power button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.header .ev-power button + button {
+  border-left: 1px solid var(--line);
+}
+
+.header .ev-power button.on {
+  background: var(--green-soft);
+  color: var(--green-dark);
+}
+
 .icon-tool {
   display: inline-flex;
   align-items: center;
@@ -598,6 +627,84 @@ body,
 
 .station-row.is-detour.is-pick {
   box-shadow: 0 0 0 2px rgb(79 70 229 / 28%);
+}
+
+.route-options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.route-option {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  align-items: center;
+  text-align: left;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.route-option:hover {
+  border-color: rgb(15 138 75 / 30%);
+  box-shadow: 0 6px 16px rgb(16 32 24 / 6%);
+}
+
+.route-swatch {
+  width: 22px;
+  height: 6px;
+  border-radius: 99px;
+  flex: 0 0 auto;
+}
+
+.route-option-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.route-option-main small {
+  color: var(--muted);
+}
+
+.route-option-meta {
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.route-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.route-chip {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: rgb(255 255 255 / 72%);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.route-chip.is-on {
+  background: var(--green-soft);
+  border-color: rgb(15 138 75 / 28%);
+  color: var(--green-dark);
 }
 
 .station-badges {
@@ -1024,7 +1131,8 @@ body,
   gap: 4px;
 }
 
-.setting-block .hint {
+.setting-block .hint,
+.plug-filter .hint {
   margin: 0;
 }
 

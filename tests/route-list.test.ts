@@ -1,5 +1,7 @@
 import {
+  cheapestOnDashed,
   detourCandidates,
+  detourWindow,
   isOnTheWay,
   mapRouteStationIds,
   orderRouteRows,
@@ -108,25 +110,26 @@ describe("mapRouteStationIds", () => {
 
 describe("isOnTheWay", () => {
   // Vienybės a. → Pramonės pr. 3, Kaunas: the fastest route crosses Žaliakalnis. Circle K on
-  // K. Baršausko g. is near that line but across the road and down the hill; Neste on Tunelio g.
-  // is a kilometre off the line yet on the riverside road home.
+  // K. Baršausko g. is near that line but across the road and down the hill.
   it("goes by road detour, not by distance from the route line", () => {
-    expect(isOnTheWay(0.3, { extraKm: 3.4 })).toBe(false);
-    expect(isOnTheWay(1.0, { extraKm: 0.8 })).toBe(true);
+    expect(isOnTheWay(0.3, { extraKm: 3.4 }, 1)).toBe(false);
+    expect(isOnTheWay(1.2, { extraKm: 0.6 }, 1)).toBe(true);
   });
 
-  it("allows up to 2 km of extra road", () => {
-    expect(isOnTheWay(0.1, { extraKm: 2 })).toBe(true);
-    expect(isOnTheWay(0.1, { extraKm: 2.1 })).toBe(false);
+  it("allows less extra road than the driver's limit", () => {
+    expect(isOnTheWay(0.1, { extraKm: 0.99 }, 1)).toBe(true);
+    expect(isOnTheWay(0.1, { extraKm: 1 }, 1)).toBe(false);
+    expect(isOnTheWay(0.1, { extraKm: 1.8 }, 2)).toBe(true);
+    expect(isOnTheWay(0.1, { extraKm: 0.6 }, 0.5)).toBe(false);
   });
 
   it("drops a station the router cannot reach", () => {
-    expect(isOnTheWay(0.1, null)).toBe(false);
+    expect(isOnTheWay(0.1, null, 1)).toBe(false);
   });
 
   it("falls back to 500 m from the line without a router answer", () => {
-    expect(isOnTheWay(0.5, undefined)).toBe(true);
-    expect(isOnTheWay(0.6, undefined)).toBe(false);
+    expect(isOnTheWay(0.5, undefined, 1)).toBe(true);
+    expect(isOnTheWay(0.6, undefined, 1)).toBe(false);
   });
 });
 
@@ -140,5 +143,66 @@ describe("detourCandidates", () => {
     ];
     expect(detourCandidates(rows).map((r) => r.id)).toEqual(["a", "b", "c"]);
     expect(detourCandidates(rows, 2).map((r) => r.id)).toEqual(["a", "b"]);
+  });
+});
+
+describe("detourWindow", () => {
+  // A road due east along 54.9° N, about 6.4 km long.
+  const line = [
+    { lat: 54.9, lon: 23.9 },
+    { lat: 54.9, lon: 24.0 },
+  ];
+
+  it("leaves 1 km before the station and rejoins 1 km after, heading along the route", () => {
+    const w = detourWindow(line, { lat: 54.9005, lon: 23.95 });
+    expect(w.alongKm).toBeCloseTo(3.2, 1);
+    expect(w.leave.lon).toBeCloseTo(23.95 - 1 / 64, 3);
+    expect(w.rejoin.lon).toBeCloseTo(23.95 + 1 / 64, 3);
+    expect(w.leave.bearing).toBeCloseTo(90, 0);
+    expect(w.rejoin.bearing).toBeCloseTo(90, 0);
+  });
+
+  it("stays on the route near its ends", () => {
+    const w = detourWindow(line, { lat: 54.9, lon: 23.901 });
+    expect(w.leave).toMatchObject({ lat: 54.9, lon: 23.9 });
+    const end = detourWindow(line, { lat: 54.9, lon: 23.999 });
+    expect(end.rejoin).toMatchObject({ lat: 54.9, lon: 24.0 });
+  });
+});
+
+describe("cheapestOnDashed", () => {
+  const near = (id: string, price: number, detourKm?: number | null, dashedKm = 0.05) => ({
+    station: { id },
+    price,
+    dashedKm,
+    detourKm,
+  });
+
+  // Vienybės a. → Pramonės pr. 3 over Žaliakalnis: a dashed line to Circle K runs along the river,
+  // past Neste on Tunelio g. and Viada on K. Baršausko g.
+  it("picks the cheapest station on the dashed line that beats the one it leads to", () => {
+    const pick = cheapestOnDashed(
+      2.274,
+      [near("viada", 2.269, 0.2), near("neste", 2.244, 0.1), near("dearer", 2.299, 0.1)],
+      1,
+    );
+    expect(pick?.station.id).toBe("neste");
+  });
+
+  it("skips a station off the line, across the road from it, or unreachable", () => {
+    expect(cheapestOnDashed(2.27, [near("off-line", 2.1, 0.1, 0.4)], 1)).toBeUndefined();
+    expect(cheapestOnDashed(2.27, [near("across", 2.1, 1.3)], 1)).toBeUndefined();
+    expect(cheapestOnDashed(2.27, [near("unreachable", 2.1, null)], 1)).toBeUndefined();
+    expect(cheapestOnDashed(2.27, [near("past-limit", 2.1, 0.8)], 0.5)).toBeUndefined();
+  });
+
+  it("goes by closeness to the line when the router did not answer", () => {
+    expect(cheapestOnDashed(2.27, [near("unchecked", 2.1, undefined)], 1)?.station.id).toBe(
+      "unchecked",
+    );
+  });
+
+  it("marks nothing when the line's own station is the cheapest", () => {
+    expect(cheapestOnDashed(2.27, [near("dearer", 2.3, 0.1)], 1)).toBeUndefined();
   });
 });

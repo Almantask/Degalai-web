@@ -737,8 +737,8 @@ function haversineM([lon1, lat1]: LonLat, [lon2, lat2]: LonLat): number {
   return 2 * 6_371_000 * Math.asin(Math.sqrt(h));
 }
 
-/** OSRM table answer for the request: straight-line metres, plus `penaltyM` per leg touching a stop. */
-function osrmTable(url: string, penaltyM: (p: LonLat) => number = () => 0) {
+/** OSRM table answer for the request, each leg costing `legM` metres (straight line by default). */
+function osrmTable(url: string, legM: (a: LonLat, b: LonLat) => number = haversineM) {
   const u = new URL(url);
   const pts = u.pathname
     .split("/driving/")[1]
@@ -746,9 +746,7 @@ function osrmTable(url: string, penaltyM: (p: LonLat) => number = () => 0) {
     .map((c) => c.split(",").map(Number) as LonLat);
   const sources = u.searchParams.get("sources")!.split(";").map(Number);
   const destinations = u.searchParams.get("destinations")!.split(";").map(Number);
-  const distances = sources.map((i) =>
-    destinations.map((j) => haversineM(pts[i], pts[j]) + penaltyM(pts[i]) + penaltyM(pts[j])),
-  );
+  const distances = sources.map((i) => destinations.map((j) => legM(pts[i], pts[j])));
   return { code: "Ok", distances, durations: distances.map((row) => row.map((m) => m / 15)) };
 }
 
@@ -870,10 +868,12 @@ test("destination draws a route from the current location", async ({ page }) => 
   await expect(page.locator(".maplibregl-popup")).toBeVisible();
 });
 
-test("on the way means a short road detour, not closeness to the route line", async ({ page }) => {
-  // Vienybės a. → Pramonės pr. 3, Kaunas. The fastest route crosses Žaliakalnis 400 m from
-  // Circle K on K. Baršausko g., which is down the hill and across the road. Neste on Tunelio g.
-  // is 800 m from that line but on the riverside road home.
+test("Kaunas: pick a route first, then stations on it and the cheapest on a dashed line", async ({
+  page,
+}) => {
+  // Vienybės a. → Pramonės pr. 3. The fastest route climbs over Žaliakalnis; the other runs along
+  // the river past Neste on Tunelio g. and Circle K on K. Baršausko g., whose pumps are across
+  // the road for this trip.
   await page.addInitScript(() => {
     const pos = {
       coords: {
@@ -888,6 +888,23 @@ test("on the way means a short road detour, not closeness to the route line", as
       timestamp: Date.now(),
     };
     navigator.geolocation.getCurrentPosition = (ok) => ok(pos as GeolocationPosition);
+  });
+  const neste = "osm:node:13686908424";
+  const circleKId = "osm:way:264954098";
+  await page.route("**/data/prices/*.json", async (route) => {
+    const file = (await (await route.fetch()).json()) as { date: string; generatedAt: string };
+    const d = (price: number) => ({ D: { price, source: "lea", observedAt: file.generatedAt } });
+    await route.fulfill({
+      json: {
+        ...file,
+        prices: {
+          [neste]: d(2.199),
+          [circleKId]: d(2.209),
+          "osm:way:515191833": d(2.239), // Viada, K. Baršausko g.
+          "osm:way:501755498": d(2.289), // Baltic Petroleum, Chemijos g.
+        },
+      },
+    });
   });
   await page.route("https://photon.komoot.io/**", async (route) => {
     const reverse = route.request().url().includes("/reverse");
@@ -904,48 +921,101 @@ test("on the way means a short road detour, not closeness to the route line", as
       },
     });
   });
+  const start: LonLat = [23.9118, 54.8987];
+  const end: LonLat = [23.9764, 54.9045];
+  const riverside: LonLat[] = [
+    [23.93, 54.8935],
+    [23.944, 54.8945],
+    [23.958, 54.898],
+  ];
+  const hill = [
+    start,
+    [23.93, 54.901],
+    [23.95, 54.9025],
+    [23.965, 54.9025],
+    [23.981, 54.9035],
+    end,
+  ];
+  const river = [start, ...riverside, end];
   const circleK: LonLat = [23.9599257, 54.8990483];
+  // Down the hill and back up costs a climb; Circle K costs a turnaround to get in and out.
+  const leg = (a: LonLat, b: LonLat) => {
+    const up = (p: LonLat) => p[1] >= 54.9005;
+    const down = (p: LonLat) => p[1] <= 54.898;
+    const climb = (up(a) && down(b)) || (down(a) && up(b)) ? 1500 : 0;
+    const turn = haversineM(a, circleK) < 1 || haversineM(b, circleK) < 1 ? 1500 : 0;
+    return haversineM(a, b) + climb + turn;
+  };
   const tableUrls: string[] = [];
   await page.route("https://router.project-osrm.org/**", async (route) => {
     const url = route.request().url();
     if (url.includes("/table/")) {
       tableUrls.push(url);
-      // Pumps on the far side: a turnaround to get in and another to get out.
-      const turnaround = (p: LonLat) => (haversineM(p, circleK) < 1 ? 1500 : 0);
-      await route.fulfill({ json: osrmTable(url, turnaround) });
+      await route.fulfill({ json: osrmTable(url, leg) });
       return;
     }
-    await route.fulfill({
-      json: {
-        code: "Ok",
-        routes: [
-          {
-            distance: 5500,
-            duration: 660,
-            geometry: {
-              coordinates: [
-                [23.9118, 54.8987],
-                [23.93, 54.901],
-                [23.95, 54.9025],
-                [23.965, 54.9025],
-                [23.9764, 54.9045],
-              ],
-            },
-          },
-        ],
-      },
+    const line = (coordinates: number[][], distance: number, duration: number) => ({
+      distance,
+      duration,
+      geometry: { coordinates },
     });
+    const coords = url.split("/driving/")[1].split("?")[0].split(";");
+    // Every via-route takes the riverside road, then the station, then home.
+    const via = coords.length === 3 ? (coords[1].split(",").map(Number) as LonLat) : null;
+    const routes = via
+      ? [line([start, ...riverside, via, end], 6800, 780)]
+      : [line(hill, 5500, 660), line(river, 6600, 720)];
+    await route.fulfill({ json: { code: "Ok", routes } });
   });
   await page.goto("/");
   const dest = page.getByPlaceholder("Kur važiuojate?");
   await dest.fill("Pramonės pr. 3");
   await dest.press("Enter");
+
+  // Two ways there: nothing is weighed until one is picked.
+  await expect(page.locator(".route-option")).toHaveCount(2, { timeout: 15_000 });
+  await expect(page.locator(".route-option").first()).toContainText("Greičiausias");
+  await expect(page.locator("#map")).toHaveAttribute("data-station-count", "0");
+  await expect(page.locator(".app")).not.toHaveClass(/has-route/);
+  expect(tableUrls).toHaveLength(0);
+
+  // Along the river, Neste is on the way and Circle K across the road is not.
+  await page.locator(".route-option", { hasText: "Maršrutas 2" }).click();
   await expect(page.locator(".app")).toHaveClass(/has-route/, { timeout: 15_000 });
-  const neste = page.locator(".station-row", { hasText: "Neste „Tunelio“" });
-  await expect(neste).toHaveCount(1);
-  await expect(neste.locator(".station-eta")).toContainText("nusukimas +");
+  const nesteRow = page.locator(".station-row", { hasText: "Neste „Tunelio“" });
+  await expect(nesteRow).toHaveCount(1);
+  await expect(nesteRow).toHaveClass(/is-on-route/);
+  await expect(nesteRow).toContainText("Pigiausia kelyje");
   await expect(page.locator(".station-row", { hasText: "Circle K „Baršausko“" })).toHaveCount(0);
-  expect(new URL(tableUrls[0]).searchParams.get("approaches")).toContain("curb");
+  const first = new URL(tableUrls[0]);
+  expect(first.searchParams.get("approaches")).toContain("curb");
+  expect(first.searchParams.get("bearings")).toMatch(/^\d+,60;/);
+
+  // Over the hill, Neste is off the way but the cheapest on the dashed line to Baltic Petroleum.
+  await page.getByRole("button", { name: /Išskleisti sąrašą/ }).click();
+  await page.locator(".route-chip", { hasText: "Maršrutas 1" }).click();
+  await expect(page.locator(".route-chip.is-on")).toContainText("Maršrutas 1");
+  await expect(nesteRow).toHaveClass(/is-detour/, { timeout: 15_000 });
+  await expect(nesteRow).toContainText("Pigiausia ant punktyro");
+  await expect(nesteRow.locator(".station-eta")).toContainText("nusukimas +");
+  await expect(page.locator(".station-row", { hasText: "Baltic Petroleum" })).toContainText(
+    "Pigiausia kelyje",
+  );
+  await expect(page.locator(".station-row", { hasText: "Circle K „Baršausko“" })).toHaveCount(0);
+  await expect(page.locator(".station-row.is-detour")).toHaveCount(1);
+
+  // A tighter limit in settings drops Baltic Petroleum (+0.8 km) and the dashed line through it.
+  await page.locator(".header-toggle").click();
+  await page.getByRole("button", { name: "Nustatymai" }).click();
+  const limit = page.locator("#set-detour");
+  await expect(limit).toHaveValue("1");
+  await limit.fill("0.5");
+  await limit.press("Tab");
+  await expect(page.locator(".station-row", { hasText: "Baltic Petroleum" })).toHaveCount(0);
+  await expect(nesteRow).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem("kur-degalai-settings"))).toContain(
+    '"maxDetourKm":0.5',
+  );
 });
 
 test.describe("EV", () => {
