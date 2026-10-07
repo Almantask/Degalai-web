@@ -193,10 +193,55 @@ describe("fetchRoutes", () => {
         return new Response(JSON.stringify({ code: "Ok", routes: [route(6)] }));
       }),
     );
-    const via = { lat: 54.8948, lon: 23.9442 };
-    expect((await fetchRoute(start, end, "fastest", via))?.distanceKm).toBe(6);
+    const via = { lat: 54.8948, lon: 23.9442, curb: true };
+    expect((await fetchRoute(start, end, "fastest", [via]))?.distanceKm).toBe(6);
     const url = new URL(urls[0]);
     expect(url.searchParams.get("approaches")).toBe("unrestricted;curb;unrestricted");
     expect(url.searchParams.has("alternatives")).toBe(false);
+  });
+
+  it("asks one route through a placed point, from any side of the road", async () => {
+    const urls: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        urls.push(url);
+        return new Response(JSON.stringify({ code: "Ok", routes: [route(7), route(8)] }));
+      }),
+    );
+    const via = { lat: 54.91, lon: 23.94 };
+    const routes = await fetchRoutes(start, end, "fastest", via);
+    expect(routes.map((r) => r.distanceKm)).toEqual([7]);
+    expect(routes[0].via).toEqual(via);
+    expect(urls).toHaveLength(1);
+    const url = new URL(urls[0]);
+    expect(url.pathname.split("/driving/")[1]).toBe("23.9118,54.8987;23.94,54.91;23.9764,54.9045");
+    expect(url.searchParams.has("approaches")).toBe(false);
+    expect(url.searchParams.has("alternatives")).toBe(false);
+  });
+
+  it("is empty when no route passes the placed point", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify({ code: "NoRoute", routes: [] }))),
+    );
+    expect(await fetchRoutes(start, end, "fastest", { lat: 55.5, lon: 21 })).toEqual([]);
+  });
+
+  it("passes a station and a placed point in the order given", async () => {
+    const urls: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        urls.push(url);
+        return new Response(JSON.stringify({ code: "Ok", routes: [route(9)] }));
+      }),
+    );
+    const station = { lat: 54.8948, lon: 23.9442, curb: true };
+    const placed = { lat: 54.91, lon: 23.96 };
+    await fetchRoute(start, end, "fastest", [station, placed]);
+    const url = new URL(urls[0]);
+    expect(url.pathname.split("/driving/")[1].split(";")).toHaveLength(4);
+    expect(url.searchParams.get("approaches")).toBe("unrestricted;curb;unrestricted;unrestricted");
   });
 });

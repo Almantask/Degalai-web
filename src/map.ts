@@ -50,6 +50,8 @@ export interface MapHandlers {
   onMapClick: (ll: LngLat) => void;
   /** A route choice (its index) was tapped on the map. */
   onRouteClick: (index: number) => void;
+  /** While a point is being placed, every tap is a map tap, on a station or route too. */
+  isPicking?: () => boolean;
 }
 
 const geolocateByMap = new WeakMap<
@@ -283,11 +285,14 @@ export function createMap(
     });
   });
 
+  const picking = (): boolean => handlers.isPicking?.() ?? false;
   map.on("click", POINTS, (e) => {
+    if (picking()) return;
     const id = e.features?.[0]?.properties?.id as string | undefined;
     if (id) handlers.onStationClick(id);
   });
   map.on("click", CLUSTER, (e) => {
+    if (picking()) return;
     const feature = e.features?.[0];
     if (!feature) return;
     const src = map.getSource(SOURCE) as maplibregl.GeoJSONSource;
@@ -299,6 +304,7 @@ export function createMap(
     });
   });
   map.on("click", OPTIONS_HIT, (e) => {
+    if (picking()) return;
     if (map.queryRenderedFeatures(e.point, { layers: [POINTS, HALO, CLUSTER] }).length) return;
     const index = e.features?.[0]?.properties?.index;
     if (typeof index === "number") handlers.onRouteClick(index);
@@ -313,7 +319,7 @@ export function createMap(
     const hits = map.queryRenderedFeatures(e.point, {
       layers: [POINTS, HALO, CLUSTER, OPTIONS_HIT],
     });
-    if (hits.length) return;
+    if (hits.length && !picking()) return;
     handlers.onMapClick({ lon: e.lngLat.lng, lat: e.lngLat.lat });
   });
   map.on("mouseenter", POINTS, () => {

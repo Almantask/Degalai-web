@@ -62,6 +62,9 @@ minimise for a full map.
   Lithuania only). Pick one of up to three routes (in the list or on the map;
   switch later from the list). The map fits the route, hides off-route
   stations, and draws via-paths through the five cheapest stops.
+- Make the route pass a point: under From / To, tap **Add point**, then tap the
+  map. The route, and every dashed route through a station, goes through it.
+  **Move point** places it again; **×** removes it and brings back the route choice.
 - Tap a station for name, brand, address, and 95 / diesel / LPG prices. Search
   and the list collapse so the map can fit the route or the pin.
 - Open **History** (`/istorija`, `/en/history`) for provider averages over the
@@ -286,6 +289,11 @@ npm run build
 npm run test:e2e
 npm run test:deps         # dependency tests (needs network)
 ```
+
+**CI** (`ci.yml`) runs `check` on every pull request and push to `main`. Run it on
+any branch from Actions → CI → Run workflow (`gh workflow run ci.yml --ref <branch>`);
+a run started that way also runs the Playwright tests. Claude Code sessions check
+changes this way rather than locally (`.claude/skills/ci-checks/SKILL.md`).
 
 **Dependency tests** (`tests/deps/`) check that everything needed to call each
 outside service is there. `wiring` is offline and runs in CI: every `env` name the

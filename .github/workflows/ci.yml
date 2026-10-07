@@ -4,6 +4,12 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Called on a branch to check a change there, browser tests included
+  # (.claude/skills/ci-checks/SKILL.md).
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   check:
@@ -24,3 +30,18 @@ jobs:
       - run: npm run build
         env:
           BASE_URL: /Degalai-web/
+
+  e2e:
+    # Only when called: these load the map tiles and drive a real browser.
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      # The Playwright the lockfile pins, not one npx would fetch.
+      - run: ./node_modules/.bin/playwright install --with-deps chromium
+      - run: npm run test:e2e

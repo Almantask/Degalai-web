@@ -72,10 +72,18 @@ describe("OSRM (routing)", () => {
 
   it("routes through a stop reached on the driver's side", async () => {
     vi.stubEnv("VITE_ORS_KEY", "");
-    const route = await fetchRoute(vilnius, kaunas, "fastest", elektrenai);
+    const route = await fetchRoute(vilnius, kaunas, "fastest", [{ ...elektrenai, curb: true }]);
     expect(route).not.toBeNull();
     expect(route!.distanceKm).toBeGreaterThan(80);
     expect(route!.geometry.length).toBeGreaterThan(10);
+  });
+
+  it("routes through a point placed on the map", async () => {
+    vi.stubEnv("VITE_ORS_KEY", "");
+    const routes = await fetchRoutes(vilnius, kaunas, "fastest", trakai);
+    expect(routes).toHaveLength(1);
+    expect(routes[0].via).toEqual(trakai);
+    expect(routes[0].distanceKm).toBeGreaterThan(80);
   });
 
   it("measures detours off the route with the table service", async () => {
