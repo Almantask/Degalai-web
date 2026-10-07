@@ -1084,6 +1084,57 @@ body,
   margin: 0;
 }
 
+.report-kind {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.report-kind legend {
+  padding: 0;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.report-kind-options {
+  display: flex;
+  gap: 6px;
+}
+
+/* Two pills like the fuel filter; the radio stays in the DOM for keyboards and screen readers. */
+.panel .report-kind label {
+  position: relative;
+  flex: 1 1 0;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.report-kind input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.panel .report-kind label:has(input:checked) {
+  background: var(--green-dark);
+  border-color: var(--green-dark);
+  color: #fff;
+}
+
+.panel .report-kind label:has(input:focus-visible) {
+  outline: 2px solid rgb(15 138 75 / 35%);
+  outline-offset: 2px;
+}
+
 .report-msg {
   color: #9a3412;
   font-size: 0.85rem;

@@ -85,7 +85,7 @@ test("settings button stays inside the header when switching language", async ({
   await expectSettingsInsideHeader(page);
 });
 
-test("report a problem checks the text, then opens a prefilled GitHub issue", async ({
+test("feedback asks bug or idea, checks the text, then opens a prefilled GitHub issue", async ({
   page,
   context,
 }) => {
@@ -95,35 +95,55 @@ test("report a problem checks the text, then opens a prefilled GitHub issue", as
   );
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  const open = page.getByRole("button", { name: "Pranešti apie klaidą" });
+  const open = page.getByRole("button", { name: "Atsiliepimai" });
   await expect(open).toBeVisible();
   await expectInsideHeader(page, ".icon-report");
   await expectSettingsInsideHeader(page);
   await open.click();
   await expect(open).toHaveAttribute("aria-expanded", "true");
-  await expect(page.getByRole("heading", { name: "Pranešti apie klaidą" })).toBeVisible();
-  const text = page.getByRole("textbox", { name: "Kas neveikia arba rodoma neteisingai?" });
-  await expect(text).toBeFocused();
-  await text.fill("Neveikia");
-  await page.getByRole("button", { name: "Pranešti GitHub'e" }).click();
+  await expect(page.getByRole("heading", { name: "Atsiliepimai" })).toBeVisible();
+
+  // Nothing to type until a category is picked.
+  const bug = page.getByRole("radio", { name: "Klaida" });
+  const idea = page.getByRole("radio", { name: "Pasiūlymas" });
+  await expect(bug).toBeFocused();
+  await expect(bug).not.toBeChecked();
+  await expect(idea).not.toBeChecked();
+  await expect(page.getByRole("textbox")).toHaveCount(0);
+
+  await page.getByText("Klaida", { exact: true }).click();
+  const bugText = page.getByRole("textbox", { name: "Kas neveikia arba rodoma neteisingai?" });
+  await expect(bugText).toBeVisible();
+  await bugText.fill("Neveikia");
+  await page.getByRole("button", { name: "Tęsti GitHub'e" }).click();
   await expect(page.getByRole("alert")).toContainText("bent 10 simbolių");
 
-  await text.fill("Žemėlapyje nerodoma degalinė Vilniuje");
+  // Switching category keeps the text and changes the question.
+  await bugText.fill("Žemėlapyje nerodoma degalinė Vilniuje");
+  await page.getByText("Pasiūlymas", { exact: true }).click();
+  await expect(idea).toBeChecked();
+  const ideaText = page.getByRole("textbox", { name: "Ką programėlė galėtų daryti?" });
+  await expect(ideaText).toHaveValue("Žemėlapyje nerodoma degalinė Vilniuje");
+  await ideaText.fill("Pranešti, kai degalai atpinga");
+
   const popupOpened = page.waitForEvent("popup");
-  await page.getByRole("button", { name: "Pranešti GitHub'e" }).click();
+  await page.getByRole("button", { name: "Tęsti GitHub'e" }).click();
   const popup = await popupOpened;
   const url = new URL(popup.url());
   expect(`${url.origin}${url.pathname}`).toBe(
     "https://github.com/Almantask/Degalai-web/issues/new",
   );
-  expect(url.searchParams.get("title")).toBe("[bug] Žemėlapyje nerodoma degalinė Vilniuje");
+  expect(url.searchParams.get("title")).toBe("[feature] Pranešti, kai degalai atpinga");
+  expect(url.searchParams.get("labels")).toBe("enhancement");
   expect(url.searchParams.get("body")).toContain("Fuel: D");
 
-  // The settings button swaps the panel; the draft is still there when coming back.
+  // The settings button swaps the panel; category and text are still there when coming back.
   await page.getByRole("button", { name: "Nustatymai" }).click();
   await expect(page.getByRole("heading", { name: "Nustatymai" })).toBeVisible();
   await open.click();
-  await expect(text).toHaveValue("Žemėlapyje nerodoma degalinė Vilniuje");
+  await expect(idea).toBeChecked();
+  await expect(ideaText).toHaveValue("Pranešti, kai degalai atpinga");
+  await expect(ideaText).toBeFocused();
 });
 
 test("history button opens provider averages by date and time", async ({ page }) => {

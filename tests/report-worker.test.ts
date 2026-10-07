@@ -19,6 +19,7 @@ const env = (extra: Partial<ReportEnv> = {}): ReportEnv => ({
 });
 
 const form = {
+  category: "bug",
   description: "Neste on Ukmergės g. shows 1.45 but the pump says 1.52",
   website: "",
   page: "https://almantask.github.io/Degalai-web/?fuel=diesel",
@@ -51,9 +52,10 @@ function github(status = 201) {
 const limiter = (success: boolean): RateLimiter => ({ limit: async () => ({ success }) });
 
 describe("parseReport", () => {
-  it("keeps the description and the known context fields only", () => {
+  it("keeps the category, description and the known context fields only", () => {
     const report = parseReport({ ...form, extra: "dropped" });
     expect(report).toEqual({
+      category: "bug",
       description: form.description,
       page: form.page,
       locale: "lt",
@@ -62,6 +64,14 @@ describe("parseReport", () => {
       userAgent: "Mozilla/5.0",
       viewport: "390×844",
     });
+  });
+
+  it("takes bugs and feature ideas, and a missing category as a bug", () => {
+    expect(parseReport({ ...form, category: "feature" })?.category).toBe("feature");
+    const { category: _category, ...older } = form;
+    expect(parseReport(older)?.category).toBe("bug");
+    expect(parseReport({ ...form, category: "question" })).toBeNull();
+    expect(parseReport({ ...form, category: 1 })).toBeNull();
   });
 
   it("rejects a missing, too short or too long description", () => {
@@ -95,6 +105,13 @@ describe("issueFromReport", () => {
     expect(issue.body).toContain("Screen:   390×844");
   });
 
+  it("files a feature idea as an enhancement", () => {
+    const issue = issueFromReport(parseReport({ ...form, category: "feature" })!);
+    expect(issue.labels).toEqual(["enhancement", "user-report"]);
+    expect(issue.title).toBe(`[feature] ${form.description}`);
+    expect(issue.body.startsWith("### Idea\n")).toBe(true);
+  });
+
   it("cannot be broken out of with backticks", () => {
     expect(codeBlock("a ``` b")).toBe("````text\na ``` b\n````");
     expect(codeBlock("plain")).toBe("```text\nplain\n```");
@@ -102,7 +119,7 @@ describe("issueFromReport", () => {
 
   it("titles with the first line, shortened, mentions and references broken", () => {
     expect(issueTitle("Ping @someone about owner/repo#1\nmore")).toBe(
-      "Ping @​someone about owner/repo#​1",
+      "Ping @\u200bsomeone about owner/repo#\u200b1",
     );
     const long = issueTitle("word ".repeat(40));
     expect(long.length).toBeLessThanOrEqual(80);

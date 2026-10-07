@@ -75,7 +75,9 @@ import {
   githubIssueLink,
   MAX_REPORT_CHARS,
   MIN_REPORT_CHARS,
+  REPORT_CATEGORIES,
   sendReport,
+  type ReportCategory,
   type ReportContext,
 } from "./report.ts";
 import DOMPurify from "dompurify";
@@ -148,17 +150,9 @@ const SWAP_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18
 </svg>`;
 
 const REPORT_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-  <path d="m8 2 1.88 1.88"/>
-  <path d="M14.12 3.88 16 2"/>
-  <path d="M9 7.13v-1a3 3 0 1 1 6 0v1"/>
-  <path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/>
-  <path d="M12 20v-9"/>
-  <path d="M6.53 9C4.6 8.8 3 7.1 3 5"/>
-  <path d="M6 13H2"/>
-  <path d="M3 21c0-2.1 1.7-3.9 3.8-4"/>
-  <path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/>
-  <path d="M22 13h-4"/>
-  <path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/>
+  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  <path d="M7 8h10"/>
+  <path d="M7 12h6"/>
 </svg>`;
 
 const REFRESH_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -221,6 +215,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let openPanel: Panel | null = null;
   /** Panel markup last written, so a re-render does not wipe the focus or a half-typed report. */
   let panelsHtml = "";
+  /** Bug or feature idea; the form asks for it before the text box shows. */
+  let reportCategory: ReportCategory | null = null;
   let reportDraft = "";
   let reportStatus: ReportStatus = "idle";
   let reportIssue: { number?: number; url?: string } | null = null;
@@ -465,7 +461,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
         openPanel = openPanel === "report" ? null : "report";
         if (reportStatus !== "sending") reportStatus = "idle";
         render();
-        root.querySelector<HTMLTextAreaElement>("#report-text")?.focus();
+        root
+          .querySelector<HTMLElement>(reportCategory ? "#report-text" : "input[name='report-kind']")
+          ?.focus();
       } else if (act === "refresh") {
         tEl.setAttribute("disabled", "true");
         tEl.setAttribute("aria-busy", "true");
@@ -514,7 +512,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
         historySpot = true;
         render();
       } else if (act === "report-github") {
-        window.open(githubIssueLink(reportDraft, reportContext()), "_blank", "noopener");
+        const form = { category: reportCategory ?? "bug", description: reportDraft } as const;
+        window.open(githubIssueLink(form, reportContext()), "_blank", "noopener");
       }
     });
 
@@ -552,6 +551,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
     root.addEventListener("change", (e) => {
       const el = e.target as HTMLInputElement;
+      if (el.name === "report-kind") {
+        reportCategory = REPORT_CATEGORIES.find((c) => c === el.value) ?? null;
+        renderPanels();
+        // The re-render replaced the radio: keep focus on it so arrow keys still switch options.
+        root.querySelector<HTMLInputElement>(`#report-kind-${el.value}`)?.focus();
+        return;
+      }
       if (el.id === "set-high-accuracy") {
         settings.highAccuracyLocation = el.checked;
         saveSettings(settings);
@@ -1654,6 +1660,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     </section>`;
     }
     const sending = reportStatus === "sending";
+    const category = reportCategory;
     const message =
       reportStatus === "short"
         ? escapeHtml(t("report.short", { n: MIN_REPORT_CHARS }))
@@ -1667,14 +1674,25 @@ export async function startApp(root: HTMLElement): Promise<void> {
       : REPORT_URL
         ? t("report.send")
         : t("report.viaGithub");
-    return `<section class="panel report-panel" aria-label="${title}">
-      ${head}
-      <form id="report-form" class="report-form" novalidate>
-        <label>${escapeHtml(t("report.label"))}<textarea id="report-text" rows="5" maxlength="${MAX_REPORT_CHARS}" placeholder="${escapeHtml(t("report.placeholder"))}"${sending ? " disabled" : ""}></textarea></label>
+    const kinds = REPORT_CATEGORIES.map(
+      (c) =>
+        `<label><input type="radio" id="report-kind-${c}" name="report-kind" value="${c}"${category === c ? " checked" : ""}${sending ? " disabled" : ""} />${escapeHtml(t(`report.kind.${c}` as MessageKey))}</label>`,
+    ).join("");
+    const fields = category
+      ? `<label>${escapeHtml(t(`report.label.${category}` as MessageKey))}<textarea id="report-text" rows="5" maxlength="${MAX_REPORT_CHARS}" placeholder="${escapeHtml(t(`report.placeholder.${category}` as MessageKey))}"${sending ? " disabled" : ""}></textarea></label>
         <div class="report-hp" aria-hidden="true"><label>Website<input id="report-website" name="website" type="text" tabindex="-1" autocomplete="off" /></label></div>
         <p class="hint">${escapeHtml(t("report.public"))}</p>
         ${message ? `<p class="report-msg" role="alert">${message}</p>` : ""}
-        <button type="submit" class="primary"${sending ? " disabled" : ""}>${escapeHtml(submit)}</button>
+        <button type="submit" class="primary"${sending ? " disabled" : ""}>${escapeHtml(submit)}</button>`
+      : "";
+    return `<section class="panel report-panel" aria-label="${title}">
+      ${head}
+      <form id="report-form" class="report-form" novalidate>
+        <fieldset class="report-kind">
+          <legend>${escapeHtml(t("report.kind"))}</legend>
+          <div class="report-kind-options">${kinds}</div>
+        </fieldset>
+        ${fields}
       </form>
     </section>`;
   }
@@ -1691,7 +1709,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   async function submitReport(): Promise<void> {
-    if (reportStatus === "sending") return;
+    const category = reportCategory;
+    if (reportStatus === "sending" || !category) return;
     const text = reportDraft.trim();
     if (text.length < MIN_REPORT_CHARS) {
       reportStatus = "short";
@@ -1700,17 +1719,26 @@ export async function startApp(root: HTMLElement): Promise<void> {
       return;
     }
     if (!REPORT_URL) {
-      window.open(githubIssueLink(text, reportContext()), "_blank", "noopener");
+      window.open(
+        githubIssueLink({ category, description: text }, reportContext()),
+        "_blank",
+        "noopener",
+      );
       return;
     }
     const website = root.querySelector<HTMLInputElement>("#report-website")?.value ?? "";
     reportStatus = "sending";
     renderPanels();
-    const result = await sendReport(REPORT_URL, text, reportContext(), website);
+    const result = await sendReport(
+      REPORT_URL,
+      { category, description: text, website },
+      reportContext(),
+    );
     if (result.ok) {
       reportStatus = "sent";
       reportIssue = { number: result.number, url: result.url };
       reportDraft = "";
+      reportCategory = null;
     } else {
       reportStatus = result.reason;
     }

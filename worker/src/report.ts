@@ -1,4 +1,4 @@
-/** The site's "Report a problem" form: each POST /report becomes a GitHub issue. */
+/** The site's feedback form: each POST /report (a bug or a feature idea) becomes a GitHub issue. */
 
 /** Workers rate limit binding (`ratelimits` in wrangler.jsonc). */
 export interface RateLimiter {
@@ -16,7 +16,10 @@ export interface ReportEnv {
   REPORT_ALL_LIMITER?: RateLimiter;
 }
 
-export interface BugReport {
+export type ReportCategory = "bug" | "feature";
+
+export interface Report {
+  category: ReportCategory;
   description: string;
   page: string;
   locale: string;
@@ -37,19 +40,27 @@ export const MAX_DESCRIPTION = 2000;
 const MAX_FIELD = 300;
 const MAX_BODY_BYTES = 8_000;
 const TITLE_CHARS = 80;
-export const REPORT_LABELS = ["bug", "user-report"];
+export const REPORT_LABELS: Record<ReportCategory, string[]> = {
+  bug: ["bug", "user-report"],
+  feature: ["enhancement", "user-report"],
+};
 
 /** Form fields the site sends besides the description. Anything else in the JSON is ignored. */
 const CONTEXT_FIELDS = ["page", "locale", "fuel", "dataDate", "userAgent", "viewport"] as const;
 
-/** A valid report, or `null`. Context fields are optional and cut to {@link MAX_FIELD}. */
-export function parseReport(value: unknown): BugReport | null {
+/**
+ * A valid report, or `null`. No category means a bug: pages cached before ideas existed send none.
+ * Context fields are optional and cut to {@link MAX_FIELD}.
+ */
+export function parseReport(value: unknown): Report | null {
   if (!value || typeof value !== "object") return null;
   const raw = value as Record<string, unknown>;
+  const category = raw.category ?? "bug";
+  if (category !== "bug" && category !== "feature") return null;
   if (typeof raw.description !== "string") return null;
   const description = cleanText(raw.description).trim();
   if (description.length < MIN_DESCRIPTION || description.length > MAX_DESCRIPTION) return null;
-  const report = { description } as BugReport;
+  const report = { category, description } as Report;
   for (const key of CONTEXT_FIELDS) {
     const v = raw[key];
     report[key] = typeof v === "string" ? cleanLine(v).slice(0, MAX_FIELD) : "";
@@ -68,7 +79,7 @@ export function isHoneypotFilled(value: unknown): boolean {
  * Issue text with everything the visitor typed inside code blocks: no @mentions that would ping
  * people, no `owner/repo#1` references that would show up in other repositories, no HTML.
  */
-export function issueFromReport(report: BugReport): Issue {
+export function issueFromReport(report: Report): Issue {
   const context = [
     `Page:     ${report.page || "-"}`,
     `Language: ${report.locale || "-"}`,
@@ -78,9 +89,9 @@ export function issueFromReport(report: BugReport): Issue {
     `Screen:   ${report.viewport || "-"}`,
   ].join("\n");
   return {
-    title: `[bug] ${issueTitle(report.description)}`,
+    title: `[${report.category}] ${issueTitle(report.description)}`,
     body: [
-      "### Description",
+      report.category === "feature" ? "### Idea" : "### Description",
       "",
       codeBlock(report.description),
       "",
@@ -88,9 +99,9 @@ export function issueFromReport(report: BugReport): Issue {
       "",
       codeBlock(context),
       "",
-      "_Sent anonymously from the site's “Report a problem” form; the reporter will not see replies here._",
+      "_Sent anonymously from the site's feedback form; the sender will not see replies here._",
     ].join("\n"),
-    labels: REPORT_LABELS,
+    labels: REPORT_LABELS[report.category],
   };
 }
 

@@ -60,8 +60,9 @@ minimise for a full map.
 - Switch LT / EN in the header. **Donate** goes to
   [almantask.github.io/donate-me](https://almantask.github.io/donate-me/).
 - Install it as a PWA. Offline, the last known prices still show.
-- **Report a problem** (the bug icon in the header) without a GitHub account. The
-  report becomes a public GitHub issue; see [Bug reports](#bug-reports).
+- Send **feedback** (the speech-bubble icon in the header): report a bug or suggest a
+  feature without a GitHub account. It becomes a public GitHub issue; see
+  [Feedback](#feedback).
 
 Settings store consumption (l/100 km) and value of time. Ranking on the map and
 on a route is still by pump price.
@@ -189,13 +190,16 @@ Lietuva and the station chains. The charge point register is published under
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) / ODC-BY; this app
 groups its charge points into sites and shows the cheapest price per site.
 
-## Bug reports
+## Feedback
 
-The header's bug icon opens a short form. It posts to `POST /report` on the cron
-worker (`worker/src/report.ts`), which files a GitHub issue labelled `bug` and
-`user-report` with the visitor's text and the page, language, fuel, data time,
-browser and screen size. Visitor text sits in code blocks, so it cannot @mention
-anyone or reference other repositories.
+The header's **Atsiliepimai / Feedback** icon opens a short form. The visitor first
+picks **Bug** or **Feature idea**, then writes the text. It posts to `POST /report`
+on the cron worker (`worker/src/report.ts`), which files a GitHub issue: a bug is
+labelled `bug` and `user-report` (title `[bug] …`), an idea `enhancement` and
+`user-report` (title `[feature] …`). The issue also lists the page, language, fuel,
+data time, browser and screen size. Visitor text sits in code blocks, so it cannot
+@mention anyone or reference other repositories. A post without a category (a page
+cached before ideas existed) counts as a bug.
 
 The worker only takes posts from `REPORT_ORIGINS` (`worker/wrangler.jsonc`), allows 3
 reports a minute per IP and 10 a minute in total (Workers rate limiting), and
