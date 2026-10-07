@@ -49,6 +49,5 @@ jobs:
           WORKFLOW_DISPATCH_TOKEN: ${{ secrets.WORKFLOW_DISPATCH_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          REPORT_URL: ${{ vars.REPORT_URL }}
           # Optional: without it the site routes with OSRM and this test skips.
           VITE_ORS_KEY: ${{ secrets.ORS_KEY }}

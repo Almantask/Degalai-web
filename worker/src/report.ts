@@ -18,6 +18,13 @@ export interface ReportEnv {
   REPORT_ALL_LIMITER?: RateLimiter;
   /** Workers KV for attached pictures. Without it, a picture is noted as lost in the issue. */
   REPORT_IMAGES?: ImageStore;
+  /** Workers KV for senders' email addresses, which never go into the public issue. */
+  REPORT_CONTACTS?: ContactStore;
+}
+
+/** The part of a Workers KV namespace binding used for contact addresses. */
+export interface ContactStore {
+  put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
 }
 
 export type ReportCategory = "bug" | "feature";
@@ -25,6 +32,8 @@ export type ReportCategory = "bug" | "feature";
 export interface Report {
   category: ReportCategory;
   description: string;
+  /** Where the maintainer can reply. Kept out of the issue. */
+  email: string;
   page: string;
   locale: string;
   fuel: string;
@@ -42,6 +51,11 @@ export interface Issue {
 export const MIN_DESCRIPTION = 10;
 export const MAX_DESCRIPTION = 2000;
 const MAX_FIELD = 300;
+export const MAX_EMAIL = 254;
+/** Something@somewhere.tld with no spaces or characters mail addresses cannot hold unquoted. */
+const EMAIL = /^[^\s@<>()[\]\\,;:"]+@[^\s@<>()[\]\\,;:"]+\.[^\s@<>()[\]\\,;:".]{2,}$/;
+/** Contact addresses go after a year, like pictures. */
+export const CONTACT_TTL_SECONDS = 365 * 24 * 60 * 60;
 /** Text and context, plus a base64 picture of up to MAX_IMAGE_BYTES. */
 const MAX_BODY_BYTES = 2_100_000;
 const TITLE_CHARS = 80;
@@ -55,7 +69,7 @@ const CONTEXT_FIELDS = ["page", "locale", "fuel", "dataDate", "userAgent", "view
 
 /**
  * A valid report, or `null`. No category means a bug: pages cached before ideas existed send none.
- * Context fields are optional and cut to {@link MAX_FIELD}.
+ * The email address is required; context fields are optional and cut to {@link MAX_FIELD}.
  */
 export function parseReport(value: unknown): Report | null {
   if (!value || typeof value !== "object") return null;
@@ -65,12 +79,33 @@ export function parseReport(value: unknown): Report | null {
   if (typeof raw.description !== "string") return null;
   const description = cleanText(raw.description).trim();
   if (description.length < MIN_DESCRIPTION || description.length > MAX_DESCRIPTION) return null;
-  const report = { category, description } as Report;
+  if (typeof raw.email !== "string" || !isEmail(raw.email.trim())) return null;
+  const report = { category, description, email: raw.email.trim() } as Report;
   for (const key of CONTEXT_FIELDS) {
     const v = raw[key];
     report[key] = typeof v === "string" ? cleanLine(v).slice(0, MAX_FIELD) : "";
   }
   return report;
+}
+
+export function isEmail(value: string): boolean {
+  return value.length <= MAX_EMAIL && EMAIL.test(value);
+}
+
+/** Stores the sender's address under a new random key, or returns `null` if KV failed. */
+export async function storeContact(
+  store: ContactStore | undefined,
+  email: string,
+): Promise<string | null> {
+  if (!store) return null;
+  const key = crypto.randomUUID();
+  try {
+    await store.put(key, email, { expirationTtl: CONTACT_TTL_SECONDS });
+  } catch (err) {
+    console.error(`Storing the contact address failed: ${String(err)}`);
+    return null;
+  }
+  return key;
 }
 
 /** People never see the hidden `website` field, so only bots fill it in. */
@@ -83,12 +118,18 @@ export function isHoneypotFilled(value: unknown): boolean {
 /** The attached picture: its URL on this worker, or `null` when it could not be stored. */
 export type IssueImage = { url: string | null } | undefined;
 
+export interface IssueExtras {
+  image?: IssueImage;
+  /** KV key of the sender's address, `null` when it could not be stored, unset when not tried. */
+  contactKey?: string | null;
+}
+
 /**
  * Issue text with everything the visitor typed inside code blocks: no @mentions that would ping
  * people, no `owner/repo#1` references that would show up in other repositories, no HTML. The
- * picture URL is the worker's own, never the visitor's.
+ * picture URL is the worker's own, never the visitor's, and the email address is never included.
  */
-export function issueFromReport(report: Report, image?: IssueImage): Issue {
+export function issueFromReport(report: Report, { image, contactKey }: IssueExtras = {}): Issue {
   const context = [
     `Page:     ${report.page || "-"}`,
     `Language: ${report.locale || "-"}`,
@@ -118,7 +159,17 @@ export function issueFromReport(report: Report, image?: IssueImage): Issue {
       "",
       codeBlock(context),
       "",
-      "_Sent anonymously from the site's feedback form; the sender will not see replies here._",
+      ...(contactKey === undefined
+        ? []
+        : [
+            "### Contact",
+            "",
+            contactKey
+              ? `The sender left an email address. It is not published: find it in Cloudflare KV namespace \`kur-degalai-report-contacts\`, key \`${contactKey}\`.`
+              : "_The sender left an email address, but it could not be stored._",
+            "",
+          ]),
+      "_Sent from the site's feedback form. The sender does not see replies here; write to them by email._",
     ].join("\n"),
     labels: REPORT_LABELS[report.category],
   };
@@ -196,12 +247,17 @@ export async function handleReport(
     image = parseImage(rawImage);
     if (!image) return reply(400, { ok: false, error: "image" });
   }
-  // A failed store still files the report, saying the picture is missing.
+  // A failed store still files the report, saying the picture or address is missing.
   const issueImage: IssueImage = image
     ? { url: await storeImage(env.REPORT_IMAGES, image, new URL(request.url).origin) }
     : undefined;
+  const contactKey = await storeContact(env.REPORT_CONTACTS, report.email);
 
-  const res = await createIssue(env, issueFromReport(report, issueImage), fetchImpl);
+  const res = await createIssue(
+    env,
+    issueFromReport(report, { image: issueImage, contactKey }),
+    fetchImpl,
+  );
   if (!res.ok) {
     console.error(`Creating the issue failed: ${res.status} ${await res.text()}`);
     return reply(502, { ok: false, error: "github" });

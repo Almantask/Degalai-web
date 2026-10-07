@@ -1227,10 +1227,45 @@ body,
   pointer-events: none;
 }
 
-.panel .report-kind label:has(input:checked) {
-  background: var(--green-dark);
-  border-color: var(--green-dark);
+/* Each category keeps its colour: a bug red, a suggestion green; solid once picked. */
+.panel .report-kind label.kind-bug {
+  background: #fef3f2;
+  border-color: rgb(180 35 24 / 25%);
+  color: #b42318;
+}
+
+.panel .report-kind label.kind-feature {
+  background: var(--green-soft);
+  border-color: rgb(15 138 75 / 30%);
+  color: var(--green-dark);
+}
+
+.panel .report-kind label.kind-bug.on {
+  background: #b42318;
+  border-color: #b42318;
   color: #fff;
+}
+
+.panel .report-kind label.kind-feature.on {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+.panel .report-kind label.on::before {
+  content: "✓";
+  margin-right: 6px;
+}
+
+.panel input[type="email"]:focus {
+  outline: 2px solid rgb(15 138 75 / 35%);
+  border-color: var(--green);
+}
+
+.panel input[aria-invalid="true"],
+.panel input[aria-invalid="true"]:focus {
+  border-color: #b42318;
+  outline-color: rgb(180 35 24 / 35%);
 }
 
 .panel .report-kind label:has(input:focus-visible) {
@@ -1243,18 +1278,9 @@ body,
   font-size: 0.85rem;
 }
 
-.report-done a,
-.panel button.link-btn {
+.report-done a {
   color: var(--green-dark);
   font-weight: 600;
-}
-
-.panel button.link-btn {
-  border: 0;
-  background: none;
-  padding: 0;
-  font-size: inherit;
-  text-decoration: underline;
 }
 
 .report-image {
@@ -1297,6 +1323,27 @@ body,
 .report-issue-link:hover,
 .report-issue-link:focus-visible {
   background: var(--green-dark);
+}
+
+.report-issue-url {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0;
+}
+
+.report-issue-address {
+  flex: 1 1 12rem;
+  min-width: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.report-issue-url button {
+  white-space: nowrap;
 }
 
 /* Honeypot: off-screen rather than display: none, which some bots skip. */

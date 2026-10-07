@@ -1,11 +1,10 @@
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi, type TestContext } from "vitest";
-import { sendReport } from "../../src/report.ts";
 import { fetchRoute } from "../../src/routing.ts";
 import { dispatchWorkflow } from "../../worker/src/dispatch.ts";
 import { createIssue } from "../../worker/src/report.ts";
-import { reportOrigins, ROOT, workerSecrets, workerVar, wrangler } from "./repo.ts";
+import { ROOT, workerSecrets, workerVar, wrangler } from "./repo.ts";
 
 // Live: the repository's Actions secrets and variables work, used by the code that uses them.
 // The Dependencies workflow passes them in, and there a missing one fails; locally its test skips.
@@ -73,7 +72,7 @@ describe("CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID (deploying the cron wor
     return JSON.parse(out.slice(start, out.lastIndexOf("]") + 1)) as T[];
   }
 
-  it("reach the KV namespace the worker keeps pictures in", (ctx) => {
+  it("reach the worker's KV namespaces", (ctx) => {
     const namespaces = wranglerList<{ id: string }>(ctx, ["kv", "namespace", "list"]);
     const bound = (wrangler().kv_namespaces ?? []).map((k) => k.id);
     expect(namespaces.map((n) => n.id)).toEqual(expect.arrayContaining(bound));
@@ -82,45 +81,6 @@ describe("CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID (deploying the cron wor
   it("see the deployed worker with its secrets", (ctx) => {
     const secrets = wranglerList<{ name: string }>(ctx, ["secret", "list", "--format", "json"]);
     expect(secrets.map((s) => s.name)).toEqual(expect.arrayContaining(workerSecrets()));
-  });
-});
-
-describe("REPORT_URL (VITE_REPORT_URL, the feedback form's endpoint)", () => {
-  const origin = reportOrigins()[0];
-
-  it("answers the browser's preflight from the site's origin", async (ctx) => {
-    const res = await fetch(setting(ctx, "REPORT_URL"), {
-      method: "OPTIONS",
-      headers: {
-        Origin: origin,
-        "Access-Control-Request-Method": "POST",
-        "Access-Control-Request-Headers": "content-type",
-      },
-    });
-    expect(res.status).toBe(204);
-    expect(res.headers.get("access-control-allow-origin")).toBe(origin);
-  });
-
-  it("takes a report sent by the site", async (ctx) => {
-    // A browser adds the page's Origin; Node's fetch does not.
-    const fromSite: typeof fetch = (input, init) =>
-      fetch(input, { ...init, headers: { ...(init?.headers as object), Origin: origin } });
-    // The hidden honeypot field is filled in, so the worker answers as if it filed the report
-    // and files nothing.
-    const result = await sendReport(
-      setting(ctx, "REPORT_URL"),
-      { category: "bug", description: "Dependency test, dropped by the worker.", website: "test" },
-      {
-        page: "/",
-        locale: "en",
-        fuel: "D",
-        dataDate: "",
-        userAgent: "kur-degalai-deps",
-        viewport: "",
-      },
-      fromSite,
-    );
-    expect(result).toEqual({ ok: true });
   });
 });
 

@@ -25,6 +25,8 @@ export function workflow(name: string): string {
 }
 
 export interface WranglerConfig {
+  name?: string;
+  workers_dev?: boolean;
   vars?: Record<string, string>;
   triggers?: { crons?: string[] };
   ratelimits?: Array<{ name: string; namespace_id: string }>;

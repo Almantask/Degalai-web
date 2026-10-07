@@ -171,8 +171,7 @@
   "report.short": "Aprašykite plačiau – bent {n} simbolių.",
   "report.sent": "Ačiū! Užregistruota kaip #{n}.",
   "report.rate": "Per daug žinučių iš karto. Pabandykite po minutės.",
-  "report.failed": "Nepavyko išsiųsti.",
-  "report.viaGithub": "Tęsti GitHub'e",
+  "report.failed": "Nepavyko išsiųsti. Pabandykite dar kartą po kelių minučių.",
   "report.thanks": "Ačiū!",
   "report.follow": "GitHub'e matysite, kas vyksta su jūsų žinute.",
   "report.openIssue": "Atidaryti #{n} GitHub'e",
@@ -182,7 +181,6 @@
   "report.imageRemove": "Pašalinti",
   "report.imageAlt": "Pridėtas paveikslėlis",
   "report.imageFailed": "Šio paveikslėlio atidaryti nepavyko. Pabandykite PNG arba JPEG.",
-  "report.imageLost": "Paveikslėlio išsaugoti nepavyko – galite jį pridėti GitHub'e.",
   "ev.power": "Įkrovimo galia",
   "ev.power.any": "Bet kokia galia",
   "ev.power.min": "{kw}+ kW",
@@ -194,5 +192,12 @@
   "plug.chademo": "CHAdeMO (DC)",
   "plug.other": "Kitos (Tesla, Type 1, Schuko)",
   "list.emptyEvFilter": "Šiame vaizde nėra stotelių, atitinkančių jungties ir galios filtrą.",
-  "route.noChargersFilter": "Šalia maršruto nėra stotelių, atitinkančių jungties ir galios filtrą."
+  "route.noChargersFilter": "Šalia maršruto nėra stotelių, atitinkančių jungties ir galios filtrą.",
+  "report.imageLost": "Paveikslėlio išsaugoti nepavyko, bet žinutė užregistruota.",
+  "report.email": "Jūsų el. paštas",
+  "report.emailPlaceholder": "vardas@pastas.lt",
+  "report.emailHint": "Neskelbiamas. Jį matys tik svetainės autorius, kad galėtų jums atsakyti.",
+  "report.emailInvalid": "Įveskite tikrą el. pašto adresą, pvz., vardas@pastas.lt.",
+  "report.copyLink": "Kopijuoti nuorodą",
+  "report.copied": "Nukopijuota ✓"
 }

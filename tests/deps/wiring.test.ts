@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { loadEvTariffs } from "../../scripts/adapters/ev-tariffs.ts";
 import { loadPriceReports } from "../../scripts/adapters/reports.ts";
 import { loadOverrides } from "../../scripts/match.ts";
-import { ISSUES_NEW_URL } from "../../src/report.ts";
+import { REPORT_ENDPOINT } from "../../src/report.ts";
 import {
   read,
   readAll,
@@ -57,8 +57,13 @@ describe("cron worker", () => {
     );
   });
 
-  it("files feedback on the repository the site falls back to", () => {
-    expect(ISSUES_NEW_URL).toBe(`https://github.com/${workerVar("GITHUB_REPO")}/issues/new`);
+  it("serves the feedback endpoint the site posts to", () => {
+    const config = wrangler();
+    const url = new URL(REPORT_ENDPOINT);
+    expect(config.workers_dev, "workers_dev serves the *.workers.dev address").toBe(true);
+    expect(url.protocol).toBe("https:");
+    expect(url.hostname).toMatch(new RegExp(`^${config.name}\\.[\\w-]+\\.workers\\.dev$`));
+    expect(url.pathname).toBe("/report");
   });
 
   it("takes reports from the GitHub Pages origin", () => {
@@ -71,19 +76,24 @@ describe("cron worker", () => {
 });
 
 describe("site build", () => {
+  /** Variables the deployed site does without, and what it does instead. */
+  const OPTIONAL_ENV: Record<string, string> = {
+    VITE_REPORT_URL: "feedback goes to REPORT_ENDPOINT; this only points a dev build elsewhere",
+  };
+
   it("gets every VITE_ variable the app reads", () => {
     const source = [...readAll("src", ".ts").values()].join("\n");
     const used = [
       ...new Set([...source.matchAll(/import\.meta\.env\.(VITE_\w+)/g)].map((m) => m[1])),
     ];
-    expect(used).toContain("VITE_REPORT_URL");
+    expect(used).not.toEqual([]);
     const declared = read("src/vite-env.d.ts");
     for (const name of used) expect(declared).toMatch(new RegExp(`readonly ${name}\\??:`));
     // The hourly workflow is the build that gets deployed.
     const build = workflow("daily.yml");
     const passed = new Set([...build.matchAll(/^\s+(VITE_\w+):/gm)].map((m) => m[1]));
     expect(
-      used.filter((name) => !passed.has(name)),
+      used.filter((name) => !passed.has(name) && !(name in OPTIONAL_ENV)),
       "not passed to vite build in daily.yml",
     ).toEqual([]);
   });

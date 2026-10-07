@@ -83,10 +83,12 @@ import {
 } from "./pwa.ts";
 import { browserRefreshDeps, refreshWebsite } from "./refresh.ts";
 import {
-  githubIssueLink,
+  isEmail,
+  MAX_EMAIL_CHARS,
   MAX_REPORT_CHARS,
   MIN_REPORT_CHARS,
   REPORT_CATEGORIES,
+  REPORT_ENDPOINT,
   sendReport,
   type ReportCategory,
   type ReportContext,
@@ -139,8 +141,8 @@ const SPOT_SOURCE_URL = "https://dashboard.elering.ee/";
 const REGISTER_SOURCE_URL = "https://ev.vialietuva.lt/en/data-provision";
 const REPORTS_SOURCE_URL =
   "https://github.com/Almantask/Degalai-web/issues/new?template=wrong-price.yml";
-/** The cron worker's POST /report; unset in dev, where the form opens GitHub instead. */
-const REPORT_URL = import.meta.env.VITE_REPORT_URL ?? "";
+/** Where feedback goes; VITE_REPORT_URL points a dev build at a local `wrangler dev`. */
+const REPORT_URL = import.meta.env.VITE_REPORT_URL || REPORT_ENDPOINT;
 
 const DONATE_HEART = `<svg class="donate-heart" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
   <path fill="currentColor" d="M7.97 14s-5.3-3.18-6.76-6C.02 5.36 1.3 2.2 4.2 2.2c1.4 0 2.5.8 3.77 2.16C9.24 3 10.34 2.2 11.75 2.2c2.9 0 4.18 3.16 2.99 5.8C13.28 10.82 7.97 14 7.97 14z"/>
@@ -233,7 +235,7 @@ interface RouteStationRow {
 
 type DestStatus = "idle" | "locating" | "routing" | "denied" | "not-found";
 type Panel = "settings" | "report";
-type ReportStatus = "idle" | "short" | "sending" | "sent" | "rate" | "failed";
+type ReportStatus = "idle" | "short" | "email" | "sending" | "sent" | "rate" | "failed";
 
 export async function startApp(root: HTMLElement): Promise<void> {
   // Fetch data alongside the map style and tiles instead of before them.
@@ -256,8 +258,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** Bug or feature idea; the form asks for it before the text box shows. */
   let reportCategory: ReportCategory | null = null;
   let reportDraft = "";
+  /** Kept after a send, so a second message needs no retyping. */
+  let reportEmail = "";
   let reportStatus: ReportStatus = "idle";
   let reportIssue: { number?: number; url?: string; imageSaved?: boolean } | null = null;
+  let reportLinkCopied = false;
   /** The attached picture, already shrunk; `url` is an object URL for the preview. */
   let reportImage: { blob: Blob; url: string } | null = null;
   let reportImageState: "idle" | "reading" | "failed" = "idle";
@@ -581,19 +586,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
         render();
       } else if (act === "report-image-pick") {
         root.querySelector<HTMLInputElement>("#report-image")?.click();
+      } else if (act === "report-copy-link" && reportIssue?.url) {
+        void copyIssueLink(reportIssue.url);
       } else if (act === "report-image-remove") {
         clearReportImage();
         renderPanels();
         root.querySelector<HTMLElement>("[data-act='report-image-pick']")?.focus();
-      } else if (act === "report-github") {
-        const form = { category: reportCategory ?? "bug", description: reportDraft } as const;
-        window.open(githubIssueLink(form, reportContext()), "_blank", "noopener");
       }
     });
 
     // A screenshot pasted while writing feedback becomes its picture; pasted text stays text.
     root.addEventListener("paste", (e) => {
-      if (openPanel !== "report" || !reportCategory || !REPORT_URL) return;
+      if (openPanel !== "report" || !reportCategory) return;
       const file = [...(e.clipboardData?.files ?? [])].find((f) => f.type.startsWith("image/"));
       if (!file) return;
       e.preventDefault();
@@ -619,6 +623,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         settings.evConsumption = num(el.value, DEFAULT_SETTINGS.evConsumption);
       else if (el.id === "set-time") settings.timeValue = num(el.value, 0);
       else if (el.id === "report-text") reportDraft = el.value;
+      else if (el.id === "report-email") reportEmail = el.value;
     });
     // The browser's own ✕ in a search field fires `search` with an empty value (so does Enter on
     // an empty field). Capture it: the event does not reach `root` by bubbling in every browser.
@@ -1988,9 +1993,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     panelsHtml = html;
     const panels = root.querySelector<HTMLElement>("#panels")!;
     panels.innerHTML = html;
-    // The draft is set here, not in the markup, so typing does not change what render() compares.
+    // Typed values are set here, not in the markup, so typing does not change what render() compares.
     const text = panels.querySelector<HTMLTextAreaElement>("#report-text");
     if (text) text.value = reportDraft;
+    const email = panels.querySelector<HTMLInputElement>("#report-email");
+    if (email) email.value = reportEmail;
   }
 
   function reportHtml(): string {
@@ -2002,7 +2009,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
         issue?.url && issue.number
           ? `<p class="report-done" role="status">${escapeHtml(t("report.sent", { n: issue.number }))}</p>
       <p class="hint">${escapeHtml(t("report.follow"))}</p>
-      <a class="report-issue-link" href="${escapeHtml(issue.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("report.openIssue", { n: issue.number }))} ↗</a>`
+      <a class="report-issue-link" href="${escapeHtml(issue.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("report.openIssue", { n: issue.number }))} ↗</a>
+      <p class="report-issue-url">
+        <span class="report-issue-address">${escapeHtml(issue.url)}</span>
+        <button type="button" data-act="report-copy-link">${escapeHtml(t(reportLinkCopied ? "report.copied" : "report.copyLink"))}</button>
+      </p>`
           : `<p class="report-done" role="status">${escapeHtml(t("report.thanks"))}</p>`;
       const lost =
         issue?.imageSaved === false
@@ -2019,27 +2030,29 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const category = reportCategory;
     const message =
       reportStatus === "short"
-        ? escapeHtml(t("report.short", { n: MIN_REPORT_CHARS }))
-        : reportStatus === "rate"
-          ? escapeHtml(t("report.rate"))
-          : reportStatus === "failed"
-            ? `${escapeHtml(t("report.failed"))} <button type="button" class="link-btn" data-act="report-github">${escapeHtml(t("report.viaGithub"))}</button>`
-            : "";
-    const submit = sending
-      ? t("report.sending")
-      : REPORT_URL
-        ? t("report.send")
-        : t("report.viaGithub");
+        ? t("report.short", { n: MIN_REPORT_CHARS })
+        : reportStatus === "email"
+          ? t("report.emailInvalid")
+          : reportStatus === "rate"
+            ? t("report.rate")
+            : reportStatus === "failed"
+              ? t("report.failed")
+              : "";
+    const submit = sending ? t("report.sending") : t("report.send");
+    // A class as well as the radio's state, so the colour shows without :has() support too.
     const kinds = REPORT_CATEGORIES.map(
       (c) =>
-        `<label><input type="radio" id="report-kind-${c}" name="report-kind" value="${c}"${category === c ? " checked" : ""}${sending ? " disabled" : ""} />${escapeHtml(t(`report.kind.${c}` as MessageKey))}</label>`,
+        `<label class="kind-${c}${category === c ? " on" : ""}"><input type="radio" id="report-kind-${c}" name="report-kind" value="${c}"${category === c ? " checked" : ""}${sending ? " disabled" : ""} />${escapeHtml(t(`report.kind.${c}` as MessageKey))}</label>`,
     ).join("");
+    const emailInvalid = reportStatus === "email";
     const fields = category
       ? `<label>${escapeHtml(t(`report.label.${category}` as MessageKey))}<textarea id="report-text" rows="5" maxlength="${MAX_REPORT_CHARS}" placeholder="${escapeHtml(t(`report.placeholder.${category}` as MessageKey))}"${sending ? " disabled" : ""}></textarea></label>
-        ${REPORT_URL ? reportImageHtml(sending) : ""}
+        ${reportImageHtml(sending)}
+        <label>${escapeHtml(t("report.email"))}<input id="report-email" type="email" inputmode="email" autocomplete="email" required maxlength="${MAX_EMAIL_CHARS}" placeholder="${escapeHtml(t("report.emailPlaceholder"))}" aria-describedby="report-email-hint"${emailInvalid ? ' aria-invalid="true"' : ""}${sending ? " disabled" : ""} /></label>
+        <p class="hint" id="report-email-hint">${escapeHtml(t("report.emailHint"))}</p>
         <div class="report-hp" aria-hidden="true"><label>Website<input id="report-website" name="website" type="text" tabindex="-1" autocomplete="off" /></label></div>
         <p class="hint">${escapeHtml(t("report.public"))}</p>
-        ${message ? `<p class="report-msg" role="alert">${message}</p>` : ""}
+        ${message ? `<p class="report-msg" role="alert">${escapeHtml(message)}</p>` : ""}
         <button type="submit" class="primary"${sending || reading ? " disabled" : ""}>${escapeHtml(submit)}</button>`
       : "";
     return `<section class="panel report-panel" aria-label="${title}">
@@ -2054,7 +2067,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     </section>`;
   }
 
-  /** Picture picker, or the chosen picture's preview. Only with the worker: GitHub links take none. */
+  /** Picture picker, or the chosen picture's preview. */
   function reportImageHtml(sending: boolean): string {
     if (reportImage) {
       return `<div class="report-image">
@@ -2092,6 +2105,26 @@ export async function startApp(root: HTMLElement): Promise<void> {
     reportImageState = "idle";
   }
 
+  async function copyIssueLink(url: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // No clipboard access (http, an old browser): select the address so it can be copied by hand.
+      const address = root.querySelector(".report-issue-address");
+      const selection = window.getSelection();
+      if (address && selection) {
+        const range = document.createRange();
+        range.selectNodeContents(address);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+      return;
+    }
+    reportLinkCopied = true;
+    renderPanels();
+    root.querySelector<HTMLElement>("[data-act='report-copy-link']")?.focus();
+  }
+
   function reportContext(): ReportContext {
     return {
       page: window.location.href,
@@ -2113,12 +2146,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
       root.querySelector<HTMLTextAreaElement>("#report-text")?.focus();
       return;
     }
-    if (!REPORT_URL) {
-      window.open(
-        githubIssueLink({ category, description: text }, reportContext()),
-        "_blank",
-        "noopener",
-      );
+    const email = reportEmail.trim();
+    if (!isEmail(email)) {
+      reportStatus = "email";
+      renderPanels();
+      root.querySelector<HTMLInputElement>("#report-email")?.focus();
       return;
     }
     const website = root.querySelector<HTMLInputElement>("#report-website")?.value ?? "";
@@ -2134,11 +2166,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     const result = await sendReport(
       REPORT_URL,
-      { category, description: text, website, image },
+      { category, description: text, email, website, image },
       reportContext(),
     );
     if (result.ok) {
       reportStatus = "sent";
+      reportLinkCopied = false;
       reportIssue = { number: result.number, url: result.url, imageSaved: result.imageSaved };
       reportDraft = "";
       reportCategory = null;

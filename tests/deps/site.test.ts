@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { inLithuania } from "../../src/geo.ts";
 import { MAP_STYLE_URL } from "../../src/map.ts";
+import { REPORT_ENDPOINT, sendReport } from "../../src/report.ts";
 import { detourWindow } from "../../src/route-list.ts";
 import {
   fetchDetours,
@@ -9,6 +10,7 @@ import {
   geocode,
   reverseGeocode,
 } from "../../src/routing.ts";
+import { reportOrigins } from "./repo.ts";
 
 // Live: each service the browser app calls still answers the way the app reads it.
 
@@ -88,5 +90,49 @@ describe("OSRM (routing)", () => {
     const detours = await fetchDetours(trips);
     expect(detours).not.toBeNull();
     expect(detours!.every((d) => d !== null)).toBe(true);
+  });
+});
+
+describe("cron worker feedback endpoint (REPORT_ENDPOINT)", () => {
+  const origin = reportOrigins()[0];
+
+  it("answers the browser's preflight from the site's origin", async () => {
+    const res = await fetch(REPORT_ENDPOINT, {
+      method: "OPTIONS",
+      headers: {
+        Origin: origin,
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "content-type",
+      },
+    });
+    expect(res.status).toBe(204);
+    expect(res.headers.get("access-control-allow-origin")).toBe(origin);
+  });
+
+  it("takes a report sent by the site", async () => {
+    // A browser adds the page's Origin; Node's fetch does not.
+    const fromSite: typeof fetch = (input, init) =>
+      fetch(input, { ...init, headers: { ...(init?.headers as object), Origin: origin } });
+    // The hidden honeypot field is filled in, so the worker answers as if it filed the report
+    // and files nothing.
+    const result = await sendReport(
+      REPORT_ENDPOINT,
+      {
+        category: "bug",
+        description: "Dependency test, dropped by the worker.",
+        email: "dependency-test@example.com",
+        website: "test",
+      },
+      {
+        page: "/",
+        locale: "en",
+        fuel: "D",
+        dataDate: "",
+        userAgent: "kur-degalai-deps",
+        viewport: "",
+      },
+      fromSite,
+    );
+    expect(result).toEqual({ ok: true });
   });
 });

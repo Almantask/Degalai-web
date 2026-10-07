@@ -3,7 +3,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_ORS_KEY?: string;
-  /** The cron worker's POST /report URL; without it the report form opens a GitHub issue. */
+  /** Overrides where feedback is posted, e.g. a local `wrangler dev`; see REPORT_ENDPOINT. */
   readonly VITE_REPORT_URL?: string;
   readonly BASE_URL: string;
 }
