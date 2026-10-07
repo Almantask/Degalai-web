@@ -64,7 +64,8 @@ minimise for a full map.
   stations, and draws via-paths through the five cheapest stops.
 - Make the route pass a point: under From / To, tap **Add point**, then tap the
   map. The route, and every dashed route through a station, goes through it.
-  **Move point** places it again; **×** removes it and brings back the route choice.
+  Drag the blue marker (with a mouse or a finger) or tap **Move point** to place it
+  again; **×** removes it and brings back the route choice.
 - Tap a station for name, brand, address, and 95 / diesel / LPG prices. Search
   and the list collapse so the map can fit the route or the pin.
 - Open **History** (`/istorija`, `/en/history`) for provider averages over the

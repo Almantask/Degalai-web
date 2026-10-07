@@ -473,6 +473,16 @@ body,
   line-height: 1;
 }
 
+/* The via marker is dragged to move it, by a finger too: no browser gesture over it. */
+.via-marker {
+  cursor: grab;
+  touch-action: none;
+}
+
+.via-marker:active {
+  cursor: grabbing;
+}
+
 /* Placing the via point: every tap on the map is the point, stations and routes included. */
 .app.is-picking #map canvas {
   cursor: crosshair !important;

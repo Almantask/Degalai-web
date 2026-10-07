@@ -1374,11 +1374,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function handleMapPick(ll: LngLat): void {
     if (pickMode === "via") {
-      if (!inLithuania(ll)) return;
-      viaPoint = ll;
-      pickMode = null;
-      setViaMarker(ll);
-      void runRoute();
+      placeVia(ll);
       return;
     }
     if (pickMode === "dest-start" || (pendingDest && !routeOrigin())) {
@@ -1422,11 +1418,34 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function setViaMarker(via: LngLat | null): void {
     viaMarker?.remove();
-    viaMarker = via
-      ? new maplibregl.Marker({ color: "#2563eb", className: "via-marker" })
-          .setLngLat([via.lon, via.lat])
-          .addTo(map)
-      : null;
+    viaMarker = null;
+    if (!via) return;
+    // Dragged with a mouse or a finger, it moves the point once let go.
+    const marker = new maplibregl.Marker({
+      color: "#2563eb",
+      className: "via-marker",
+      draggable: true,
+    })
+      .setLngLat([via.lon, via.lat])
+      .addTo(map);
+    marker.on("dragend", () => {
+      const { lng, lat } = marker.getLngLat();
+      placeVia({ lat, lon: lng });
+    });
+    viaMarker = marker;
+  }
+
+  /** The route must pass `ll` from now on; outside Lithuania the point stays where it was. */
+  function placeVia(ll: LngLat): void {
+    if (!inLithuania(ll)) {
+      if (viaPoint) viaMarker?.setLngLat([viaPoint.lon, viaPoint.lat]);
+      return;
+    }
+    viaPoint = ll;
+    pickMode = null;
+    if (viaMarker) viaMarker.setLngLat([ll.lon, ll.lat]);
+    else setViaMarker(ll);
+    void runRoute();
   }
 
   /** A route to change, or a point to move: the next map tap places the point. */
