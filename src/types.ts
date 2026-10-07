@@ -178,7 +178,8 @@ export interface UserSettings {
   roadFactor: number;
   aroundRadiusKm: number;
   aroundReturn: boolean;
-  routeDetourKm: number;
+  /** A station is on the way when stopping there adds less than this much road (km). */
+  maxDetourKm: number;
   hideUnpriced: boolean;
   /** Use GPS (`enableHighAccuracy`) for a more precise browser location. */
   highAccuracyLocation: boolean;
@@ -202,7 +203,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   roadFactor: 1.3,
   aroundRadiusKm: 15,
   aroundReturn: true,
-  routeDetourKm: 5,
+  maxDetourKm: 1,
   hideUnpriced: true,
   highAccuracyLocation: true,
   excludedBrands: [],

@@ -60,6 +60,8 @@
   "settings.title": "Nustatymai",
   "settings.consumption": "Sąnaudos (l/100 km)",
   "settings.timeValue": "Laiko vertė (€/h)",
+  "settings.maxDetour": "Didžiausias nusukimas (km)",
+  "settings.maxDetourHint": "Degalinė rodoma kelyje, jei užsukus į ją kelionė pailgėja mažiau nei tiek.",
   "settings.highAccuracy": "Tikslesnė vieta",
   "settings.highAccuracyHint": "GPS nustato vietą tiksliau, bet naudoja daugiau baterijos ir gali užtrukti.",
   "settings.providers": "Tiekėjai",

@@ -20,6 +20,12 @@ const LOCALE_SET = new Set<string>(["lt", "en"]);
 const PREFERENCE_SET = new Set<string>(["shortest", "fastest"]);
 const RADIUS_SET = new Set<number>(AROUND_RADIUS_KM);
 
+/**
+ * Bounds for the on-the-way detour. Stations are searched within 2 km of the route, and going
+ * out and back makes about twice that the most a detour can usefully be.
+ */
+export const MAX_DETOUR_KM_RANGE = { min: 0.1, max: 4 } as const;
+
 function clampNumber(value: unknown, fallback: number, min: number, max: number): number {
   let n = Number.NaN;
   if (typeof value === "number") n = value;
@@ -59,7 +65,7 @@ export function sanitizeSettings(raw: unknown): UserSettings {
     roadFactor: clampNumber(parsed.roadFactor, DEFAULT_SETTINGS.roadFactor, 1, 2),
     aroundRadiusKm,
     aroundReturn: asBoolean(parsed.aroundReturn, DEFAULT_SETTINGS.aroundReturn),
-    routeDetourKm: clampNumber(parsed.routeDetourKm, DEFAULT_SETTINGS.routeDetourKm, 1, 15),
+    maxDetourKm: clampDetourKm(parsed.maxDetourKm),
     hideUnpriced: asBoolean(parsed.hideUnpriced, DEFAULT_SETTINGS.hideUnpriced),
     highAccuracyLocation: asBoolean(
       parsed.highAccuracyLocation,
@@ -70,6 +76,11 @@ export function sanitizeSettings(raw: unknown): UserSettings {
     historyStat,
     ...(locale ? { locale } : {}),
   };
+}
+
+export function clampDetourKm(value: unknown): number {
+  const { min, max } = MAX_DETOUR_KM_RANGE;
+  return clampNumber(value, DEFAULT_SETTINGS.maxDetourKm, min, max);
 }
 
 /** Options for `navigator.geolocation` based on the high-accuracy setting. */

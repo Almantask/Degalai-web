@@ -240,9 +240,10 @@ Geocoding is Photon, clipped to Lithuania. Routing uses OpenRouteService when
 OSRM demo (fastest, plus up to two alternatives). Detours fall back to haversine
 × a road factor when a via-route is unavailable.
 
-A station is **on the way** when stopping there adds less than 1 km of road to
-the route you picked: leave the route 1 km before the station, stop, and rejoin
-it 1 km after, against driving straight through. Every priced station within
+A station is **on the way** when stopping there adds less road to the route you
+picked than your limit (Settings → Largest detour, 1 km by default, 0.1–4 km):
+leave the route 1 km before the station, stop, and rejoin it 1 km after, against
+driving straight through. Every priced station within
 2 km of the route line (up to 120, closest first) gets that detour from one OSRM
 `table` request per 30 stations. The route points keep the route's heading
 (`bearings`) and the station must be reached on the driver's side of the road
@@ -253,7 +254,7 @@ shows that detour ("detour +0.8 km"). If the table request fails, stations withi
 
 On each dashed via-route, the cheapest station within 200 m of it is marked too
 ("Cheapest on the dashed route") when it is cheaper than the station the line
-leads to and less than 1 km off that line by road (same check as above). Its
+leads to and within your detour limit of that line by road (same check). Its
 detour is the dashed route's extra length plus that stop.
 
 ## Develop

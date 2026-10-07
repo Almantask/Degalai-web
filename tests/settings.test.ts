@@ -30,7 +30,7 @@ describe("sanitizeSettings", () => {
         roadFactor: 1.5,
         aroundRadiusKm: 30,
         aroundReturn: false,
-        routeDetourKm: 8,
+        maxDetourKm: 2.5,
         hideUnpriced: false,
         highAccuracyLocation: false,
         excludedBrands: ["viada"],
@@ -48,7 +48,7 @@ describe("sanitizeSettings", () => {
       roadFactor: 1.5,
       aroundRadiusKm: 30,
       aroundReturn: false,
-      routeDetourKm: 8,
+      maxDetourKm: 2.5,
       hideUnpriced: false,
       highAccuracyLocation: false,
       excludedBrands: ["viada"],
@@ -72,6 +72,15 @@ describe("sanitizeSettings", () => {
     expect(s.evConsumption).toBe(40);
     expect(s.evKwh).toBe(5);
     expect(sanitizeSettings({}).evConsumption).toBe(17);
+  });
+
+  it("defaults the on-the-way detour to 1 km and keeps it between 0.1 and 4 km", () => {
+    expect(sanitizeSettings({}).maxDetourKm).toBe(1);
+    expect(sanitizeSettings({ maxDetourKm: "0.5" }).maxDetourKm).toBe(0.5);
+    expect(sanitizeSettings({ maxDetourKm: 0 }).maxDetourKm).toBe(0.1);
+    expect(sanitizeSettings({ maxDetourKm: 40 }).maxDetourKm).toBe(4);
+    // The old, never used corridor setting does not carry over.
+    expect(sanitizeSettings({ routeDetourKm: 5 })).not.toHaveProperty("routeDetourKm");
   });
 
   it("defaults high-accuracy location to on", () => {

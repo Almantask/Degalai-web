@@ -1003,6 +1003,19 @@ test("Kaunas: pick a route first, then stations on it and the cheapest on a dash
   );
   await expect(page.locator(".station-row", { hasText: "Circle K „Baršausko“" })).toHaveCount(0);
   await expect(page.locator(".station-row.is-detour")).toHaveCount(1);
+
+  // A tighter limit in settings drops Baltic Petroleum (+0.8 km) and the dashed line through it.
+  await page.locator(".header-toggle").click();
+  await page.getByRole("button", { name: "Nustatymai" }).click();
+  const limit = page.locator("#set-detour");
+  await expect(limit).toHaveValue("1");
+  await limit.fill("0.5");
+  await limit.press("Tab");
+  await expect(page.locator(".station-row", { hasText: "Baltic Petroleum" })).toHaveCount(0);
+  await expect(nesteRow).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem("kur-degalai-settings"))).toContain(
+    '"maxDetourKm":0.5',
+  );
 });
 
 test.describe("EV", () => {

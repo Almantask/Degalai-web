@@ -13,8 +13,6 @@ export const ON_ROUTE_KM = 0.5;
 export const DETOUR_CORRIDOR_KM = 2;
 /** Road detour checks per route, closest to the polyline first. */
 export const MAX_DETOUR_CHECKS = 120;
-/** A station is on the way when stopping there adds less than this much road. */
-export const ON_ROUTE_DETOUR_KM = 1;
 /**
  * A stop leaves the route this far before the station and rejoins it this far after, so a
  * motorway exit or a junction just before the pumps still counts.
@@ -70,9 +68,10 @@ export function detourCandidates<T extends { lineKm: number }>(
 export function isOnTheWay(
   lineKm: number,
   detour: { extraKm: number } | null | undefined,
+  maxDetourKm: number,
 ): boolean {
   if (detour === undefined) return lineKm <= ON_ROUTE_KM;
-  return detour != null && detour.extraKm < ON_ROUTE_DETOUR_KM;
+  return detour != null && detour.extraKm < maxDetourKm;
 }
 
 /**
@@ -87,14 +86,14 @@ export function cheapestOnDashed<
     dashedKm: number;
     detourKm: number | null | undefined;
   },
->(targetPrice: number, candidates: T[]): T | undefined {
+>(targetPrice: number, candidates: T[], maxDetourKm: number): T | undefined {
   return candidates
     .filter(
       (c) =>
         c.dashedKm <= DASHED_ROUTE_KM &&
         c.price < targetPrice &&
         c.detourKm !== null &&
-        (c.detourKm === undefined || c.detourKm < ON_ROUTE_DETOUR_KM),
+        (c.detourKm === undefined || c.detourKm < maxDetourKm),
     )
     .sort(byPrice)[0];
 }

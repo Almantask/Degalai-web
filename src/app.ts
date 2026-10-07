@@ -101,11 +101,13 @@ import {
   toggleHistoryBrand,
 } from "./history-series.ts";
 import {
+  clampDetourKm,
   excludedFor,
   fuelFromUrl,
   isBrandIncluded,
   loadSettings,
   locationPositionOptions,
+  MAX_DETOUR_KM_RANGE,
   saveSettings,
   uniqueBrands,
 } from "./settings.ts";
@@ -625,6 +627,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
         saveSettings(settings);
         setMapGeolocateAccuracy(map, el.checked);
         if (startIsGps) requestLocation(true);
+        return;
+      }
+      if (el.id === "set-detour") {
+        settings.maxDetourKm = clampDetourKm(el.value);
+        el.value = String(settings.maxDetourKm);
+        saveSettings(settings);
+        // Detours are cached per route, so this only re-sorts stations already checked.
+        if (routeLine) {
+          void evaluateRouteStations(routeLine).then(() => {
+            refreshMap();
+            renderList();
+          });
+        }
         return;
       }
       if (el.id.startsWith("set-brand-") && el.dataset.brand) {
@@ -1183,7 +1198,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     const rows = new Map<string, RouteStationRow>();
     for (const { target, line, candidates } of lines) {
-      const pick = cheapestOnDashed(target.price, candidates);
+      const pick = cheapestOnDashed(target.price, candidates, settings.maxDetourKm);
       if (!pick || rows.has(pick.station.id)) continue;
       const nearest = nearestPointOnPolyline(pick.station, line);
       rows.set(pick.station.id, {
@@ -1210,7 +1225,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const onWay: RouteStationRow[] = [];
     for (const { station: s, price, lineKm } of nearby) {
       const detour = detours.get(s.id);
-      if (!isOnTheWay(lineKm, detour)) continue;
+      if (!isOnTheWay(lineKm, detour, settings.maxDetourKm)) continue;
       const nearest = nearestPointOnPolyline({ lat: s.lat, lon: s.lon }, res.geometry);
       onWay.push({
         station: s,
@@ -1836,6 +1851,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
           : `<label>${escapeHtml(t("settings.consumption"))}<input id="set-cons" type="number" min="3" max="20" step="0.1" value="${escapeHtml(String(settings.consumption))}" /></label>`
       }
       <label>${escapeHtml(t("settings.timeValue"))}<input id="set-time" type="number" min="0" max="50" step="1" value="${escapeHtml(String(settings.timeValue))}" /></label>
+      <div class="setting-block">
+        <label>${escapeHtml(t("settings.maxDetour"))}<input id="set-detour" type="number" min="${MAX_DETOUR_KM_RANGE.min}" max="${MAX_DETOUR_KM_RANGE.max}" step="0.1" value="${escapeHtml(String(settings.maxDetourKm))}" /></label>
+        <p class="hint">${escapeHtml(t("settings.maxDetourHint"))}</p>
+      </div>
       <div class="setting-block">
         <label class="check"><input id="set-high-accuracy" type="checkbox"${settings.highAccuracyLocation ? " checked" : ""} />${escapeHtml(t("settings.highAccuracy"))}</label>
         <p class="hint">${escapeHtml(t("settings.highAccuracyHint"))}</p>

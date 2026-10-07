@@ -60,6 +60,8 @@
   "settings.title": "Settings",
   "settings.consumption": "Consumption (l/100 km)",
   "settings.timeValue": "Value of time (€/h)",
+  "settings.maxDetour": "Largest detour (km)",
+  "settings.maxDetourHint": "A station counts as on the way when stopping there adds less than this to the trip.",
   "settings.highAccuracy": "More precise location",
   "settings.highAccuracyHint": "GPS is more accurate, but uses more battery and may take longer.",
   "settings.providers": "Providers",
