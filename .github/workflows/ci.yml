@@ -42,5 +42,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --ignore-scripts
-      - run: npx playwright install --with-deps chromium
+      # The Playwright the lockfile pins, not one npx would fetch.
+      - run: ./node_modules/.bin/playwright install --with-deps chromium
       - run: npm run test:e2e

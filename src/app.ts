@@ -1969,7 +1969,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** Under From / To: place a point the route must pass, move it, or remove it. */
   function viaHtml(): string {
     const picking = pickMode === "via";
-    const action = t(picking ? "via.cancel" : viaPoint ? "via.move" : "via.add");
+    let action = t("via.add");
+    if (picking) action = t("via.cancel");
+    else if (viaPoint) action = t("via.move");
     const remove = viaPoint
       ? `<button type="button" class="dest-via-remove" data-act="clear-via" aria-label="${escapeHtml(t("via.remove"))}" title="${escapeHtml(t("via.remove"))}">×</button>`
       : "";
@@ -2304,29 +2306,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       return `<div class="banner">${escapeHtml(t("status.offline", { date: formatDate(data.meta.date) }))}</div>`;
     }
     if (!data.prices) return `<div class="banner">${escapeHtml(t("status.noData"))}</div>`;
-    if (destStatus === "locating")
-      return `<div class="banner info">${escapeHtml(t("dest.locating"))}</div>`;
-    if (destStatus === "routing")
-      return `<div class="banner info">${escapeHtml(t("dest.routing"))}</div>`;
-    if (destStatus === "denied") {
-      const msg =
-        locateStatus === "outside"
-          ? t("dest.outside")
-          : pickMode === "dest-start"
-            ? t("dest.pickStart")
-            : t("dest.denied");
-      return `<div class="banner">${escapeHtml(msg)}</div>`;
-    }
-    if (destStatus === "not-found")
-      return `<div class="banner">${escapeHtml(t("dest.notFound"))}</div>`;
-    if (destStatus === "via-not-found")
-      return `<div class="banner">${escapeHtml(t("via.notFound"))}</div>`;
-    if (pickMode === "via") {
-      return `<div class="banner info pick-banner" role="status">
-        <p>${escapeHtml(t("via.pick"))}</p>
-        <button type="button" class="install-dismiss" data-act="pick-via" aria-label="${escapeHtml(t("via.cancel"))}">×</button>
-      </div>`;
-    }
+    const route = routeStatusHtml();
+    if (route) return route;
     const offer = currentInstallOffer();
     if (offer === "prompt") {
       return `<div class="banner info install-banner">
@@ -2339,6 +2320,31 @@ export async function startApp(root: HTMLElement): Promise<void> {
       return `<div class="banner info install-banner">
         <p>${escapeHtml(t("install.ios"))}</p>
         <button type="button" class="install-dismiss" data-act="install-dismiss" aria-label="${escapeHtml(t("action.close"))}">×</button>
+      </div>`;
+    }
+    return "";
+  }
+
+  /** Finding the start, routing, what went wrong, or where to tap for the via point; "" if none. */
+  function routeStatusHtml(): string {
+    if (destStatus === "locating")
+      return `<div class="banner info">${escapeHtml(t("dest.locating"))}</div>`;
+    if (destStatus === "routing")
+      return `<div class="banner info">${escapeHtml(t("dest.routing"))}</div>`;
+    if (destStatus === "denied") {
+      let msg = t("dest.denied");
+      if (locateStatus === "outside") msg = t("dest.outside");
+      else if (pickMode === "dest-start") msg = t("dest.pickStart");
+      return `<div class="banner">${escapeHtml(msg)}</div>`;
+    }
+    if (destStatus === "not-found")
+      return `<div class="banner">${escapeHtml(t("dest.notFound"))}</div>`;
+    if (destStatus === "via-not-found")
+      return `<div class="banner">${escapeHtml(t("via.notFound"))}</div>`;
+    if (pickMode === "via") {
+      return `<div class="banner info pick-banner" role="status">
+        <p>${escapeHtml(t("via.pick"))}</p>
+        <button type="button" class="install-dismiss" data-act="pick-via" aria-label="${escapeHtml(t("via.cancel"))}">×</button>
       </div>`;
     }
     return "";
