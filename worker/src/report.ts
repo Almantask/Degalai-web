@@ -201,17 +201,7 @@ export async function handleReport(
     ? { url: await storeImage(env.REPORT_IMAGES, image, new URL(request.url).origin) }
     : undefined;
 
-  const res = await fetchImpl(`https://api.github.com/repos/${env.GITHUB_REPO}/issues`, {
-    method: "POST",
-    headers: {
-      Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-      "Content-Type": "application/json",
-      "User-Agent": "kur-degalai-report",
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-    body: JSON.stringify(issueFromReport(report, issueImage)),
-  });
+  const res = await createIssue(env, issueFromReport(report, issueImage), fetchImpl);
   if (!res.ok) {
     console.error(`Creating the issue failed: ${res.status} ${await res.text()}`);
     return reply(502, { ok: false, error: "github" });
@@ -223,6 +213,25 @@ export async function handleReport(
     number: issue.number,
     url: issue.html_url,
     ...(issueImage ? { imageSaved: issueImage.url !== null } : {}),
+  });
+}
+
+/** Files the issue on `GITHUB_REPO` with the worker's token. */
+export function createIssue(
+  env: Pick<ReportEnv, "GITHUB_TOKEN" | "GITHUB_REPO">,
+  issue: Issue,
+  fetchImpl: typeof fetch = fetch,
+): Promise<Response> {
+  return fetchImpl(`https://api.github.com/repos/${env.GITHUB_REPO}/issues`, {
+    method: "POST",
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+      "Content-Type": "application/json",
+      "User-Agent": "kur-degalai-report",
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+    body: JSON.stringify(issue),
   });
 }
 

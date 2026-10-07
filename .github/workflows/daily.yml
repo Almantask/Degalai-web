@@ -66,6 +66,9 @@ jobs:
           # The cron worker's report endpoint (https://kur-degalai-cron.<subdomain>.workers.dev/report).
           # Unset, the "Report a problem" form opens a prefilled GitHub issue instead.
           VITE_REPORT_URL: ${{ vars.REPORT_URL }}
+          # OpenRouteService key (openrouteservice.org). It ends up in the public JS bundle.
+          # Unset, routes come from the public OSRM server.
+          VITE_ORS_KEY: ${{ secrets.ORS_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

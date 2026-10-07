@@ -234,7 +234,9 @@ instead, and a failed send offers the same link.
 
 Geocoding is Photon, clipped to Lithuania. Routing uses OpenRouteService when
 `VITE_ORS_KEY` is set (shortest preference), otherwise the public OSRM demo
-(fastest). Detours fall back to haversine × a road factor when a via-route is
+(fastest). The hourly build takes it from the `ORS_KEY` repository secret; the key
+ends up in the public JS bundle, so visitors share its daily quota, and routes
+fall back to OSRM once it is used up. Detours fall back to haversine × a road factor when a via-route is
 unavailable.
 
 A station is **on the way** when stopping there adds at most 2 km of road. Every
@@ -265,15 +267,24 @@ npm run test:deps         # dependency tests (needs network)
 outside service is there. `wiring` is offline and runs in CI: every `env` name the
 cron worker reads is set in `wrangler.jsonc` or as a secret by `worker.yml`, the
 dispatched workflow accepts `workflow_dispatch` and deploys from that ref, the
-build passes every `VITE_` variable the app needs, and the committed overrides
-load without dropping entries. The rest call the real services through the
-adapters: LEA's map bundle still holds the API address and token, the ena.lt page
-still links the workbook, Circle K, Via Lietuva, Elering, Overpass, Photon, OSRM
-and OpenFreeMap still answer the way the code reads them, and GitHub has the
-branch, enabled workflow and labels. The **Dependencies** workflow runs them daily.
-Optional: `GITHUB_TOKEN` (with admin rights, e.g. `gh auth token`, it also checks
-the Actions secrets and variables), `REPORT_URL` (checks the deployed feedback
-endpoint) and `VITE_ORS_KEY` (checks OpenRouteService).
+build passes every `VITE_` variable the app reads, the committed overrides load
+without dropping entries, and every Actions secret and variable is handed to the
+dependency tests. The rest call the real services through the adapters: LEA's map
+bundle still holds the API address and token, the ena.lt page still links the
+workbook, Circle K, Via Lietuva, Elering, Overpass, Photon, OSRM and OpenFreeMap
+still answer the way the code reads them, and GitHub has the branch, enabled
+workflow and labels.
+
+`credentials` uses each secret and variable through the code that uses it:
+`WORKFLOW_DISPATCH_TOKEN` with the worker's dispatch and issue calls (sent so
+GitHub refuses them after accepting the token: nothing starts, nothing is filed),
+`CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` with wrangler (the KV namespace
+and the deployed worker's secrets), `REPORT_URL` with the site's `sendReport` (the
+honeypot field filled, so the worker files nothing) and `ORS_KEY` with
+`fetchRoute`. The **Dependencies** workflow runs everything daily and on pushes
+that change how a service is called; there an empty secret or variable fails
+(`ORS_KEY` is optional). Locally a test skips when its value is not in the
+environment.
 
 To refresh the README shots (preview must be running on port 4173):
 

@@ -5,7 +5,16 @@ import { loadEvTariffs } from "../../scripts/adapters/ev-tariffs.ts";
 import { loadPriceReports } from "../../scripts/adapters/reports.ts";
 import { loadOverrides } from "../../scripts/match.ts";
 import { ISSUES_NEW_URL } from "../../src/report.ts";
-import { read, readAll, reportOrigins, ROOT, workerVar, workflow, wrangler } from "./repo.ts";
+import {
+  read,
+  readAll,
+  reportOrigins,
+  ROOT,
+  workerSecrets,
+  workerVar,
+  workflow,
+  wrangler,
+} from "./repo.ts";
 
 // Offline: everything the code needs to call its dependencies is configured in this repository.
 
@@ -15,23 +24,6 @@ function workerEnvNames(): string[] {
   return [...new Set([...source.matchAll(/\benv\.([A-Z][A-Z0-9_]*)/g)].map((m) => m[1]))].sort();
 }
 
-/** Worker secrets the deploy workflow sets: `wrangler secret put` scripts that worker.yml runs. */
-function deployedWorkerSecrets(): string[] {
-  const { scripts } = JSON.parse(read("worker/package.json")) as {
-    scripts: Record<string, string>;
-  };
-  const deploy = workflow("worker.yml");
-  return Object.entries(scripts).flatMap(([name, command]) => {
-    const secret = command.match(/wrangler secret put ([A-Z][A-Z0-9_]*)/)?.[1];
-    const runs = new RegExp(`npm run (?:--silent )?${escapeRegExp(name)}(?![\\w:-])`).test(deploy);
-    return secret && runs ? [secret] : [];
-  });
-}
-
-function escapeRegExp(text: string): string {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 describe("cron worker", () => {
   it("has every variable, binding and secret it reads configured", () => {
     const config = wrangler();
@@ -39,7 +31,7 @@ describe("cron worker", () => {
       ...Object.keys(config.vars ?? {}),
       ...(config.ratelimits ?? []).map((r) => r.name),
       ...(config.kv_namespaces ?? []).map((k) => k.binding),
-      ...deployedWorkerSecrets(),
+      ...workerSecrets(),
     ]);
     const used = workerEnvNames();
     expect(used).toContain("GITHUB_TOKEN");
@@ -79,11 +71,6 @@ describe("cron worker", () => {
 });
 
 describe("site build", () => {
-  /** Variables the app works without, and what it does instead. */
-  const OPTIONAL_ENV: Record<string, string> = {
-    VITE_ORS_KEY: "routes come from the public OSRM server",
-  };
-
   it("gets every VITE_ variable the app reads", () => {
     const source = [...readAll("src", ".ts").values()].join("\n");
     const used = [
@@ -96,7 +83,7 @@ describe("site build", () => {
     const build = workflow("daily.yml");
     const passed = new Set([...build.matchAll(/^\s+(VITE_\w+):/gm)].map((m) => m[1]));
     expect(
-      used.filter((name) => !passed.has(name) && !(name in OPTIONAL_ENV)),
+      used.filter((name) => !passed.has(name)),
       "not passed to vite build in daily.yml",
     ).toEqual([]);
   });
@@ -126,5 +113,22 @@ describe("data pipeline", () => {
         (raw as unknown[]).length,
       );
     }
+  });
+});
+
+describe("Actions secrets and variables", () => {
+  it("are all handed to the dependency tests, which use them", () => {
+    const others = [...readAll(".github/workflows", ".yml")]
+      .filter(([path]) => !path.endsWith("/dependencies.yml"))
+      .map(([, text]) => text)
+      .join("\n");
+    const used = [...others.matchAll(/\b(secrets|vars)\.([A-Z][A-Z0-9_]*)/g)]
+      .map((m) => `${m[1]}.${m[2]}`)
+      .filter((name) => name !== "secrets.GITHUB_TOKEN");
+    const deps = workflow("dependencies.yml");
+    expect(
+      [...new Set(used)].filter((name) => !deps.includes(name)),
+      "not passed to npm run test:deps in dependencies.yml",
+    ).toEqual([]);
   });
 });

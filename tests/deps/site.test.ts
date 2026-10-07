@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { inLithuania } from "../../src/geo.ts";
 import { MAP_STYLE_URL } from "../../src/map.ts";
 import { fetchDetours, fetchRoute, geocode, reverseGeocode } from "../../src/routing.ts";
-import { reportOrigins } from "./repo.ts";
 
 // Live: each service the browser app calls still answers the way the app reads it.
 
@@ -67,28 +66,5 @@ describe("OSRM (routing)", () => {
     const detours = await fetchDetours(vilnius, kaunas, [elektrenai, trakai]);
     expect(detours).not.toBeNull();
     expect(detours!.every((d) => d !== null)).toBe(true);
-  });
-});
-
-describe("OpenRouteService (routing with VITE_ORS_KEY)", () => {
-  it.skipIf(!process.env.VITE_ORS_KEY)("routes with the key", async () => {
-    // OSRM, the fallback, would answer "fastest".
-    expect((await fetchRoute(vilnius, kaunas, "shortest"))?.profile).toBe("shortest");
-  });
-});
-
-describe("cron worker feedback endpoint (REPORT_URL)", () => {
-  it.skipIf(!process.env.REPORT_URL)("lets the site's origin post a report", async () => {
-    const origin = reportOrigins()[0];
-    const res = await fetch(process.env.REPORT_URL!, {
-      method: "OPTIONS",
-      headers: {
-        Origin: origin,
-        "Access-Control-Request-Method": "POST",
-        "Access-Control-Request-Headers": "content-type",
-      },
-    });
-    expect(res.status).toBe(204);
-    expect(res.headers.get("access-control-allow-origin")).toBe(origin);
   });
 });

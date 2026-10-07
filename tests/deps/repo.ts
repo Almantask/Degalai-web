@@ -55,3 +55,20 @@ export function reportOrigins(): string[] {
     .map((o) => o.trim())
     .filter(Boolean);
 }
+
+/** Worker secrets the deploy sets: `wrangler secret put` scripts that worker.yml runs. */
+export function workerSecrets(): string[] {
+  const { scripts } = JSON.parse(read("worker/package.json")) as {
+    scripts: Record<string, string>;
+  };
+  const deploy = workflow("worker.yml");
+  return Object.entries(scripts).flatMap(([name, command]) => {
+    const secret = command.match(/wrangler secret put ([A-Z][A-Z0-9_]*)/)?.[1];
+    const runs = new RegExp(`npm run (?:--silent )?${escapeRegExp(name)}(?![\\w:-])`).test(deploy);
+    return secret && runs ? [secret] : [];
+  });
+}
+
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}

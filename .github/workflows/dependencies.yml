@@ -34,10 +34,21 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            worker/package-lock.json
       - run: npm ci --ignore-scripts
+      # Wrangler, which the Cloudflare credential tests run as the worker deploy does.
+      - run: npm ci --ignore-scripts
+        working-directory: worker
       - run: npm run test:deps
         env:
-          # Lifts the GitHub API rate limit. It cannot list Actions secrets, so that check skips.
+          # Lifts the GitHub API rate limit.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Unset, the deployed feedback endpoint check skips.
+          # Each is used by the code that uses it (tests/deps/credentials.test.ts); empty fails.
+          WORKFLOW_DISPATCH_TOKEN: ${{ secrets.WORKFLOW_DISPATCH_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           REPORT_URL: ${{ vars.REPORT_URL }}
+          # Optional: without it the site routes with OSRM and this test skips.
+          VITE_ORS_KEY: ${{ secrets.ORS_KEY }}
