@@ -71,6 +71,13 @@ import {
   persistInstallDismissed,
 } from "./pwa.ts";
 import { browserRefreshDeps, refreshWebsite } from "./refresh.ts";
+import {
+  githubIssueLink,
+  MAX_REPORT_CHARS,
+  MIN_REPORT_CHARS,
+  sendReport,
+  type ReportContext,
+} from "./report.ts";
 import DOMPurify from "dompurify";
 import {
   allHistoryBrandsOn,
@@ -114,6 +121,8 @@ const SPOT_SOURCE_URL = "https://dashboard.elering.ee/";
 const REGISTER_SOURCE_URL = "https://ev.vialietuva.lt/en/data-provision";
 const REPORTS_SOURCE_URL =
   "https://github.com/Almantask/Degalai-web/issues/new?template=wrong-price.yml";
+/** The cron worker's POST /report; unset in dev, where the form opens GitHub instead. */
+const REPORT_URL = import.meta.env.VITE_REPORT_URL ?? "";
 
 const DONATE_HEART = `<svg class="donate-heart" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
   <path fill="currentColor" d="M7.97 14s-5.3-3.18-6.76-6C.02 5.36 1.3 2.2 4.2 2.2c1.4 0 2.5.8 3.77 2.16C9.24 3 10.34 2.2 11.75 2.2c2.9 0 4.18 3.16 2.99 5.8C13.28 10.82 7.97 14 7.97 14z"/>
@@ -136,6 +145,20 @@ const SWAP_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18
   <path d="M3 8l4-4 4 4"/>
   <path d="M17 20V4"/>
   <path d="M21 16l-4 4-4-4"/>
+</svg>`;
+
+const REPORT_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="m8 2 1.88 1.88"/>
+  <path d="M14.12 3.88 16 2"/>
+  <path d="M9 7.13v-1a3 3 0 1 1 6 0v1"/>
+  <path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/>
+  <path d="M12 20v-9"/>
+  <path d="M6.53 9C4.6 8.8 3 7.1 3 5"/>
+  <path d="M6 13H2"/>
+  <path d="M3 21c0-2.1 1.7-3.9 3.8-4"/>
+  <path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/>
+  <path d="M22 13h-4"/>
+  <path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/>
 </svg>`;
 
 const REFRESH_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -179,6 +202,8 @@ interface RouteStationRow {
 }
 
 type DestStatus = "idle" | "locating" | "routing" | "denied" | "not-found";
+type Panel = "settings" | "report";
+type ReportStatus = "idle" | "short" | "sending" | "sent" | "rate" | "failed";
 
 export async function startApp(root: HTMLElement): Promise<void> {
   // Fetch data alongside the map style and tiles instead of before them.
@@ -193,7 +218,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let view: View = parsed.view;
   let userLocation: LngLat | null = null;
   let pickMode: "dest-start" | null = null;
-  let settingsOpen = false;
+  let openPanel: Panel | null = null;
+  /** Panel markup last written, so a re-render does not wipe the focus or a half-typed report. */
+  let panelsHtml = "";
+  let reportDraft = "";
+  let reportStatus: ReportStatus = "idle";
+  let reportIssue: { number?: number; url?: string } | null = null;
   let listMinimized = false;
   let headerMinimized = false;
   let historyMinimized = false;
@@ -407,7 +437,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       } else if (act === "view") {
         view = tEl.dataset.view === "history" ? "history" : "map";
         headerMinimized = false;
-        settingsOpen = false;
+        openPanel = null;
         if (view === "history") historyMinimized = false;
         navigate(view, locale, settings.fuel);
         render();
@@ -429,14 +459,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
         persistFuel();
         onFuelChange();
       } else if (act === "settings") {
-        settingsOpen = !settingsOpen;
+        openPanel = openPanel === "settings" ? null : "settings";
         render();
+      } else if (act === "report") {
+        openPanel = openPanel === "report" ? null : "report";
+        if (reportStatus !== "sending") reportStatus = "idle";
+        render();
+        root.querySelector<HTMLTextAreaElement>("#report-text")?.focus();
       } else if (act === "refresh") {
         tEl.setAttribute("disabled", "true");
         tEl.setAttribute("aria-busy", "true");
         void refreshWebsite(browserRefreshDeps());
       } else if (act === "close-panel") {
-        settingsOpen = false;
+        openPanel = null;
         render();
       } else if (act === "station") {
         openStation(tEl.dataset.id!);
@@ -478,7 +513,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
       } else if (act === "history-spot" && !historySpot) {
         historySpot = true;
         render();
+      } else if (act === "report-github") {
+        window.open(githubIssueLink(reportDraft, reportContext()), "_blank", "noopener");
       }
+    });
+
+    root.addEventListener("submit", (e) => {
+      if ((e.target as HTMLElement).id !== "report-form") return;
+      e.preventDefault();
+      void submitReport();
     });
 
     root.addEventListener("input", (e) => {
@@ -493,6 +536,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       else if (el.id === "set-ev-cons")
         settings.evConsumption = num(el.value, DEFAULT_SETTINGS.evConsumption);
       else if (el.id === "set-time") settings.timeValue = num(el.value, 0);
+      else if (el.id === "report-text") reportDraft = el.value;
     });
     // The browser's own ✕ in a search field fires `search` with an empty value (so does Enter on
     // an empty field). Capture it: the event does not reach `root` by bubbling in every browser.
@@ -666,7 +710,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     endHit = hit;
     endIsHere = false;
     destQuery = hit.label;
-    settingsOpen = false;
+    openPanel = null;
     pendingDest = true;
     if (!routeOrigin()) {
       destStatus = locateStatus === "denied" ? "denied" : "locating";
@@ -802,7 +846,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function collapseForMapFocus(): void {
     headerMinimized = true;
     listMinimized = true;
-    settingsOpen = false;
+    openPanel = null;
     render();
   }
 
@@ -1109,8 +1153,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const header = root.querySelector("#header")!;
     header.innerHTML = headerHtml();
     applyHeaderMinimized();
-    const panels = root.querySelector("#panels")!;
-    panels.innerHTML = settingsOpen ? settingsHtml() : "";
+    renderPanels();
     renderList();
     const banner = root.querySelector("#banner")!;
     banner.innerHTML = statusHtml();
@@ -1491,8 +1534,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
             </a>
           </div>
           <div class="topbar-tools">
+            <button type="button" class="icon-btn icon-tool icon-report ${openPanel === "report" ? "on" : ""}" data-act="report" aria-label="${escapeHtml(t("report.open"))}" title="${escapeHtml(t("report.open"))}" aria-expanded="${openPanel === "report" ? "true" : "false"}">${REPORT_ICON}</button>
             <button type="button" class="icon-btn icon-tool icon-refresh" data-act="refresh" aria-label="${escapeHtml(t("action.refresh"))}" title="${escapeHtml(t("action.refresh"))}">${REFRESH_ICON}</button>
-            <button type="button" class="icon-btn icon-tool icon-settings ${settingsOpen ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">${SETTINGS_ICON}</button>
+            <button type="button" class="icon-btn icon-tool icon-settings ${openPanel === "settings" ? "on" : ""}" data-act="settings" aria-label="${escapeHtml(t("action.settings"))}">${SETTINGS_ICON}</button>
           </div>
         </div>
         <div class="fuel-filter" role="group" aria-label="${escapeHtml(t("fuel.filter"))}">
@@ -1582,6 +1626,95 @@ export async function startApp(root: HTMLElement): Promise<void> {
         </ul>
       </fieldset>
     </section>`;
+  }
+
+  function renderPanels(): void {
+    const html =
+      openPanel === "settings" ? settingsHtml() : openPanel === "report" ? reportHtml() : "";
+    if (html === panelsHtml) return;
+    panelsHtml = html;
+    const panels = root.querySelector<HTMLElement>("#panels")!;
+    panels.innerHTML = html;
+    // The draft is set here, not in the markup, so typing does not change what render() compares.
+    const text = panels.querySelector<HTMLTextAreaElement>("#report-text");
+    if (text) text.value = reportDraft;
+  }
+
+  function reportHtml(): string {
+    const title = escapeHtml(t("report.title"));
+    const head = `<header><h2>${title}</h2><button type="button" data-act="close-panel">${escapeHtml(t("action.close"))}</button></header>`;
+    if (reportStatus === "sent") {
+      const link =
+        reportIssue?.url && reportIssue.number
+          ? ` <a href="${escapeHtml(reportIssue.url)}" target="_blank" rel="noopener noreferrer">#${reportIssue.number}</a>`
+          : "";
+      return `<section class="panel report-panel" aria-label="${title}">
+      ${head}
+      <p class="report-done" role="status">${escapeHtml(t("report.sent"))}${link}</p>
+    </section>`;
+    }
+    const sending = reportStatus === "sending";
+    const message =
+      reportStatus === "short"
+        ? escapeHtml(t("report.short", { n: MIN_REPORT_CHARS }))
+        : reportStatus === "rate"
+          ? escapeHtml(t("report.rate"))
+          : reportStatus === "failed"
+            ? `${escapeHtml(t("report.failed"))} <button type="button" class="link-btn" data-act="report-github">${escapeHtml(t("report.viaGithub"))}</button>`
+            : "";
+    const submit = sending
+      ? t("report.sending")
+      : REPORT_URL
+        ? t("report.send")
+        : t("report.viaGithub");
+    return `<section class="panel report-panel" aria-label="${title}">
+      ${head}
+      <form id="report-form" class="report-form" novalidate>
+        <label>${escapeHtml(t("report.label"))}<textarea id="report-text" rows="5" maxlength="${MAX_REPORT_CHARS}" placeholder="${escapeHtml(t("report.placeholder"))}"${sending ? " disabled" : ""}></textarea></label>
+        <div class="report-hp" aria-hidden="true"><label>Website<input id="report-website" name="website" type="text" tabindex="-1" autocomplete="off" /></label></div>
+        <p class="hint">${escapeHtml(t("report.public"))}</p>
+        ${message ? `<p class="report-msg" role="alert">${message}</p>` : ""}
+        <button type="submit" class="primary"${sending ? " disabled" : ""}>${escapeHtml(submit)}</button>
+      </form>
+    </section>`;
+  }
+
+  function reportContext(): ReportContext {
+    return {
+      page: window.location.href,
+      locale,
+      fuel: settings.fuel,
+      dataDate: lastUpdatedAt(data) ?? data.meta?.date ?? "",
+      userAgent: navigator.userAgent,
+      viewport: `${window.innerWidth}×${window.innerHeight}`,
+    };
+  }
+
+  async function submitReport(): Promise<void> {
+    if (reportStatus === "sending") return;
+    const text = reportDraft.trim();
+    if (text.length < MIN_REPORT_CHARS) {
+      reportStatus = "short";
+      renderPanels();
+      root.querySelector<HTMLTextAreaElement>("#report-text")?.focus();
+      return;
+    }
+    if (!REPORT_URL) {
+      window.open(githubIssueLink(text, reportContext()), "_blank", "noopener");
+      return;
+    }
+    const website = root.querySelector<HTMLInputElement>("#report-website")?.value ?? "";
+    reportStatus = "sending";
+    renderPanels();
+    const result = await sendReport(REPORT_URL, text, reportContext(), website);
+    if (result.ok) {
+      reportStatus = "sent";
+      reportIssue = { number: result.number, url: result.url };
+      reportDraft = "";
+    } else {
+      reportStatus = result.reason;
+    }
+    renderPanels();
   }
 
   function statusHtml(): string {

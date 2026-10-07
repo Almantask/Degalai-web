@@ -1,4 +1,6 @@
-interface Env {
+import { handleReport, type ReportEnv } from "./report.ts";
+
+interface Env extends ReportEnv {
   GITHUB_TOKEN: string;
   GITHUB_REPO: string;
   GITHUB_WORKFLOW: string;
@@ -29,5 +31,10 @@ async function dispatchWorkflow(env: Env): Promise<void> {
 export default {
   async scheduled(_controller: unknown, env: Env): Promise<void> {
     await dispatchWorkflow(env);
+  },
+
+  async fetch(request: Request, env: Env): Promise<Response> {
+    if (new URL(request.url).pathname === "/report") return handleReport(request, env);
+    return new Response("Not found", { status: 404 });
   },
 };

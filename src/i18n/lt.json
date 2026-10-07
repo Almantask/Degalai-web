@@ -151,5 +151,17 @@
   "history.mode.spot": "Birža",
   "history.evCaption": "Įkrovimo kainos pagal tinklą, kuris jas nustato. Nemokamos stotelės neįtrauktos.",
   "dest.swap": "Sukeisti pradžią ir tikslą",
-  "settings.networks": "Įkrovimo tinklai"
+  "settings.networks": "Įkrovimo tinklai",
+  "report.open": "Pranešti apie klaidą",
+  "report.title": "Pranešti apie klaidą",
+  "report.label": "Kas neveikia arba rodoma neteisingai?",
+  "report.placeholder": "Pvz.: Vilniuje, Ukmergės g. „Neste“ rodo 1,45 €/l, o kolonėlėje 1,52 €/l.",
+  "report.public": "Pranešimas bus paskelbtas viešai GitHub'e kartu su puslapio adresu, naršykle ir ekrano dydžiu. Nerašykite asmeninių duomenų.",
+  "report.send": "Siųsti",
+  "report.sending": "Siunčiama…",
+  "report.short": "Aprašykite plačiau – bent {n} simbolių.",
+  "report.sent": "Ačiū! Pranešimas užregistruotas:",
+  "report.rate": "Per daug pranešimų iš karto. Pabandykite po minutės.",
+  "report.failed": "Nepavyko išsiųsti.",
+  "report.viaGithub": "Pranešti GitHub'e"
 }

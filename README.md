@@ -60,6 +60,8 @@ minimise for a full map.
 - Switch LT / EN in the header. **Donate** goes to
   [almantask.github.io/donate-me](https://almantask.github.io/donate-me/).
 - Install it as a PWA. Offline, the last known prices still show.
+- **Report a problem** (the bug icon in the header) without a GitHub account. The
+  report becomes a public GitHub issue; see [Bug reports](#bug-reports).
 
 Settings store consumption (l/100 km) and value of time. Ranking on the map and
 on a route is still by pump price.
@@ -186,6 +188,30 @@ Coordinates: OpenStreetMap. Attribute OSM, LEA, Circle K, Nord Pool / Elering, V
 Lietuva and the station chains. The charge point register is published under
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) / ODC-BY; this app
 groups its charge points into sites and shows the cheapest price per site.
+
+## Bug reports
+
+The header's bug icon opens a short form. It posts to `POST /report` on the cron
+worker (`worker/src/report.ts`), which files a GitHub issue labelled `bug` and
+`user-report` with the visitor's text and the page, language, fuel, data time,
+browser and screen size. Visitor text sits in code blocks, so it cannot @mention
+anyone or reference other repositories.
+
+The worker only takes posts from `REPORT_ORIGINS` (`worker/wrangler.jsonc`), allows 3
+reports a minute per IP and 10 a minute in total (Workers rate limiting), and
+quietly drops forms whose hidden honeypot field is filled in.
+
+Setup, once:
+
+1. The worker's `GITHUB_TOKEN` (from the `WORKFLOW_DISPATCH_TOKEN` secret) needs
+   **Issues: Read and write** on this repository besides **Actions: Read and
+   write**. A classic token with `repo` scope already has both.
+2. After the worker deploys, add a repository **variable** `REPORT_URL` set to
+   `https://kur-degalai-cron.<your-subdomain>.workers.dev/report` (the deploy log
+   prints the URL). The hourly build passes it to the site as `VITE_REPORT_URL`.
+
+Without `REPORT_URL` (local dev too), the form opens a prefilled GitHub issue
+instead, and a failed send offers the same link.
 
 ## Routing
 
