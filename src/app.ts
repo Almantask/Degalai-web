@@ -90,6 +90,7 @@ import {
   MIN_REPORT_CHARS,
   REPORT_CATEGORIES,
   REPORT_ENDPOINT,
+  REPORTS_LIST_URL,
   sendReport,
   type ReportCategory,
   type ReportContext,
@@ -236,7 +237,7 @@ interface RouteStationRow {
 
 type DestStatus = "idle" | "locating" | "routing" | "denied" | "not-found" | "via-not-found";
 type Panel = "settings" | "report";
-type ReportStatus = "idle" | "short" | "email" | "sending" | "sent" | "rate" | "failed";
+type ReportStatus = "idle" | "short" | "email" | "sending" | "sent" | "rate" | "failed" | "timeout";
 
 export async function startApp(root: HTMLElement): Promise<void> {
   // Fetch data alongside the map style and tiles instead of before them.
@@ -263,6 +264,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** Kept after a send, so a second message needs no retyping. */
   let reportEmail = "";
   let reportStatus: ReportStatus = "idle";
+  /** A send finished while the panel was shut; reopening shows its outcome once. */
+  let reportUnseen = false;
   let reportIssue: { number?: number; url?: string; imageSaved?: boolean } | null = null;
   let reportLinkCopied = false;
   /** The attached picture, already shrunk; `url` is an object URL for the preview. */
@@ -536,11 +539,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
         render();
       } else if (act === "report") {
         openPanel = openPanel === "report" ? null : "report";
-        if (reportStatus !== "sending") reportStatus = "idle";
+        if (reportUnseen) reportUnseen = false;
+        else if (reportStatus !== "sending") reportStatus = "idle";
         render();
-        root
-          .querySelector<HTMLElement>(reportCategory ? "#report-text" : "input[name='report-kind']")
-          ?.focus();
+        focusReport();
       } else if (act === "refresh") {
         tEl.setAttribute("disabled", "true");
         tEl.setAttribute("aria-busy", "true");
@@ -607,7 +609,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
     // A screenshot pasted while writing feedback becomes its picture; pasted text stays text.
     root.addEventListener("paste", (e) => {
-      if (openPanel !== "report" || !reportCategory) return;
+      if (openPanel !== "report" || !reportCategory || reportStatus === "sending") return;
       const file = [...(e.clipboardData?.files ?? [])].find((f) => f.type.startsWith("image/"));
       if (!file) return;
       e.preventDefault();
@@ -2084,6 +2086,25 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function reportHtml(): string {
     const title = escapeHtml(t("report.title"));
     const head = `<header><h2>${title}</h2><button type="button" data-act="close-panel">${escapeHtml(t("action.close"))}</button></header>`;
+    if (reportStatus === "sending") {
+      return `<section class="panel report-panel" aria-label="${title}">
+      ${head}
+      <div class="report-wait" role="status" tabindex="-1">
+        <span class="report-spinner" aria-hidden="true"></span>
+        <div>
+          <p class="report-done">${escapeHtml(t("report.waiting"))}</p>
+          <p class="hint">${escapeHtml(t("report.waitingHint"))}</p>
+        </div>
+      </div>
+    </section>`;
+    }
+    if (reportStatus === "timeout") {
+      return `<section class="panel report-panel" aria-label="${title}">
+      ${head}
+      <p class="report-done" role="status">${escapeHtml(t("report.timeout"))}</p>
+      <a class="report-issue-link" href="${REPORTS_LIST_URL}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("report.latest"))} ↗</a>
+    </section>`;
+    }
     if (reportStatus === "sent") {
       const issue = reportIssue;
       const done =
@@ -2106,7 +2127,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ${lost}
     </section>`;
     }
-    const sending = reportStatus === "sending";
     const reading = reportImageState === "reading";
     const category = reportCategory;
     const message =
@@ -2119,22 +2139,21 @@ export async function startApp(root: HTMLElement): Promise<void> {
             : reportStatus === "failed"
               ? t("report.failed")
               : "";
-    const submit = sending ? t("report.sending") : t("report.send");
     // A class as well as the radio's state, so the colour shows without :has() support too.
     const kinds = REPORT_CATEGORIES.map(
       (c) =>
-        `<label class="kind-${c}${category === c ? " on" : ""}"><input type="radio" id="report-kind-${c}" name="report-kind" value="${c}"${category === c ? " checked" : ""}${sending ? " disabled" : ""} />${escapeHtml(t(`report.kind.${c}` as MessageKey))}</label>`,
+        `<label class="kind-${c}${category === c ? " on" : ""}"><input type="radio" id="report-kind-${c}" name="report-kind" value="${c}"${category === c ? " checked" : ""} />${escapeHtml(t(`report.kind.${c}` as MessageKey))}</label>`,
     ).join("");
     const emailInvalid = reportStatus === "email";
     const fields = category
-      ? `<label>${escapeHtml(t(`report.label.${category}` as MessageKey))}<textarea id="report-text" rows="5" maxlength="${MAX_REPORT_CHARS}" placeholder="${escapeHtml(t(`report.placeholder.${category}` as MessageKey))}"${sending ? " disabled" : ""}></textarea></label>
-        ${reportImageHtml(sending)}
-        <label>${escapeHtml(t("report.email"))}<input id="report-email" type="email" inputmode="email" autocomplete="email" required maxlength="${MAX_EMAIL_CHARS}" placeholder="${escapeHtml(t("report.emailPlaceholder"))}" aria-describedby="report-email-hint"${emailInvalid ? ' aria-invalid="true"' : ""}${sending ? " disabled" : ""} /></label>
+      ? `<label>${escapeHtml(t(`report.label.${category}` as MessageKey))}<textarea id="report-text" rows="5" maxlength="${MAX_REPORT_CHARS}" placeholder="${escapeHtml(t(`report.placeholder.${category}` as MessageKey))}"></textarea></label>
+        ${reportImageHtml()}
+        <label>${escapeHtml(t("report.email"))}<input id="report-email" type="email" inputmode="email" autocomplete="email" required maxlength="${MAX_EMAIL_CHARS}" placeholder="${escapeHtml(t("report.emailPlaceholder"))}" aria-describedby="report-email-hint"${emailInvalid ? ' aria-invalid="true"' : ""} /></label>
         <p class="hint" id="report-email-hint">${escapeHtml(t("report.emailHint"))}</p>
         <div class="report-hp" aria-hidden="true"><label>Website<input id="report-website" name="website" type="text" tabindex="-1" autocomplete="off" /></label></div>
         <p class="hint">${escapeHtml(t("report.public"))}</p>
         ${message ? `<p class="report-msg" role="alert">${escapeHtml(message)}</p>` : ""}
-        <button type="submit" class="primary"${sending || reading ? " disabled" : ""}>${escapeHtml(submit)}</button>`
+        <button type="submit" class="primary"${reading ? " disabled" : ""}>${escapeHtml(t("report.send"))}</button>`
       : "";
     return `<section class="panel report-panel" aria-label="${title}">
       ${head}
@@ -2148,18 +2167,31 @@ export async function startApp(root: HTMLElement): Promise<void> {
     </section>`;
   }
 
+  /** Moves focus to whatever the report panel now shows first. */
+  function focusReport(): void {
+    const target =
+      reportStatus === "sending"
+        ? ".report-wait"
+        : reportStatus === "sent" || reportStatus === "timeout"
+          ? ".report-issue-link"
+          : reportCategory
+            ? "#report-text"
+            : "input[name='report-kind']";
+    root.querySelector<HTMLElement>(`.report-panel ${target}`)?.focus();
+  }
+
   /** Picture picker, or the chosen picture's preview. */
-  function reportImageHtml(sending: boolean): string {
+  function reportImageHtml(): string {
     if (reportImage) {
       return `<div class="report-image">
           <img src="${escapeHtml(reportImage.url)}" alt="${escapeHtml(t("report.imageAlt"))}" />
-          <button type="button" data-act="report-image-remove"${sending ? " disabled" : ""}>${escapeHtml(t("report.imageRemove"))}</button>
+          <button type="button" data-act="report-image-remove">${escapeHtml(t("report.imageRemove"))}</button>
         </div>`;
     }
     const reading = reportImageState === "reading";
     const label = t(reading ? "report.imageReading" : "report.imageAdd");
     return `<div class="report-image">
-          <button type="button" class="report-attach" data-act="report-image-pick" title="${escapeHtml(t("report.imageAddTitle"))}"${reading || sending ? " disabled" : ""}>${IMAGE_ICON}${escapeHtml(label)}</button>
+          <button type="button" class="report-attach" data-act="report-image-pick" title="${escapeHtml(t("report.imageAddTitle"))}"${reading ? " disabled" : ""}>${IMAGE_ICON}${escapeHtml(label)}</button>
           <input type="file" id="report-image" accept="image/*" hidden />
         </div>
         ${reportImageState === "failed" ? `<p class="report-msg" role="alert">${escapeHtml(t("report.imageFailed"))}</p>` : ""}`;
@@ -2237,6 +2269,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const website = root.querySelector<HTMLInputElement>("#report-website")?.value ?? "";
     reportStatus = "sending";
     renderPanels();
+    focusReport();
     let image: string | undefined;
     try {
       image = reportImage ? await blobToDataUrl(reportImage.blob) : undefined;
@@ -2258,11 +2291,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
       reportCategory = null;
       clearReportImage();
     } else {
+      // After a timeout the draft stays: the issue may not exist, and reopening shows the form.
       reportStatus = result.reason;
     }
+    reportUnseen = openPanel !== "report";
     renderPanels();
-    // The form is gone after a send: move focus to the issue link rather than losing it.
-    if (result.ok) root.querySelector<HTMLElement>(".report-issue-link")?.focus();
+    focusReport();
   }
 
   function statusHtml(): string {

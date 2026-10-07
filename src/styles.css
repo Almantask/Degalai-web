@@ -1390,6 +1390,35 @@ body,
   background: var(--green-dark);
 }
 
+.report-wait {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  outline: none;
+}
+
+.report-wait p {
+  margin: 0 0 4px;
+}
+
+.report-spinner {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  border: 3px solid var(--green-soft);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: icon-spin 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .report-spinner {
+    animation: none;
+    border-color: var(--green);
+  }
+}
+
 .report-issue-url {
   display: flex;
   flex-wrap: wrap;

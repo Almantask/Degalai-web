@@ -174,7 +174,6 @@
   "report.placeholder.feature": "E.g. tell me when the cheapest station near me drops its price.",
   "report.public": "Your text and picture are posted publicly on GitHub, with the page address, browser and screen size. Leave out personal details.",
   "report.send": "Send",
-  "report.sending": "Sending…",
   "report.short": "Please say a bit more: at least {n} characters.",
   "report.sent": "Thanks! Filed as #{n}.",
   "report.rate": "Too many messages at once. Try again in a minute.",
@@ -206,5 +205,9 @@
   "report.emailHint": "Not published. Only the site's author sees it, to reply to you.",
   "report.emailInvalid": "Enter a real email address, e.g. name@example.com.",
   "report.copyLink": "Copy link",
-  "report.copied": "Copied ✓"
+  "report.copied": "Copied ✓",
+  "report.waiting": "Sent! Waiting for it to appear on GitHub…",
+  "report.waitingHint": "If you want a link to the new issue, please wait; it can take up to a minute.",
+  "report.timeout": "No answer within a minute. Your message was most likely filed anyway; look for it among the latest reports on GitHub.",
+  "report.latest": "Latest reports on GitHub"
 }
