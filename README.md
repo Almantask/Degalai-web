@@ -42,9 +42,16 @@ minimise for a full map.
   follow that fuel.
 - **EV** shows public charging points from the national charge point register
   (Via Lietuva) and OpenStreetMap with a €/kWh price where one is known, plus
-  sockets, power and any session fee in the popup. Chargers without a price
+  sockets with their power and any session fee in the popup. Chargers without a price
   still show (grey pin, listed last). A free charger has a "?" that says why it is
   probably free (see [provider-mistakes.md](provider-mistakes.md)).
+  Under the EV chip, **Any power · 50+ kW · 150+ kW** keeps only chargers with a plug
+  that powerful (kept in the link as `?fuel=ev&kw=50`). **My car's plugs** in Settings
+  (Type 2, CCS, CHAdeMO, other) hides chargers your car cannot use. Both check each
+  plug on its own, so a site with a 22 kW Type 2 and a 150 kW CCS is not a fast Type 2.
+  With either on, a site the register prices for AC and DC apart shows and ranks by the
+  price of the plugs that fit: DC for a fast search, not its cheaper AC price.
+  Chargers of unknown power are hidden by a power filter.
   `chargers.json` loads only when you pick EV. On **History**, EV has the same
   average / min / max / median tabs per charging network (free chargers left
   out), plus a **Spot** tab with the hourly Nord Pool LT price, including

@@ -4,6 +4,7 @@ import { netBenefit } from "./calc.ts";
 import { cheapestHourRanges, filterSeries, formatCheapRanges } from "./cheap-hours.ts";
 import { swapEndpoints, type Endpoints } from "./endpoints.ts";
 import { loadAppData, lastUpdatedAt, loadChargers, loadHistory, type AppData } from "./data.ts";
+import { chargerFits, evPricesFor, isEvFilterOn, type EvFilter } from "./ev-filter.ts";
 import {
   formatDate,
   formatDateTime,
@@ -108,6 +109,7 @@ import {
   loadSettings,
   locationPositionOptions,
   MAX_DETOUR_KM_RANGE,
+  minKwFromUrl,
   saveSettings,
   uniqueBrands,
 } from "./settings.ts";
@@ -119,6 +121,7 @@ import {
   type MinimizeSign,
 } from "./sheet-gesture.ts";
 import type {
+  DailyPrices,
   FuelGroup,
   FuelType,
   HistoryFile,
@@ -126,7 +129,7 @@ import type {
   HistoryStat,
   Station,
 } from "./types.ts";
-import { DEFAULT_SETTINGS, FUEL_GROUPS, HISTORY_STATS } from "./types.ts";
+import { DEFAULT_SETTINGS, EV_MIN_KW, FUEL_GROUPS, HISTORY_STATS, PLUG_GROUPS } from "./types.ts";
 
 const DONATE_URL = "https://almantask.github.io/donate-me/";
 const LEA_SOURCE_URL = "https://degalukainos.ena.lt/";
@@ -241,6 +244,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   setLocale(locale);
   const urlFuel = fuelFromUrl(window.location.search);
   if (urlFuel) settings.fuel = urlFuel;
+  // A link that names EV carries its power preset; none means any power.
+  if (urlFuel === "EV") settings.evMinKw = minKwFromUrl(window.location.search);
 
   let view: View = parsed.view;
   let userLocation: LngLat | null = null;
@@ -294,7 +299,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let installDismissed = loadInstallDismissed();
   let installPrompt: { prompt: () => Promise<void> } | null = null;
   let listHtml = "";
-  let includedCache: { excluded: string[]; source: Station[]; stations: Station[] } | null = null;
+  let includedCache: {
+    excluded: string[];
+    source: Station[];
+    ev: EvFilter | null;
+    stations: Station[];
+  } | null = null;
+  let evPricesCache: {
+    prices: DailyPrices;
+    chargers: Station[];
+    ev: EvFilter;
+    out: DailyPrices;
+  } | null = null;
   /** EV chargers, fetched the first time the EV chip is on. */
   let chargers: Station[] | null = null;
   let chargersLoading = false;
@@ -341,6 +357,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     setLocale(locale);
     const f = fuelFromUrl(window.location.search);
     if (f) settings.fuel = f;
+    if (f === "EV") settings.evMinKw = minKwFromUrl(window.location.search);
     void ensureChargers();
     render();
     refreshMap();
@@ -476,7 +493,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         headerMinimized = false;
         openPanel = null;
         if (view === "history") historyMinimized = false;
-        navigate(view, locale, settings.fuel);
+        navigate(view, locale, settings.fuel, false, settings.evMinKw);
         render();
       } else if (act === "locale") {
         const loc = tEl.dataset.locale as Locale;
@@ -484,7 +501,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         setLocale(loc);
         settings.locale = loc;
         saveSettings(settings);
-        navigate(view, loc, settings.fuel);
+        navigate(view, loc, settings.fuel, false, settings.evMinKw);
         document.documentElement.lang = loc;
         updateHreflang();
         render();
@@ -495,6 +512,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
         settings.fuel = FUEL_BY_GROUP[g][0];
         persistFuel();
         onFuelChange();
+      } else if (act === "ev-kw") {
+        const kw = EV_MIN_KW.find((k) => String(k) === tEl.dataset.kw);
+        if (kw == null || kw === settings.evMinKw) return;
+        settings.evMinKw = kw;
+        persistFuel();
+        popup?.remove();
+        applyStationFilter();
+        render();
       } else if (act === "settings") {
         openPanel = openPanel === "settings" ? null : "settings";
         render();
@@ -651,7 +676,20 @@ export async function startApp(root: HTMLElement): Promise<void> {
         if (isEv()) settings.excludedEvBrands = [...next].sort();
         else settings.excludedBrands = [...next].sort();
         saveSettings(settings);
-        applyBrandFilter();
+        applyStationFilter();
+        return;
+      }
+      if (el.id.startsWith("set-plug-")) {
+        const off = new Set(settings.excludedPlugs);
+        const plug = PLUG_GROUPS.find((g) => g === el.dataset.plug);
+        if (!plug) return;
+        if (el.checked) off.delete(plug);
+        else off.add(plug);
+        // A new array, so the station and price caches see the change.
+        settings.excludedPlugs = PLUG_GROUPS.filter((g) => off.has(g));
+        saveSettings(settings);
+        popup?.remove();
+        applyStationFilter();
         return;
       }
       if (el.id.startsWith("set-")) saveSettings(settings);
@@ -832,7 +870,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function persistFuel(): void {
     saveSettings(settings);
-    navigate(view, locale, settings.fuel, true);
+    navigate(view, locale, settings.fuel, true, settings.evMinKw);
   }
 
   function isEv(): boolean {
@@ -856,21 +894,59 @@ export async function startApp(root: HTMLElement): Promise<void> {
     render();
   }
 
-  /** Brand filter is replaced, never mutated, so the array identity keys the cache. */
+  /** Plugs and least power for EV; null for pump fuels. */
+  function evFilter(): EvFilter | null {
+    return isEv() ? { excludedPlugs: settings.excludedPlugs, minKw: settings.evMinKw } : null;
+  }
+
+  function sameEvFilter(a: EvFilter | null, b: EvFilter | null): boolean {
+    return a?.excludedPlugs === b?.excludedPlugs && a?.minKw === b?.minKw;
+  }
+
+  /** Brand and plug filters are replaced, never mutated, so array identity keys the cache. */
   function includedStations(): Station[] {
     const source = activeStations();
     const excluded = excludedFor(settings);
-    if (includedCache?.excluded !== excluded || includedCache.source !== source) {
+    const ev = evFilter();
+    if (
+      includedCache?.excluded !== excluded ||
+      includedCache.source !== source ||
+      !sameEvFilter(includedCache.ev, ev)
+    ) {
       includedCache = {
         excluded,
         source,
-        stations: source.filter((s) => isBrandIncluded(s.brand, excluded)),
+        ev,
+        stations: source.filter(
+          (s) => isBrandIncluded(s.brand, excluded) && (!ev || chargerFits(s, ev)),
+        ),
       };
     }
     return includedCache.stations;
   }
 
-  function applyBrandFilter(): void {
+  /** Today's prices; with a plug or power filter on, chargers carry the AC or DC price that fits. */
+  function activePrices(): DailyPrices | null {
+    const ev = evFilter();
+    if (!data.prices || !chargers || !ev || !isEvFilterOn(ev)) return data.prices;
+    const c = evPricesCache;
+    if (c?.prices !== data.prices || c.chargers !== chargers || !sameEvFilter(c.ev, ev)) {
+      evPricesCache = {
+        prices: data.prices,
+        chargers,
+        ev,
+        out: evPricesFor(data.prices, chargers, ev),
+      };
+    }
+    return evPricesCache!.out;
+  }
+
+  function evFilterOn(): boolean {
+    const ev = evFilter();
+    return Boolean(ev && isEvFilterOn(ev));
+  }
+
+  function applyStationFilter(): void {
     if (routeLine) {
       void evaluateRouteStations(routeLine).then(() => {
         refreshMap();
@@ -917,7 +993,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
           ]),
         )
       : undefined;
-    setStationData(map, stations, data.prices, settings.fuel, settings, emphasis);
+    setStationData(map, stations, activePrices(), settings.fuel, settings, emphasis);
     setRouteData(map, routeLine?.geometry ?? null, routeLine ? viaGeometries() : []);
     setRouteOptions(
       map,
@@ -1108,8 +1184,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     // Dashed lines are redrawn below; until then the old picks would carry stale prices.
     dashedRows = [];
     const nearby: NearbyStation[] = [];
+    const prices = activePrices();
     for (const s of includedStations()) {
-      const price = data.prices?.prices[s.id]?.[settings.fuel]?.price;
+      const price = prices?.prices[s.id]?.[settings.fuel]?.price;
       if (price == null) continue;
       const lineKm = distanceToPolylineKm({ lat: s.lat, lon: s.lon }, res.geometry);
       if (lineKm <= DETOUR_CORRIDOR_KM) nearby.push({ station: s, price, lineKm });
@@ -1159,8 +1236,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const onWayIds = new Set(routeRows.map((r) => r.station.id));
     const ids = mapRouteStationIds(routeRows, extraMapStationIds);
     const priced: Array<{ station: Station; price: number }> = [];
+    const prices = activePrices();
     for (const s of includedStations()) {
-      const price = data.prices?.prices[s.id]?.[settings.fuel]?.price;
+      const price = prices?.prices[s.id]?.[settings.fuel]?.price;
       if (price != null && !onWayIds.has(s.id)) priced.push({ station: s, price });
     }
     const lines: Array<{ target: RouteStationRow; line: LngLat[]; candidates: DashedCandidate[] }> =
@@ -1348,7 +1426,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         DOMPurify.sanitize(
           stationPopupHtml(
             s,
-            data.prices,
+            activePrices(),
             distKm != null ? { distLabel: formatKm(distKm) } : undefined,
           ),
           { USE_PROFILES: { html: true } },
@@ -1598,16 +1676,20 @@ export async function startApp(root: HTMLElement): Promise<void> {
       return;
     }
     if (routeLine && endHit && rows.length === 0 && destStatus !== "routing") {
-      setList(listWrap([], t(isEv() ? "route.noChargers" : "route.noStations"), routeSwitchHtml()));
+      const empty = isEv()
+        ? t(evFilterOn() ? "route.noChargersFilter" : "route.noChargers")
+        : t("route.noStations");
+      setList(listWrap([], empty, routeSwitchHtml()));
       return;
     }
     if (isEv() && !chargers) {
       setList(listWrap([], t("list.loadingChargers")));
       return;
     }
+    const prices = activePrices();
     const inView = stationsInView(map, includedStations()).map((s) => ({
       s,
-      price: data.prices?.prices[s.id]?.[settings.fuel]?.price,
+      price: prices?.prices[s.id]?.[settings.fuel]?.price,
     }));
     const priced = inView
       .filter((r): r is { s: Station; price: number } => r.price != null)
@@ -1619,7 +1701,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
           .sort((a, b) => a.s.name.localeCompare(b.s.name) || a.s.id.localeCompare(b.s.id))
       : [];
     if (priced.length === 0 && unpriced.length === 0) {
-      setList(listWrap([], t(isEv() ? "list.emptyEv" : "list.empty")));
+      const empty = isEv() ? (evFilterOn() ? "list.emptyEvFilter" : "list.emptyEv") : "list.empty";
+      setList(listWrap([], t(empty)));
       return;
     }
     const last = priced.length - 1;
@@ -1761,12 +1844,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
           <a class="logo" data-act="view" data-view="map" href="${pathFor("map", locale)}">${escapeHtml(t("app.name"))}</a>
           <div class="topbar-end">
             <div class="lang">
-              <a data-act="locale" data-locale="lt" href="${escapeHtml(hrefFor(view, "lt", settings.fuel))}" hreflang="lt" class="${locale === "lt" ? "on" : ""}">LT</a>
-              <a data-act="locale" data-locale="en" href="${escapeHtml(hrefFor(view, "en", settings.fuel))}" hreflang="en" class="${locale === "en" ? "on" : ""}">EN</a>
+              <a data-act="locale" data-locale="lt" href="${escapeHtml(hrefFor(view, "lt", settings.fuel, settings.evMinKw))}" hreflang="lt" class="${locale === "lt" ? "on" : ""}">LT</a>
+              <a data-act="locale" data-locale="en" href="${escapeHtml(hrefFor(view, "en", settings.fuel, settings.evMinKw))}" hreflang="en" class="${locale === "en" ? "on" : ""}">EN</a>
             </div>
             <nav class="nav-views">
-              <a class="icon-btn ${view === "map" ? "on" : ""}" data-act="view" data-view="map" href="${escapeHtml(hrefFor("map", locale, settings.fuel))}">${escapeHtml(t("nav.stations"))}</a>
-              <a class="icon-btn ${view === "history" ? "on" : ""}" data-act="view" data-view="history" href="${escapeHtml(hrefFor("history", locale, settings.fuel))}">${escapeHtml(t("nav.history"))}</a>
+              <a class="icon-btn ${view === "map" ? "on" : ""}" data-act="view" data-view="map" href="${escapeHtml(hrefFor("map", locale, settings.fuel, settings.evMinKw))}">${escapeHtml(t("nav.stations"))}</a>
+              <a class="icon-btn ${view === "history" ? "on" : ""}" data-act="view" data-view="history" href="${escapeHtml(hrefFor("history", locale, settings.fuel, settings.evMinKw))}">${escapeHtml(t("nav.history"))}</a>
             </nav>
             <a class="icon-btn donate-btn" href="${DONATE_URL}" target="_blank" rel="noopener noreferrer">
               ${DONATE_HEART}
@@ -1785,6 +1868,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
               `<button type="button" class="${g === group ? "on" : ""}" data-act="fuel-group" data-group="${group}">${escapeHtml(t(`fuel.group.${group}` as MessageKey))}</button>`,
           ).join("")}
         </div>
+        ${isEv() && view === "map" ? evPowerHtml() : ""}
         <div class="dest">
           <div class="dest-field">
             <span class="dest-pin dest-pin-start" aria-hidden="true"></span>
@@ -1807,6 +1891,30 @@ export async function startApp(root: HTMLElement): Promise<void> {
         <span class="header-chevron" aria-hidden="true">${headerMinimized ? "▾" : "▴"}</span>
       </button>
     `;
+  }
+
+  /** Any power, fast or ultra-fast: a per-trip choice, so it sits under the EV chip. */
+  function evPowerHtml(): string {
+    const chips = EV_MIN_KW.map((kw) => {
+      const on = settings.evMinKw === kw;
+      const label = kw === 0 ? t("ev.power.any") : t("ev.power.min", { kw });
+      const title = kw === 0 ? "" : ` title="${escapeHtml(t("ev.power.hint"))}"`;
+      return `<button type="button" class="${on ? "on" : ""}" data-act="ev-kw" data-kw="${kw}" aria-pressed="${on ? "true" : "false"}"${title}>${escapeHtml(label)}</button>`;
+    });
+    return `<div class="ev-power" role="group" aria-label="${escapeHtml(t("ev.power"))}">${chips.join("")}</div>`;
+  }
+
+  /** The car's plugs rarely change, so they live in Settings next to the networks. */
+  function plugsHtml(): string {
+    const checks = PLUG_GROUPS.map((plug) => {
+      const on = !settings.excludedPlugs.includes(plug);
+      return `<label class="check"><input id="set-plug-${plug}" data-plug="${plug}" type="checkbox"${on ? " checked" : ""} />${escapeHtml(t(`plug.${plug}`))}</label>`;
+    }).join("");
+    return `<fieldset class="brand-filter plug-filter">
+        <legend>${escapeHtml(t("settings.plugs"))}</legend>
+        ${checks}
+        <p class="hint">${escapeHtml(t("settings.plugsHint"))}</p>
+      </fieldset>`;
   }
 
   function settingsHtml(): string {
@@ -1859,6 +1967,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         <label class="check"><input id="set-high-accuracy" type="checkbox"${settings.highAccuracyLocation ? " checked" : ""} />${escapeHtml(t("settings.highAccuracy"))}</label>
         <p class="hint">${escapeHtml(t("settings.highAccuracyHint"))}</p>
       </div>
+      ${ev ? plugsHtml() : ""}
       <fieldset class="brand-filter">
         <legend>${escapeHtml(t(ev ? "settings.networks" : "settings.providers"))}</legend>
         ${checks}

@@ -6,6 +6,7 @@ import {
   fuelToUrl,
   isBrandIncluded,
   locationPositionOptions,
+  minKwFromUrl,
   sanitizeSettings,
   uniqueBrands,
 } from "../src/settings.ts";
@@ -35,6 +36,8 @@ describe("sanitizeSettings", () => {
         highAccuracyLocation: false,
         excludedBrands: ["viada"],
         excludedEvBrands: ["in-balance-grid"],
+        excludedPlugs: ["chademo"],
+        evMinKw: 50,
         locale: "en",
       }),
     ).toEqual({
@@ -53,6 +56,8 @@ describe("sanitizeSettings", () => {
       highAccuracyLocation: false,
       excludedBrands: ["viada"],
       excludedEvBrands: ["in-balance-grid"],
+      excludedPlugs: ["chademo"],
+      evMinKw: 50,
       historyStat: "avg",
       locale: "en",
     });
@@ -72,6 +77,18 @@ describe("sanitizeSettings", () => {
     expect(s.evConsumption).toBe(40);
     expect(s.evKwh).toBe(5);
     expect(sanitizeSettings({}).evConsumption).toBe(17);
+  });
+
+  it("keeps known plugs once in a fixed order and only the offered power presets", () => {
+    expect(sanitizeSettings({}).excludedPlugs).toEqual([]);
+    expect(
+      sanitizeSettings({ excludedPlugs: ["other", "type2", "type2", "<b>", 3] }).excludedPlugs,
+    ).toEqual(["type2", "other"]);
+    expect(sanitizeSettings({ excludedPlugs: "ccs" }).excludedPlugs).toEqual([]);
+    expect(sanitizeSettings({}).evMinKw).toBe(0);
+    expect(sanitizeSettings({ evMinKw: 150 }).evMinKw).toBe(150);
+    expect(sanitizeSettings({ evMinKw: "50" }).evMinKw).toBe(50);
+    expect(sanitizeSettings({ evMinKw: 75 }).evMinKw).toBe(0);
   });
 
   it("defaults the on-the-way detour to 1 km and keeps it between 0.1 and 4 km", () => {
@@ -167,5 +184,15 @@ describe("fuelFromUrl", () => {
     expect(fuelFromUrl("?fuel=ev")).toBe("EV");
     expect(fuelToUrl("EV")).toBe("ev");
     expect(fuelFromUrl(`?fuel=" onclick="alert(1)`)).toBeNull();
+  });
+});
+
+describe("minKwFromUrl", () => {
+  it("reads the 50 and 150 kW presets and treats anything else as any power", () => {
+    expect(minKwFromUrl("?fuel=ev&kw=50")).toBe(50);
+    expect(minKwFromUrl("?fuel=ev&kw=150")).toBe(150);
+    expect(minKwFromUrl("?fuel=ev")).toBe(0);
+    expect(minKwFromUrl("?fuel=ev&kw=75")).toBe(0);
+    expect(minKwFromUrl(`?kw=" onclick="alert(1)`)).toBe(0);
   });
 });

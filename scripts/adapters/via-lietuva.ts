@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import ExcelJS from "exceljs";
 import { normalizeBrand } from "../../src/brands.ts";
 import { round3 } from "../../src/calc.ts";
+import { addSocketKw } from "../../src/ev-filter.ts";
 import { haversineKm, inLithuania } from "../../src/geo.ts";
 import type { ChargerInfo, Station } from "../../src/types.ts";
 import { FETCH_UA } from "./types.ts";
@@ -236,6 +237,7 @@ function foldMisplaced(drafts: SiteDraft[]): SiteDraft[] {
       for (const k of d.station.ev!.sockets) if (!ev.sockets.includes(k)) ev.sockets.push(k);
       const kw = d.station.ev!.maxKw;
       if (kw != null && (ev.maxKw == null || kw > ev.maxKw)) ev.maxKw = kw;
+      for (const [k, v] of Object.entries(d.station.ev!.kwBySocket ?? {})) addSocketKw(ev, k, v);
       folded.add(d);
     }
   }
@@ -305,12 +307,13 @@ export function parseRegisterRows(rows: string[][]): Station[] {
     if (stationId) site.stations.add(stationId);
     const ev = site.station.ev!;
     const socket = get("connector");
-    if (socket) {
-      const k = socketKey(socket);
-      if (!ev.sockets.includes(k)) ev.sockets.push(k);
-    }
+    const k = socket ? socketKey(socket) : undefined;
+    if (k && !ev.sockets.includes(k)) ev.sockets.push(k);
     const kw = num(get("maxPower"));
-    if (kw != null && kw > 0 && (ev.maxKw == null || kw > ev.maxKw)) ev.maxKw = kw;
+    if (kw != null && kw > 0) {
+      if (ev.maxKw == null || kw > ev.maxKw) ev.maxKw = kw;
+      if (k) addSocketKw(ev, k, kw);
+    }
     const price = parseRegisterPrice(get("price"));
     if (price.kwh != null) (/nuolat/i.test(get("current")) ? site.dc : site.ac).push(price.kwh);
     if (price.sessionFee != null) site.fees.push(price.sessionFee);

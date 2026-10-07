@@ -57,20 +57,33 @@ function fuelQueryParam(fuel: FuelType): string | null {
   return null;
 }
 
-export function hrefFor(view: View, locale: Locale, fuel?: FuelType): string {
-  const path = pathFor(view, locale);
-  if (!fuel) return path;
-  const q = fuelQueryParam(fuel);
-  if (!q) return path;
-  const sep = path.includes("?") ? "&" : "?";
-  return `${path}${sep}fuel=${q}`;
+/** `fuel=…`, plus `kw=…` for an EV power preset. */
+function searchParams(fuel: FuelType | undefined, minKw: number): URLSearchParams {
+  const params = new URLSearchParams();
+  const q = fuel ? fuelQueryParam(fuel) : null;
+  if (q) params.set("fuel", q);
+  if (fuel === "EV" && (minKw === 50 || minKw === 150)) params.set("kw", String(minKw));
+  return params;
 }
 
-export function navigate(view: View, locale: Locale, fuel?: FuelType, replace = false): void {
+export function hrefFor(view: View, locale: Locale, fuel?: FuelType, minKw = 0): string {
+  const path = pathFor(view, locale);
+  const q = searchParams(fuel, minKw).toString();
+  if (!q) return path;
+  const sep = path.includes("?") ? "&" : "?";
+  return `${path}${sep}${q}`;
+}
+
+export function navigate(
+  view: View,
+  locale: Locale,
+  fuel?: FuelType,
+  replace = false,
+  minKw = 0,
+): void {
   const path = pathFor(view, locale);
   const url = new URL(path, window.location.origin);
-  const q = fuel ? fuelQueryParam(fuel) : null;
-  if (q) url.searchParams.set("fuel", q);
+  url.search = searchParams(fuel, minKw).toString();
   if (replace) history.replaceState({ view, locale }, "", url);
   else history.pushState({ view, locale }, "", url);
   setLocale(locale);

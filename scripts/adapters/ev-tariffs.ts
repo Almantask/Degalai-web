@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { normalizeBrand } from "../../src/brands.ts";
+import { isDcSocket } from "../../src/ev-filter.ts";
 import type { DailyPrices, Station } from "../../src/types.ts";
 import { PRICE_RANGE } from "../validate.ts";
 import { VIA_LIETUVA_SOURCE } from "./via-lietuva.ts";
@@ -23,7 +24,6 @@ export const EV_TARIFF_SOURCE = "ev-tariff";
 export const OSM_CHARGE_SOURCE = "osm-charge";
 /** A charger this powerful, or with a CCS / CHAdeMO socket, is priced at the DC tariff. */
 export const DC_MIN_KW = 50;
-const DC_SOCKETS = new Set(["type2_combo", "chademo", "tesla_supercharger"]);
 
 export function loadEvTariffs(path: string): EvTariff[] {
   if (!existsSync(path)) return [];
@@ -43,7 +43,7 @@ function isTariff(value: unknown): value is EvTariff {
 
 export function isDcCharger(s: Station): boolean {
   if (s.ev?.maxKw != null && s.ev.maxKw >= DC_MIN_KW) return true;
-  return Boolean(s.ev?.sockets.some((k) => DC_SOCKETS.has(k)));
+  return Boolean(s.ev?.sockets.some(isDcSocket));
 }
 
 function inRange(price: number): boolean {

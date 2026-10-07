@@ -182,5 +182,17 @@
   "report.imageRemove": "Pašalinti",
   "report.imageAlt": "Pridėtas paveikslėlis",
   "report.imageFailed": "Šio paveikslėlio atidaryti nepavyko. Pabandykite PNG arba JPEG.",
-  "report.imageLost": "Paveikslėlio išsaugoti nepavyko – galite jį pridėti GitHub'e."
+  "report.imageLost": "Paveikslėlio išsaugoti nepavyko – galite jį pridėti GitHub'e.",
+  "ev.power": "Įkrovimo galia",
+  "ev.power.any": "Bet kokia galia",
+  "ev.power.min": "{kw}+ kW",
+  "ev.power.hint": "Tik stotelės su bent tokios galios jungtimi. Nežinomos galios stotelės paslepiamos.",
+  "settings.plugs": "Mano automobilio jungtys",
+  "settings.plugsHint": "Rodomos tik stotelės su viena iš šių jungčių. Atžymėjus jungtį, paslepiamos ir stotelės be duomenų apie jungtis.",
+  "plug.type2": "Type 2 (AC)",
+  "plug.ccs": "CCS (DC)",
+  "plug.chademo": "CHAdeMO (DC)",
+  "plug.other": "Kitos (Tesla, Type 1, Schuko)",
+  "list.emptyEvFilter": "Šiame vaizde nėra stotelių, atitinkančių jungties ir galios filtrą.",
+  "route.noChargersFilter": "Šalia maršruto nėra stotelių, atitinkančių jungties ir galios filtrą."
 }

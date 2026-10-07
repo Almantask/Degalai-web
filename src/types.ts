@@ -45,6 +45,8 @@ export interface ChargerInfo {
   sockets: string[];
   /** Highest output in kW across sockets, when tagged. */
   maxKw?: number;
+  /** Highest output in kW of each socket kind, e.g. `{ type2: 22, type2_combo: 150 }`. */
+  kwBySocket?: Record<string, number>;
   /** Network or operator as tagged in OSM. */
   network?: string;
   /** Price in €/kWh parsed from the OSM `charge` tag. */
@@ -62,6 +64,14 @@ export interface ChargerInfo {
 /** Likely reason a register charger is free, read from its owner and site (`free.*` messages). */
 export type FreeReason =
   "municipal" | "powerPlant" | "airport" | "fleet" | "workplace" | "networkPaid" | "unknown";
+
+/** Plug choices in the EV settings; `other` is Tesla, Type 1, CCS1, Schuko and CEE. */
+export const PLUG_GROUPS = ["type2", "ccs", "chademo", "other"] as const;
+export type PlugGroup = (typeof PLUG_GROUPS)[number];
+
+/** Charging power presets on the EV chip row: any, fast and ultra-fast. */
+export const EV_MIN_KW = [0, 50, 150] as const;
+export type EvMinKw = (typeof EV_MIN_KW)[number];
 
 export interface PriceEntry {
   price: number;
@@ -187,6 +197,10 @@ export interface UserSettings {
   excludedBrands: string[];
   /** Charging networks the user turned off; kept apart so EV and fuel filters never mix. */
   excludedEvBrands: string[];
+  /** Plugs the user's car cannot take. Empty means any plug. */
+  excludedPlugs: PlugGroup[];
+  /** Only chargers with a fitting plug this powerful (kW); 0 means any power. */
+  evMinKw: EvMinKw;
   /** Statistic plotted on the history chart. */
   historyStat: HistoryStat;
   locale?: "lt" | "en";
@@ -208,6 +222,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   highAccuracyLocation: true,
   excludedBrands: [],
   excludedEvBrands: [],
+  excludedPlugs: [],
+  evMinKw: 0,
   historyStat: "avg",
 };
 

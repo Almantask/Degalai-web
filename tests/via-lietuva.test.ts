@@ -126,6 +126,7 @@ describe("parseRegisterRows", () => {
       ev: {
         sockets: ["type2", "type2_combo"],
         maxKw: 150,
+        kwBySocket: { type2: 22, type2_combo: 150 },
         network: "Inbalance grid",
         registerPrice: 0.28,
         prices: { ac: 0.28, dc: 0.39 },
@@ -334,6 +335,20 @@ describe("mergeChargers", () => {
     lon: 25.2808,
     sourceIds: { osm: "node/4" },
   };
+
+  it("fills a register site's missing socket power from OSM but keeps its own", () => {
+    const register: Station = {
+      ...site,
+      ev: { sockets: ["type2", "type2_combo"], maxKw: 150, kwBySocket: { type2_combo: 150 } },
+    };
+    const osm: Station = {
+      ...near,
+      ev: { sockets: ["type2", "type2_combo"], kwBySocket: { type2: 22, type2_combo: 50 } },
+    };
+    const [merged] = mergeChargers([register], [osm]).chargers;
+    expect(merged!.ev!.kwBySocket).toEqual({ type2_combo: 150, type2: 22 });
+    expect(register.ev!.kwBySocket).toEqual({ type2_combo: 150 });
+  });
 
   it("treats an OSM point up to 300 m away as the same site", () => {
     const { chargers, osmOnly } = mergeChargers([site], [carPark, nextDoor]);

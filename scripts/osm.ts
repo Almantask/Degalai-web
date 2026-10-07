@@ -209,6 +209,7 @@ function toCharger(el: OverpassEl): Station | null {
   const { address, city } = osmAddress(tags);
   const chargeTag = parseChargeTag(tags.charge);
   const maxKw = chargerMaxKw(tags);
+  const kwBySocket = chargerKwBySocket(tags);
   return {
     id: `ev:${el.type}:${el.id}`,
     name,
@@ -222,6 +223,7 @@ function toCharger(el: OverpassEl): Station | null {
     ev: {
       sockets: chargerSockets(tags),
       ...(maxKw != null ? { maxKw } : {}),
+      ...(Object.keys(kwBySocket).length ? { kwBySocket } : {}),
       ...(network ? { network } : {}),
       ...(chargeTag != null ? { chargeTag } : {}),
     },
@@ -252,6 +254,20 @@ export function chargerMaxKw(tags: Record<string, string>): number | undefined {
     }
   }
   return max;
+}
+
+/** Highest output of each socket kind from `socket:<kind>:output` (`22 kW`, `50000 W`). */
+export function chargerKwBySocket(tags: Record<string, string>): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [k, v] of Object.entries(tags)) {
+    const socket = k.match(/^socket:([a-z0-9_]+):output$/)?.[1];
+    if (!socket) continue;
+    for (const part of v.split(";")) {
+      const kw = parsePowerKw(part);
+      if (kw != null && (out[socket] == null || kw > out[socket])) out[socket] = kw;
+    }
+  }
+  return out;
 }
 
 function parsePowerKw(value: string): number | undefined {

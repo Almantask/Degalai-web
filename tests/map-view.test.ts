@@ -273,6 +273,19 @@ describe("charger popup", () => {
   it("dedupes socket names", () => {
     expect(socketLabels(["type2", "type2_cable", "chademo"])).toEqual(["Type 2", "CHAdeMO"]);
   });
+
+  it("gives each socket its own power when known, and drops a repeated top power", () => {
+    expect(
+      socketLabels(["type2", "type2_cable", "type2_combo"], { type2: 11, type2_cable: 22 }),
+    ).toEqual(["Type 2 22 kW", "CCS"]);
+    setLocale("en");
+    const html = stationPopupHtml(
+      { ...charger, ev: { ...charger.ev!, kwBySocket: { type2: 22, type2_combo: 150 } } },
+      null,
+    );
+    expect(html).toContain("Type 2 22 kW, CCS 150 kW");
+    expect(html).not.toContain("up to");
+  });
 });
 
 describe("percentile", () => {

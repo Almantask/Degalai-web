@@ -631,21 +631,30 @@ const SOCKET_NAMES: Record<string, string> = {
   cee_red_32a: "CEE",
 };
 
-export function socketLabels(sockets: readonly string[]): string[] {
-  const out: string[] = [];
+/** Socket names, each once, with the top kW when the site gives it per socket: `CCS 150 kW`. */
+export function socketLabels(
+  sockets: readonly string[],
+  kwBySocket: Readonly<Record<string, number>> = {},
+): string[] {
+  const kw = new Map<string, number | undefined>();
   for (const k of sockets) {
     const label = SOCKET_NAMES[k] ?? k.replaceAll("_", " ");
-    if (!out.includes(label)) out.push(label);
+    const v = kwBySocket[k];
+    const prev = kw.get(label);
+    if (!kw.has(label) || (v != null && (prev == null || v > prev))) kw.set(label, v);
   }
-  return out;
+  return [...kw].map(([label, v]) => (v != null ? `${label} ${v} kW` : label));
 }
 
 function chargerDetailsHtml(s: Station, prices: DailyPrices | null): string {
   const ev = s.ev;
   if (!ev) return "";
+  const labels = socketLabels(ev.sockets, ev.kwBySocket);
+  // Once a socket shows the site's top power, "up to" would only repeat it.
+  const maxShown = ev.sockets.some((k) => ev.kwBySocket?.[k] === ev.maxKw);
   const parts = [
-    socketLabels(ev.sockets).join(", "),
-    ev.maxKw != null ? t("popup.maxKw", { kw: ev.maxKw }) : "",
+    labels.join(", "),
+    ev.maxKw != null && !maxShown ? t("popup.maxKw", { kw: ev.maxKw }) : "",
   ].filter(Boolean);
   const entry = prices?.prices[s.id]?.EV;
   const source = entry?.source;

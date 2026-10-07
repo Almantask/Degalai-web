@@ -10,6 +10,14 @@ describe("hrefFor", () => {
     expect(hrefFor("history", "en", "EV")).toMatch(/\/en\/history\?fuel=ev$/);
   });
 
+  it("adds the EV power preset, and only for EV", () => {
+    expect(hrefFor("map", "lt", "EV", 50)).toMatch(/\?fuel=ev&kw=50$/);
+    expect(hrefFor("map", "en", "EV", 150)).toMatch(/\/en\/\?fuel=ev&kw=150$/);
+    expect(hrefFor("map", "lt", "EV", 0)).toMatch(/\?fuel=ev$/);
+    expect(hrefFor("map", "lt", "D", 50)).toMatch(/\?fuel=diesel$/);
+    expect(hrefFor("map", "lt", "EV", 75)).toMatch(/\?fuel=ev$/);
+  });
+
   it("ignores unknown fuel values instead of interpolating them", () => {
     const href = hrefFor("map", "lt", `" onclick="alert(1)` as unknown as FuelType);
     expect(href).not.toMatch(/onclick/i);

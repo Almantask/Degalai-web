@@ -1,5 +1,6 @@
 import {
   assertHealthyOsmCount,
+  chargerKwBySocket,
   chargerMaxKw,
   chargerSockets,
   chooseOsmStations,
@@ -136,6 +137,17 @@ describe("charger tags", () => {
     expect(chargerMaxKw({ "socket:type2:output": "11000 W" })).toBe(11);
     expect(chargerMaxKw({ "socket:chademo:output": "50kW;25 kW" })).toBe(50);
     expect(chargerMaxKw({ "socket:type2:output": "fast" })).toBeUndefined();
+  });
+
+  it("reads each socket kind's power apart from the station total", () => {
+    expect(
+      chargerKwBySocket({
+        "socket:type2:output": "22 kW",
+        "socket:type2_combo:output": "150 kW;50 kW",
+        "charging_station:output": "172 kW",
+        "socket:chademo:output": "fast",
+      }),
+    ).toEqual({ type2: 22, type2_combo: 150 });
   });
 
   it("skips sockets tagged as absent", () => {
