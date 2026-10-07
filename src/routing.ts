@@ -76,20 +76,27 @@ export interface RouteResult {
   distanceKm: number;
   durationMin: number;
   profile: "shortest" | "fastest";
+  /** The point the driver placed for the route to pass, when there is one. */
+  via?: LngLat;
+}
+
+/** A point the route passes on its way; a station (`curb`) is reached on the driver's side. */
+export interface Waypoint extends LngLat {
+  curb?: boolean;
 }
 
 export async function fetchRoute(
   start: LngLat,
   end: LngLat,
   preference: "shortest" | "fastest",
-  via?: LngLat,
+  via: Waypoint[] = [],
 ): Promise<RouteResult | null> {
   const orsKey = import.meta.env.VITE_ORS_KEY as string | undefined;
   if (orsKey) {
-    const ors = await openRoute(start, end, preference, orsKey, via);
+    const ors = await openRoute([start, ...via, end], preference, orsKey);
     if (ors) return ors;
   }
-  const [osrm] = await osrmRoutes(start, end, via);
+  const [osrm] = await osrmRoutes([start, ...via, end]);
   return osrm ?? null;
 }
 
@@ -98,34 +105,36 @@ export const MAX_ROUTES = 3;
 
 /**
  * The route and, from OSRM, up to two alternatives, best first; empty when routing fails.
- * OpenRouteService answers with its one route.
+ * OpenRouteService answers with its one route, and so does a route that must pass `via`: OSRM
+ * looks for alternatives only between two points.
  */
 export async function fetchRoutes(
   start: LngLat,
   end: LngLat,
   preference: "shortest" | "fastest",
+  via?: LngLat,
 ): Promise<RouteResult[]> {
+  if (via) {
+    const route = await fetchRoute(start, end, preference, [via]);
+    return route ? [{ ...route, via }] : [];
+  }
   const orsKey = import.meta.env.VITE_ORS_KEY as string | undefined;
   if (orsKey) {
-    const ors = await openRoute(start, end, preference, orsKey);
+    const ors = await openRoute([start, end], preference, orsKey);
     if (ors) return [ors];
   }
-  const routes = await osrmRoutes(start, end, undefined, MAX_ROUTES - 1);
+  const routes = await osrmRoutes([start, end], MAX_ROUTES - 1);
   if (routes.length) return routes.slice(0, MAX_ROUTES);
   // A server that refuses alternatives still answers a plain route.
-  return osrmRoutes(start, end);
+  return osrmRoutes([start, end]);
 }
 
-async function osrmRoutes(
-  start: LngLat,
-  end: LngLat,
-  via?: LngLat,
-  alternatives = 0,
-): Promise<RouteResult[]> {
-  const parts = [start, via, end].filter(Boolean) as LngLat[];
-  const coords = parts.map((p) => `${p.lon},${p.lat}`).join(";");
+async function osrmRoutes(points: Waypoint[], alternatives = 0): Promise<RouteResult[]> {
+  const coords = points.map((p) => `${p.lon},${p.lat}`).join(";");
   // Reach a station with it on the driver's side, as fetchDetours does.
-  const approaches = via ? "&approaches=unrestricted;curb;unrestricted" : "";
+  const approaches = points.some((p) => p.curb)
+    ? `&approaches=${points.map((p) => (p.curb ? "curb" : "unrestricted")).join(";")}`
+    : "";
   const alts = alternatives > 0 ? `&alternatives=${alternatives}` : "";
   const url = `${OSRM}/route/v1/driving/${coords}?overview=full&geometries=geojson${approaches}${alts}`;
   try {
@@ -151,13 +160,11 @@ async function osrmRoutes(
 }
 
 async function openRoute(
-  start: LngLat,
-  end: LngLat,
+  points: LngLat[],
   preference: "shortest" | "fastest",
   key: string,
-  via?: LngLat,
 ): Promise<RouteResult | null> {
-  const coords = [start, via, end].filter(Boolean).map((p) => [p!.lon, p!.lat]);
+  const coords = points.map((p) => [p.lon, p.lat]);
   try {
     const res = await fetch("https://api.openrouteservice.org/v2/directions/driving-car/geojson", {
       method: "POST",

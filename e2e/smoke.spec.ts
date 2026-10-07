@@ -1343,3 +1343,110 @@ test.describe("route fields", () => {
     await expect(dest).toHaveValue("");
   });
 });
+
+test.describe("point the route must pass", () => {
+  test.use({ serviceWorkers: "block" });
+
+  test("places a point under From / To, routes through it, and removes it", async ({ page }) => {
+    await page.addInitScript(() => {
+      const pos = {
+        coords: {
+          latitude: 54.687,
+          longitude: 25.28,
+          accuracy: 10,
+          altitude: null,
+          altitudeAccuracy: null,
+          heading: null,
+          speed: null,
+        },
+        timestamp: Date.now(),
+      };
+      navigator.geolocation.getCurrentPosition = (ok) => ok(pos as GeolocationPosition);
+    });
+    await page.route("https://photon.komoot.io/**", async (route) => {
+      const reverse = route.request().url().includes("/reverse");
+      await route.fulfill({
+        json: {
+          features: [
+            reverse
+              ? { geometry: { coordinates: [25.28, 54.687] }, properties: { name: "Vilnius" } }
+              : { geometry: { coordinates: [23.9, 54.9] }, properties: { name: "Kaunas" } },
+          ],
+        },
+      });
+    });
+    /** Route requests: their waypoints and whether stations are reached on the curb side. */
+    const asked: Array<{ points: LonLat[]; curb: boolean }> = [];
+    await page.route("https://router.project-osrm.org/**", async (route) => {
+      const url = route.request().url();
+      if (url.includes("/table/")) {
+        await route.fulfill({ json: osrmTable(url) });
+        return;
+      }
+      const u = new URL(url);
+      const points = u.pathname
+        .split("/driving/")[1]
+        .split(";")
+        .map((c) => c.split(",").map(Number) as LonLat);
+      asked.push({ points, curb: (u.searchParams.get("approaches") ?? "").includes("curb") });
+      // Straight from waypoint to waypoint, through the middle of Lithuania without a via.
+      const line = points.length === 2 ? [points[0], [24.6, 54.8] as LonLat, points[1]] : points;
+      const distance = line.slice(1).reduce((m, p, i) => m + haversineM(line[i], p), 0);
+      await route.fulfill({
+        json: {
+          code: "Ok",
+          routes: [{ distance, duration: distance / 20, geometry: { coordinates: line } }],
+        },
+      });
+    });
+    await page.goto("/");
+    const label = page.getByText("Pakeiskite maršrutą pridėdami tašką, per kurį jis turi eiti");
+    const add = page.getByRole("button", { name: "Pridėti tašką" });
+    await expect(label).toBeVisible();
+    // No route to change yet.
+    await expect(add).toBeDisabled();
+
+    const dest = page.locator("#dest");
+    await dest.fill("Kaunas");
+    await dest.press("Enter");
+    await expect(page.locator(".app")).toHaveClass(/has-route/, { timeout: 15_000 });
+    await expect(page.locator(".maplibregl-marker")).toHaveCount(2);
+
+    await page.locator(".header-toggle").click();
+    await expect(add).toBeEnabled();
+    await add.click();
+    await expect(page.locator(".app")).toHaveClass(/is-picking/);
+    await expect(page.locator("#header")).toHaveClass(/is-min/);
+    await expect(
+      page.getByText("Bakstelėkite žemėlapį ten, kur maršrutas turi eiti."),
+    ).toBeVisible();
+
+    const before = asked.length;
+    const box = (await page.locator("#map").boundingBox())!;
+    await page.mouse.click(box.x + box.width * 0.4, box.y + box.height * 0.5);
+    await expect(page.locator(".via-marker")).toHaveCount(1);
+    await expect(page.locator(".app")).not.toHaveClass(/is-picking/);
+    await expect(page.locator(".app")).toHaveClass(/has-route/, { timeout: 15_000 });
+    await expect(page.locator(".maplibregl-marker")).toHaveCount(3);
+
+    // One route through the point, which any side of the road reaches.
+    const through = asked.slice(before).find((r) => !r.curb);
+    expect(through?.points).toHaveLength(3);
+    const placed = through!.points[1];
+    // Every dashed route through a station passes the point too.
+    await expect.poll(() => asked.slice(before).filter((r) => r.curb).length).toBeGreaterThan(0);
+    for (const r of asked.slice(before).filter((x) => x.curb)) {
+      expect(r.points).toHaveLength(4);
+      expect(r.points).toContainEqual(placed);
+    }
+
+    await page.locator(".header-toggle").click();
+    await expect(page.getByRole("button", { name: "Perkelti tašką" })).toBeEnabled();
+    const afterVia = asked.length;
+    await page.getByRole("button", { name: "Pašalinti tašką" }).click();
+    await expect(page.locator(".via-marker")).toHaveCount(0);
+    await expect(page.locator(".maplibregl-marker")).toHaveCount(2);
+    await expect.poll(() => asked.slice(afterVia).some((r) => r.points.length === 2)).toBe(true);
+    await expect(page.getByRole("button", { name: "Pašalinti tašką" })).toHaveCount(0);
+  });
+});

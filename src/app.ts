@@ -73,6 +73,7 @@ import {
   type Detour,
   type GeoHit,
   type RouteResult,
+  type Waypoint,
 } from "./routing.ts";
 import {
   installOffer,
@@ -233,7 +234,7 @@ interface RouteStationRow {
   viaExtraMin?: number;
 }
 
-type DestStatus = "idle" | "locating" | "routing" | "denied" | "not-found";
+type DestStatus = "idle" | "locating" | "routing" | "denied" | "not-found" | "via-not-found";
 type Panel = "settings" | "report";
 type ReportStatus = "idle" | "short" | "email" | "sending" | "sent" | "rate" | "failed";
 
@@ -251,7 +252,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   let view: View = parsed.view;
   let userLocation: LngLat | null = null;
-  let pickMode: "dest-start" | null = null;
+  /** The next map tap sets the start, or the point the route must pass. */
+  let pickMode: "dest-start" | "via" | null = null;
   let openPanel: Panel | null = null;
   /** Panel markup last written, so a re-render does not wipe the focus or a half-typed report. */
   let panelsHtml = "";
@@ -301,6 +303,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let locateStatus: "idle" | "pending" | "denied" | "outside" = "idle";
   let startMarker: maplibregl.Marker | null = null;
   let endMarker: maplibregl.Marker | null = null;
+  /** A point the driver placed for the route to pass. */
+  let viaPoint: LngLat | null = null;
+  let viaMarker: maplibregl.Marker | null = null;
   let installDismissed = loadInstallDismissed();
   let installPrompt: { prompt: () => Promise<void> } | null = null;
   let listHtml = "";
@@ -337,6 +342,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         if (dataReady) handleMapPick(ll);
       },
       onRouteClick: (index) => void chooseRoute(index),
+      isPicking: () => pickMode === "via",
     },
     settings.highAccuracyLocation,
   );
@@ -552,6 +558,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
         clearStart();
       } else if (act === "swap-dest") {
         swapStartAndDestination();
+      } else if (act === "pick-via") {
+        togglePickVia();
+      } else if (act === "clear-via") {
+        clearVia();
       } else if (act === "toggle-list") {
         listMinimized = !listMinimized;
         renderList();
@@ -859,7 +869,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     routeRows = [];
     dashedRows = [];
     extraMapStationIds = new Set();
-    pickMode = pickMode === "dest-start" ? null : pickMode;
+    pickMode = null;
+    viaPoint = null;
+    setViaMarker(null);
     headerMinimized = false;
     listMinimized = false;
     setRouteData(map, null);
@@ -1120,14 +1132,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     pendingDest = false;
     pickMode = null;
     render();
-    const routes = await fetchRoutes(start, end, settings.routePreference);
+    const routes = await fetchRoutes(start, end, settings.routePreference, viaPoint ?? undefined);
     routeLine = null;
     routeOptions = routes;
     routeRows = [];
     dashedRows = [];
     extraMapStationIds = new Set();
     if (!routes.length) {
-      destStatus = "not-found";
+      destStatus = viaPoint ? "via-not-found" : "not-found";
       setEndpointMarkers(null, null);
       refreshMap();
       render();
@@ -1334,7 +1346,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const start = res.geometry[0];
     const end = res.geometry[res.geometry.length - 1];
     if (!start || !end) return;
-    const via = { lat: row.station.lat, lon: row.station.lon };
+    const stop: Waypoint = { lat: row.station.lat, lon: row.station.lon, curb: true };
+    const via = routeStops(res, stop, row.distFromStartKm);
     const viaRoute = await fetchRoute(start, end, settings.routePreference, via);
     if (viaRoute) {
       row.viaExtraKm = Math.max(0, viaRoute.distanceKm - res.distanceKm);
@@ -1345,11 +1358,27 @@ export async function startApp(root: HTMLElement): Promise<void> {
       }
       row.viaGeometry = viaRoute.geometry;
     } else {
-      row.viaGeometry = [start, via, end];
+      row.viaGeometry = [start, ...via, end];
     }
   }
 
+  /** The station and the point the route must pass, in the order the route reaches them. */
+  function routeStops(res: RouteResult, stop: Waypoint, stopKm: number): Waypoint[] {
+    if (!res.via) return [stop];
+    const nearest = nearestPointOnPolyline(res.via, res.geometry);
+    const viaKm = distanceAlongLineKm(res.geometry, nearest.index, nearest.point);
+    return stopKm < viaKm ? [stop, res.via] : [res.via, stop];
+  }
+
   function handleMapPick(ll: LngLat): void {
+    if (pickMode === "via") {
+      if (!inLithuania(ll)) return;
+      viaPoint = ll;
+      pickMode = null;
+      setViaMarker(ll);
+      void runRoute();
+      return;
+    }
     if (pickMode === "dest-start" || (pendingDest && !routeOrigin())) {
       if (!inLithuania(ll)) return;
       userLocation = ll;
@@ -1387,6 +1416,41 @@ export async function startApp(root: HTMLElement): Promise<void> {
     endMarker = end
       ? new maplibregl.Marker({ color: "#b91c1c" }).setLngLat([end.lon, end.lat]).addTo(map)
       : null;
+  }
+
+  function setViaMarker(via: LngLat | null): void {
+    viaMarker?.remove();
+    viaMarker = via
+      ? new maplibregl.Marker({ color: "#2563eb", className: "via-marker" })
+          .setLngLat([via.lon, via.lat])
+          .addTo(map)
+      : null;
+  }
+
+  /** A route to change, or a point to move: the next map tap places the point. */
+  function canPickVia(): boolean {
+    return Boolean(endHit) && (routeOptions.length > 0 || viaPoint !== null);
+  }
+
+  function togglePickVia(): void {
+    if (pickMode === "via") {
+      pickMode = null;
+      render();
+      return;
+    }
+    if (!canPickVia()) return;
+    pickMode = "via";
+    popup?.remove();
+    // Out of the map's way, so the tap lands where the driver means.
+    collapseForMapFocus();
+  }
+
+  function clearVia(): void {
+    if (pickMode === "via") pickMode = null;
+    viaPoint = null;
+    setViaMarker(null);
+    if (endHit) void runRoute();
+    else render();
   }
 
   function stationAddress(s: Station): string {
@@ -1451,6 +1515,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const banner = root.querySelector("#banner")!;
     banner.innerHTML = statusHtml();
     root.querySelector(".app")?.classList.toggle("has-route", Boolean(routeLine));
+    root.querySelector(".app")?.classList.toggle("is-picking", pickMode === "via");
     root.querySelector(".app")?.classList.toggle("is-history", view === "history");
     if (view === "history" && !historyFile && !historyLoading) void ensureHistory();
     const history = root.querySelector("#history")!;
@@ -1888,6 +1953,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
             <div id="dest-sug" class="sug-box"></div>
           </div>
           <button type="button" class="dest-swap" data-act="swap-dest" aria-label="${escapeHtml(t("dest.swap"))}" title="${escapeHtml(t("dest.swap"))}"${canSwap ? "" : " disabled"}>${SWAP_ICON}</button>
+          ${viaHtml()}
         </div>
       </div>
       <button type="button" class="header-toggle" data-act="toggle-header" aria-expanded="${headerMinimized ? "false" : "true"}" aria-label="${escapeHtml(headerMinimized ? t("header.expand") : t("header.collapse"))}">
@@ -1896,6 +1962,21 @@ export async function startApp(root: HTMLElement): Promise<void> {
         <span class="header-chevron" aria-hidden="true">${headerMinimized ? "▾" : "▴"}</span>
       </button>
     `;
+  }
+
+  /** Under From / To: place a point the route must pass, move it, or remove it. */
+  function viaHtml(): string {
+    const picking = pickMode === "via";
+    const action = t(picking ? "via.cancel" : viaPoint ? "via.move" : "via.add");
+    const remove = viaPoint
+      ? `<button type="button" class="dest-via-remove" data-act="clear-via" aria-label="${escapeHtml(t("via.remove"))}" title="${escapeHtml(t("via.remove"))}">×</button>`
+      : "";
+    return `<div class="dest-via">
+            <span class="dest-pin dest-pin-via" aria-hidden="true"></span>
+            <span class="dest-via-label" id="via-label">${escapeHtml(t("via.label"))}</span>
+            <button type="button" class="dest-via-btn${picking ? " on" : ""}" data-act="pick-via" aria-describedby="via-label" aria-pressed="${picking ? "true" : "false"}"${picking || canPickVia() ? "" : " disabled"}>${escapeHtml(action)}</button>
+            ${remove}
+          </div>`;
   }
 
   /** Any power, fast or ultra-fast: a per-trip choice, so it sits under the EV chip. */
@@ -2204,6 +2285,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     if (destStatus === "not-found")
       return `<div class="banner">${escapeHtml(t("dest.notFound"))}</div>`;
+    if (destStatus === "via-not-found")
+      return `<div class="banner">${escapeHtml(t("via.notFound"))}</div>`;
+    if (pickMode === "via") {
+      return `<div class="banner info pick-banner" role="status">
+        <p>${escapeHtml(t("via.pick"))}</p>
+        <button type="button" class="install-dismiss" data-act="pick-via" aria-label="${escapeHtml(t("via.cancel"))}">×</button>
+      </div>`;
+    }
     const offer = currentInstallOffer();
     if (offer === "prompt") {
       return `<div class="banner info install-banner">

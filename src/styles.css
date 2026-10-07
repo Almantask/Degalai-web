@@ -413,6 +413,71 @@ body,
   box-shadow: 0 0 0 4px rgb(185 28 28 / 18%);
 }
 
+/* Under From / To: a point the route must pass. The pin lines up with theirs. */
+.dest-via {
+  grid-column: 1 / -1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding-left: 28px;
+}
+
+.dest-pin-via {
+  background: #2563eb;
+  box-shadow: 0 0 0 4px rgb(37 99 235 / 18%);
+}
+
+.dest-via-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.82rem;
+  line-height: 1.25;
+  color: var(--muted);
+}
+
+.header .dest-via-btn {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  font-size: 0.85rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.header .dest-via-btn:hover:not(:disabled) {
+  background: rgb(15 138 75 / 22%);
+}
+
+.header .dest-via-btn.on {
+  background: var(--green);
+  color: #fff;
+}
+
+.header .dest-via-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.header .dest-via-remove {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* Placing the via point: every tap on the map is the point, stations and routes included. */
+.app.is-picking #map canvas {
+  cursor: crosshair !important;
+}
+
 .search {
   width: 100%;
   border: 1px solid var(--line);
@@ -1381,13 +1446,15 @@ body,
   color: var(--green-dark);
 }
 
-.install-banner {
+.install-banner,
+.pick-banner {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.install-banner p {
+.install-banner p,
+.pick-banner p {
   margin: 0;
   flex: 1;
 }
@@ -1404,7 +1471,8 @@ body,
   cursor: pointer;
 }
 
-.install-banner .install-dismiss {
+.install-banner .install-dismiss,
+.pick-banner .install-dismiss {
   background: transparent;
   border: 0;
   color: inherit;
