@@ -1336,36 +1336,100 @@ test.describe("route fields", () => {
   });
 });
 
+/** A route request: its waypoints, and whether stations are reached on the curb side. */
+interface RouteAsk {
+  points: LonLat[];
+  curb: boolean;
+}
+
+/**
+ * From Vilnius, every search finds Kaunas, and OSRM answers with straight lines from waypoint to
+ * waypoint (through the middle of Lithuania without a via). Returns the route requests as they come.
+ */
+async function straightRoutes(page: Page): Promise<RouteAsk[]> {
+  await fakeLocation(page, 54.687, 25.28);
+  await photonVilniusKaunas(page);
+  const asked: RouteAsk[] = [];
+  await page.route("https://router.project-osrm.org/**", async (route) => {
+    const url = route.request().url();
+    if (url.includes("/table/")) {
+      await route.fulfill({ json: osrmTable(url) });
+      return;
+    }
+    const u = new URL(url);
+    const points = u.pathname
+      .split("/driving/")[1]
+      .split(";")
+      .map((c) => c.split(",").map(Number) as LonLat);
+    asked.push({ points, curb: (u.searchParams.get("approaches") ?? "").includes("curb") });
+    const line = points.length === 2 ? [points[0], [24.6, 54.8] as LonLat, points[1]] : points;
+    const distance = line.slice(1).reduce((m, p, i) => m + haversineM(line[i], p), 0);
+    await route.fulfill({
+      json: {
+        code: "Ok",
+        routes: [{ distance, duration: distance / 20, geometry: { coordinates: line } }],
+      },
+    });
+  });
+  return asked;
+}
+
+/** The point the last route was asked to pass (stations' dashed routes left out). */
+function lastVia(asked: RouteAsk[]): LonLat | undefined {
+  return asked.filter((r) => !r.curb && r.points.length === 3).at(-1)?.points[1];
+}
+
+type Box = { x: number; y: number; width: number; height: number };
+
+/** Where an element sits once the map has stopped moving it. */
+async function settledBox(page: Page, selector: string): Promise<Box> {
+  const box = () => page.locator(selector).boundingBox();
+  let last = await box();
+  await expect
+    .poll(async () => {
+      const next = await box();
+      const same = JSON.stringify(next) === JSON.stringify(last);
+      last = next;
+      return same;
+    })
+    .toBe(true);
+  return last!;
+}
+
+/** Kaunas as the destination, then the point the route must pass placed with `tap`. */
+async function routeThroughPoint(
+  page: Page,
+  tap: (x: number, y: number) => Promise<void>,
+): Promise<void> {
+  await page.goto("/");
+  const dest = page.locator("#dest");
+  await dest.fill("Kaunas");
+  await dest.press("Enter");
+  await expect(page.locator(".app")).toHaveClass(/has-route/, { timeout: 15_000 });
+  await page.locator(".header-toggle").click();
+  await page.getByRole("button", { name: "Pridėti tašką" }).click();
+  await expect(page.locator(".app")).toHaveClass(/is-picking/);
+  const map = await settledBox(page, "#map");
+  await tap(map.x + map.width * 0.4, map.y + map.height * 0.5);
+  await expect(page.locator(".via-marker")).toHaveCount(1);
+  await expect(page.locator(".app")).toHaveClass(/has-route/, { timeout: 15_000 });
+}
+
+/** After a drag up and to the right, the route passes a point north-east of the old one. */
+async function expectViaMovedNorthEast(page: Page, asked: RouteAsk[], from: LonLat): Promise<void> {
+  await expect.poll(() => lastVia(asked)).not.toEqual(from);
+  const to = lastVia(asked)!;
+  expect(to[0]).toBeGreaterThan(from[0]);
+  expect(to[1]).toBeGreaterThan(from[1]);
+  await expect(page.locator(".via-marker")).toHaveCount(1);
+  await expect(page.locator(".app")).toHaveClass(/has-route/, { timeout: 15_000 });
+}
+
 test.describe("point the route must pass", () => {
   test.use({ serviceWorkers: "block" });
 
   test("places a point under From / To, routes through it, and removes it", async ({ page }) => {
-    await fakeLocation(page, 54.687, 25.28);
-    await photonVilniusKaunas(page);
-    /** Route requests: their waypoints and whether stations are reached on the curb side. */
-    const asked: Array<{ points: LonLat[]; curb: boolean }> = [];
-    await page.route("https://router.project-osrm.org/**", async (route) => {
-      const url = route.request().url();
-      if (url.includes("/table/")) {
-        await route.fulfill({ json: osrmTable(url) });
-        return;
-      }
-      const u = new URL(url);
-      const points = u.pathname
-        .split("/driving/")[1]
-        .split(";")
-        .map((c) => c.split(",").map(Number) as LonLat);
-      asked.push({ points, curb: (u.searchParams.get("approaches") ?? "").includes("curb") });
-      // Straight from waypoint to waypoint, through the middle of Lithuania without a via.
-      const line = points.length === 2 ? [points[0], [24.6, 54.8] as LonLat, points[1]] : points;
-      const distance = line.slice(1).reduce((m, p, i) => m + haversineM(line[i], p), 0);
-      await route.fulfill({
-        json: {
-          code: "Ok",
-          routes: [{ distance, duration: distance / 20, geometry: { coordinates: line } }],
-        },
-      });
-    });
+    const asked = await straightRoutes(page);
     await page.goto("/");
     const label = page.getByText("Pakeiskite maršrutą pridėdami tašką, per kurį jis turi eiti");
     const add = page.getByRole("button", { name: "Pridėti tašką" });
@@ -1415,5 +1479,40 @@ test.describe("point the route must pass", () => {
     await expect(page.locator(".maplibregl-marker")).toHaveCount(2);
     await expect.poll(() => asked.slice(afterVia).some((r) => r.points.length === 2)).toBe(true);
     await expect(page.getByRole("button", { name: "Pašalinti tašką" })).toHaveCount(0);
+  });
+
+  test("dragging the point with the mouse moves it, and the route with it", async ({ page }) => {
+    const asked = await straightRoutes(page);
+    await routeThroughPoint(page, (x, y) => page.mouse.click(x, y));
+    const placed = lastVia(asked)!;
+    const marker = await settledBox(page, ".via-marker");
+    const x = marker.x + marker.width / 2;
+    const y = marker.y + marker.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + 80, y - 60, { steps: 10 });
+    await page.mouse.up();
+    await expectViaMovedNorthEast(page, asked, placed);
+  });
+
+  test.describe("on a phone", () => {
+    test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+    test("dragging the point with a finger moves it, and the route with it", async ({ page }) => {
+      const asked = await straightRoutes(page);
+      await routeThroughPoint(page, (x, y) => page.touchscreen.tap(x, y));
+      const placed = lastVia(asked)!;
+      const marker = await settledBox(page, ".via-marker");
+      const x = marker.x + marker.width / 2;
+      const y = marker.y + marker.height / 2;
+      // Playwright taps but cannot drag a finger: send the touches as the browser would.
+      const cdp = await page.context().newCDPSession(page);
+      const touch = (type: string, touchPoints: Array<{ x: number; y: number }>) =>
+        cdp.send("Input.dispatchTouchEvent", { type, touchPoints });
+      await touch("touchStart", [{ x, y }]);
+      for (let i = 1; i <= 10; i++) await touch("touchMove", [{ x: x + 6 * i, y: y - 5 * i }]);
+      await touch("touchEnd", []);
+      await expectViaMovedNorthEast(page, asked, placed);
+    });
   });
 });
