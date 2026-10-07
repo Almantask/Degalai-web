@@ -17,9 +17,11 @@ selected.
 ![Map of Lithuanian fuel stations with a cheapest-first list](docs/screenshots/map.png)
 
 Set a start (your location, an address, or a tap on the map) and a destination.
-Only the five cheapest stations on the way stay on the map, each with a route
-through it. Stations off the corridor are hidden; tap another from the list to
-add it.
+When there is more than one way there, pick one of up to three routes first.
+Only the five cheapest stations on the way stay on the map, each with a dashed
+route through it, plus the cheapest station on each dashed route when it beats
+the one the line leads to. Stations off the route are hidden; tap another from
+the list to add it.
 
 ![Route from Vilnius to Kaunas with on-the-way stations](docs/screenshots/route.png)
 
@@ -50,8 +52,9 @@ minimise for a full map.
 - Scan a cheapest-first list of stations in view, with cheapest / most expensive
   badges and a last-checked time.
 - Plan a trip: start defaults to your location; type a destination (Photon,
-  Lithuania only). The map fits the route, hides off-route stations, and can
-  draw via-paths through the five cheapest stops.
+  Lithuania only). Pick one of up to three routes (in the list or on the map;
+  switch later from the list). The map fits the route, hides off-route
+  stations, and draws via-paths through the five cheapest stops.
 - Tap a station for name, brand, address, and 95 / diesel / LPG prices. Search
   and the list collapse so the map can fit the route or the pin.
 - Open **History** (`/istorija`, `/en/history`) for provider averages over the
@@ -190,18 +193,25 @@ groups its charge points into sites and shows the cheapest price per site.
 ## Routing
 
 Geocoding is Photon, clipped to Lithuania. Routing uses OpenRouteService when
-`VITE_ORS_KEY` is set (shortest preference), otherwise the public OSRM demo
-(fastest). Detours fall back to haversine × a road factor when a via-route is
-unavailable.
+`VITE_ORS_KEY` is set (shortest preference, one route), otherwise the public
+OSRM demo (fastest, plus up to two alternatives). Detours fall back to haversine
+× a road factor when a via-route is unavailable.
 
-A station is **on the way** when stopping there adds at most 2 km of road. Every
-priced station within 2 km of the route line (up to 150, closest first) gets its
-real detour from one OSRM `table` request per 50 stations, reaching the station
-with it on the driver's side of the road (`approaches=curb`). So a station across
-the road or behind a hill drops out even when it is close to the line, and one on
-a parallel street you could just as well take stays in. The list shows that
-detour ("detour +0.8 km"). If the table request fails, stations within 500 m of
-the line count as on the way.
+A station is **on the way** when stopping there adds less than 1 km of road to
+the route you picked: leave the route 1 km before the station, stop, and rejoin
+it 1 km after, against driving straight through. Every priced station within
+2 km of the route line (up to 120, closest first) gets that detour from one OSRM
+`table` request per 30 stations. The route points keep the route's heading
+(`bearings`) and the station must be reached on the driver's side of the road
+(`approaches=curb`), so a station across the road or behind a hill drops out even
+when it is close to the line, and one just off the route stays in. The list
+shows that detour ("detour +0.8 km"). If the table request fails, stations within
+500 m of the line count as on the way.
+
+On each dashed via-route, the cheapest station within 200 m of it is marked too
+("Cheapest on the dashed route") when it is cheaper than the station the line
+leads to and less than 1 km off that line by road (same check as above). Its
+detour is the dashed route's extra length plus that stop.
 
 ## Develop
 

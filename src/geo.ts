@@ -50,6 +50,61 @@ export function distanceAlongLineKm(line: LngLat[], upToIndex: number, upTo: Lng
   return d;
 }
 
+/** Heading from a to b in degrees clockwise from north. */
+export function bearingDeg(a: LngLat, b: LngLat): number {
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const dLon = toRad(b.lon - a.lon);
+  const y = Math.sin(dLon) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+}
+
+/** The point `km` along a polyline, clamped to its ends, with the heading of travel there. */
+export function pointAlongLine(line: LngLat[], km: number): { point: LngLat; bearing: number } {
+  if (line.length === 0) return { point: { lat: 0, lon: 0 }, bearing: 0 };
+  let left = Math.max(0, km);
+  let last: { point: LngLat; bearing: number } = { point: line[0], bearing: 0 };
+  for (let i = 0; i < line.length - 1; i++) {
+    const a = line[i];
+    const b = line[i + 1];
+    const seg = haversineKm(a, b);
+    if (seg === 0) continue;
+    const bearing = bearingDeg(a, b);
+    if (left <= seg) {
+      const t = left / seg;
+      const point = { lon: a.lon + (b.lon - a.lon) * t, lat: a.lat + (b.lat - a.lat) * t };
+      return { point, bearing };
+    }
+    left -= seg;
+    last = { point: b, bearing };
+  }
+  return last;
+}
+
+/** A box around a polyline, widened by `km`, to skip points that cannot be that close to it. */
+export function boundsAround(line: LngLat[], km: number): { contains: (p: LngLat) => boolean } {
+  let minLat = Infinity;
+  let maxLat = -Infinity;
+  let minLon = Infinity;
+  let maxLon = -Infinity;
+  for (const p of line) {
+    minLat = Math.min(minLat, p.lat);
+    maxLat = Math.max(maxLat, p.lat);
+    minLon = Math.min(minLon, p.lon);
+    maxLon = Math.max(maxLon, p.lon);
+  }
+  const dLat = km / 111;
+  const dLon = km / (111 * Math.cos(toRad(Math.max(Math.abs(minLat), Math.abs(maxLat)))));
+  return {
+    contains: (p) =>
+      p.lat >= minLat - dLat &&
+      p.lat <= maxLat + dLat &&
+      p.lon >= minLon - dLon &&
+      p.lon <= maxLon + dLon,
+  };
+}
+
 function distanceToSegmentKm(p: LngLat, a: LngLat, b: LngLat): number {
   return haversineKm(p, projectOnSegment(p, a, b));
 }

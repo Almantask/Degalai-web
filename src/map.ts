@@ -16,6 +16,14 @@ const ROUTE = "route-line";
 const ROUTE_SRC = "route";
 const DETOUR_SRC = "detours";
 const DETOUR = "detours-line";
+const OPTIONS_SRC = "route-options";
+const OPTIONS = "route-options-line";
+const OPTIONS_HIT = "route-options-hit";
+
+/** Route choices while picking, best first; the main route keeps the first color. */
+export const ROUTE_OPTION_COLORS = ["#1b6b3a", "#2563eb", "#b45309"] as const;
+/** Routes not taken, once one is picked. */
+const ROUTE_OPTION_MUTED = "#6b7280";
 
 /** Marker colors for stations on an active route — contrast with the green path. */
 export const ROUTE_MARKER = {
@@ -37,6 +45,8 @@ export function routeStationEmphasis(kind: "on" | "detour", isCheapestOn: boolea
 export interface MapHandlers {
   onStationClick: (id: string) => void;
   onMapClick: (ll: LngLat) => void;
+  /** A route choice (its index) was tapped on the map. */
+  onRouteClick: (index: number) => void;
 }
 
 const geolocateByMap = new WeakMap<
@@ -75,6 +85,26 @@ export function createMap(
     });
     map.addSource(ROUTE_SRC, { type: "geojson", data: emptyFc() });
     map.addSource(DETOUR_SRC, { type: "geojson", data: emptyFc() });
+    map.addSource(OPTIONS_SRC, { type: "geojson", data: emptyFc() });
+
+    map.addLayer({
+      id: OPTIONS,
+      type: "line",
+      source: OPTIONS_SRC,
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: {
+        "line-color": ["get", "color"],
+        "line-width": ["case", ["get", "picking"], 5, 4],
+        "line-opacity": ["case", ["get", "picking"], 0.85, 0.45],
+      },
+    });
+    // Wide and invisible, so a finger can hit a thin line.
+    map.addLayer({
+      id: OPTIONS_HIT,
+      type: "line",
+      source: OPTIONS_SRC,
+      paint: { "line-color": "#000", "line-width": 22, "line-opacity": 0 },
+    });
 
     map.addLayer({
       id: ROUTE,
@@ -265,8 +295,22 @@ export function createMap(
       map.easeTo({ center: geom.coordinates as [number, number], zoom });
     });
   });
-  map.on("click", (e) => {
+  map.on("click", OPTIONS_HIT, (e) => {
     if (map.queryRenderedFeatures(e.point, { layers: [POINTS, HALO, CLUSTER] }).length) return;
+    const index = e.features?.[0]?.properties?.index;
+    if (typeof index === "number") handlers.onRouteClick(index);
+  });
+  map.on("mouseenter", OPTIONS_HIT, () => {
+    map.getCanvas().style.cursor = "pointer";
+  });
+  map.on("mouseleave", OPTIONS_HIT, () => {
+    map.getCanvas().style.cursor = "";
+  });
+  map.on("click", (e) => {
+    const hits = map.queryRenderedFeatures(e.point, {
+      layers: [POINTS, HALO, CLUSTER, OPTIONS_HIT],
+    });
+    if (hits.length) return;
     handlers.onMapClick({ lon: e.lngLat.lng, lat: e.lngLat.lat });
   });
   map.on("mouseenter", POINTS, () => {
@@ -388,6 +432,40 @@ export function setRouteData(
   }
 }
 
+/**
+ * Route choices: each in its own color while the driver picks (`chosen` null), then the ones not
+ * taken in grey. Either way a tap on one picks it.
+ */
+export function setRouteOptions(
+  map: maplibregl.Map,
+  routes: LngLat[][],
+  chosen: number | null,
+): void {
+  const src = map.getSource(OPTIONS_SRC) as maplibregl.GeoJSONSource | undefined;
+  if (!src) return;
+  const picking = chosen == null;
+  const features = routes
+    .map((pts, index) => ({ pts, index }))
+    .filter(({ pts, index }) => index !== chosen && pts.length >= 2)
+    // Draw the best route last so it stays on top where routes share a road.
+    .reverse()
+    .map(({ pts, index }) => ({
+      type: "Feature" as const,
+      properties: {
+        index,
+        picking,
+        color: picking
+          ? ROUTE_OPTION_COLORS[index % ROUTE_OPTION_COLORS.length]
+          : ROUTE_OPTION_MUTED,
+      },
+      geometry: {
+        type: "LineString" as const,
+        coordinates: pts.map((p) => [p.lon, p.lat] as [number, number]),
+      },
+    }));
+  src.setData({ type: "FeatureCollection", features });
+}
+
 function routeBounds(
   line: LngLat[] | null,
   detours: LngLat[][] = [],
@@ -418,6 +496,33 @@ export function overlayPadding(
     left: edge,
     right: edge,
   };
+}
+
+type Box = Pick<DOMRect, "top" | "bottom" | "left" | "right" | "width" | "height">;
+
+/**
+ * Padding that keeps a fit clear of the header and an open list: beside the map when the list
+ * is a panel on the right (wide screens), above it when it is a bottom sheet.
+ */
+export function openListPadding(
+  mapBox: Box,
+  headerBox: Box | null,
+  listBox: Box | null,
+  gap = 12,
+): maplibregl.PaddingOptions {
+  const edge = 24;
+  const pad = { top: edge, bottom: edge, left: edge, right: edge };
+  if (headerBox && headerBox.height > 0) {
+    pad.top = Math.max(edge, Math.round(headerBox.bottom - mapBox.top) + gap);
+  }
+  if (listBox && listBox.height > 0) {
+    if (listBox.left > mapBox.left + mapBox.width / 2) {
+      pad.right = Math.max(edge, Math.round(mapBox.right - listBox.left) + gap);
+    } else {
+      pad.bottom = Math.max(edge, Math.round(mapBox.bottom - listBox.top) + gap);
+    }
+  }
+  return pad;
 }
 
 export function fitRoute(

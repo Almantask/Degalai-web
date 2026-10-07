@@ -7,13 +7,14 @@ import { loadAppData, lastUpdatedAt, loadChargers, loadHistory, type AppData } f
 import {
   formatDate,
   formatDateTime,
+  formatDuration,
   formatKm,
-  formatMoney,
   formatPrice,
   escapeHtml,
   shortAddress,
 } from "./format.ts";
 import {
+  boundsAround,
   distanceAlongLineKm,
   distanceToPolylineKm,
   inLithuania,
@@ -36,9 +37,12 @@ import {
   createMap,
   fitRoute,
   flyToStation,
+  openListPadding,
   overlayPadding,
   setMapGeolocateAccuracy,
+  ROUTE_OPTION_COLORS,
   setRouteData,
+  setRouteOptions,
   setStationData,
   freeReasonText,
   stationPopupHtml,
@@ -47,8 +51,13 @@ import {
   routeStationEmphasis,
 } from "./map.ts";
 import {
+  byPrice,
+  cheapestOnDashed,
+  DASHED_ROUTE_KM,
   DETOUR_CORRIDOR_KM,
+  MAX_DASHED_CHECKS,
   detourCandidates,
+  detourWindow,
   isOnTheWay,
   mapRouteStationIds,
   orderRouteRows,
@@ -57,6 +66,7 @@ import { hrefFor, navigate, parsePath, pathFor, type View } from "./router.ts";
 import {
   fetchDetours,
   fetchRoute,
+  fetchRoutes,
   geocode,
   reverseGeocode,
   type Detour,
@@ -160,6 +170,15 @@ function priceBenefit(
   });
 }
 
+/** A station near a dashed via-route, with its road detour from that line once checked. */
+interface DashedCandidate {
+  station: Station;
+  price: number;
+  dashedKm: number;
+  detourKm: number | null | undefined;
+  detourMin: number;
+}
+
 /** A priced station within the detour corridor, with its distance from the route line. */
 interface NearbyStation {
   station: Station;
@@ -174,8 +193,13 @@ interface RouteStationRow {
   distFromStartKm: number;
   extraKm: number;
   extraMin: number;
+  /** extraKm and extraMin are the road detour from the route, not from the via-route. */
+  roadDetour: boolean;
   benefit: ReturnType<typeof netBenefit>;
   viaGeometry?: LngLat[];
+  /** What the via-route through this station adds over the route. */
+  viaExtraKm?: number;
+  viaExtraMin?: number;
 }
 
 type DestStatus = "idle" | "locating" | "routing" | "denied" | "not-found";
@@ -209,6 +233,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let routeRows: RouteStationRow[] = [];
   let extraMapStationIds = new Set<string>();
   let routeLine: RouteResult | null = null;
+  /** Routes from the last search; with more than one, the driver picks routeLine from them. */
+  let routeOptions: RouteResult[] = [];
+  /** On each dashed via-route, the cheapest station on it that is not on the way itself. */
+  let dashedRows: RouteStationRow[] = [];
   /** Road detours for routeLine by station id; null when the router cannot reach one. */
   let routeDetours: { route: RouteResult; byId: Map<string, Detour | null> } | null = null;
   let routeEvalSeq = 0;
@@ -249,6 +277,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       onMapClick: (ll) => {
         if (dataReady) handleMapPick(ll);
       },
+      onRouteClick: (index) => void chooseRoute(index),
     },
     settings.highAccuracyLocation,
   );
@@ -440,6 +469,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
         render();
       } else if (act === "station") {
         openStation(tEl.dataset.id!);
+      } else if (act === "route") {
+        void chooseRoute(Number(tEl.dataset.index));
       } else if (act === "clear-dest") {
         clearDestination();
       } else if (act === "clear-start") {
@@ -685,7 +716,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     pendingDest = false;
     destStatus = "idle";
     routeLine = null;
+    routeOptions = [];
     routeRows = [];
+    dashedRows = [];
     extraMapStationIds = new Set();
     pickMode = pickMode === "dest-start" ? null : pickMode;
     headerMinimized = false;
@@ -768,10 +801,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
     render();
   }
 
+  function choosingRoute(): boolean {
+    return !routeLine && routeOptions.length > 1;
+  }
+
   function refreshMap(): void {
-    const routeIds = routeLine ? mapStationIds() : null;
+    // While the driver picks a route, no station is weighed yet.
+    const routeIds = routeLine ? mapStationIds() : choosingRoute() ? new Set<string>() : null;
     const stations = stationsForRouteMap(includedStations(), routeIds);
-    const shown = routeLine ? routeRows.filter((r) => routeIds?.has(r.station.id)) : [];
+    const shown = routeLine
+      ? [...routeRows, ...dashedRows].filter((r) => routeIds?.has(r.station.id))
+      : [];
     const cheapestOnId = shown.length ? orderRouteRows(shown).cheapestOn?.station.id : undefined;
     const emphasis = routeLine
       ? Object.fromEntries(
@@ -782,13 +822,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
         )
       : undefined;
     setStationData(map, stations, data.prices, settings.fuel, settings, emphasis);
-    if (routeLine) {
-      setRouteData(map, routeLine.geometry, viaGeometries());
-    }
+    setRouteData(map, routeLine?.geometry ?? null, routeLine ? viaGeometries() : []);
+    setRouteOptions(
+      map,
+      routeOptions.length > 1 ? routeOptions.map((r) => r.geometry) : [],
+      routeLine ? routeOptions.indexOf(routeLine) : null,
+    );
   }
 
   function mapStationIds(): Set<string> {
-    return mapRouteStationIds(routeRows, extraMapStationIds);
+    const ids = mapRouteStationIds(routeRows, extraMapStationIds);
+    for (const r of dashedRows) ids.add(r.station.id);
+    return ids;
   }
 
   function viaGeometries(): LngLat[][] {
@@ -898,23 +943,56 @@ export async function startApp(root: HTMLElement): Promise<void> {
     pendingDest = false;
     pickMode = null;
     render();
-    const res = await fetchRoute(start, end, settings.routePreference);
-    if (!res) {
-      routeLine = null;
-      routeRows = [];
-      extraMapStationIds = new Set();
+    const routes = await fetchRoutes(start, end, settings.routePreference);
+    routeLine = null;
+    routeOptions = routes;
+    routeRows = [];
+    dashedRows = [];
+    extraMapStationIds = new Set();
+    if (!routes.length) {
       destStatus = "not-found";
-      setRouteData(map, null);
       setEndpointMarkers(null, null);
       refreshMap();
       render();
       return;
     }
-    extraMapStationIds = new Set();
+    setEndpointMarkers(start, end);
+    if (routes.length === 1) {
+      await chooseRoute(0);
+      return;
+    }
+    // Several ways there: the driver picks one before any station is weighed.
+    destStatus = "idle";
+    headerMinimized = true;
+    listMinimized = false;
+    settingsOpen = false;
+    refreshMap();
+    render();
+    // The list stays open beside or under the map, so fit around it, not under it.
+    const box = (sel: string) => root.querySelector<HTMLElement>(sel)?.getBoundingClientRect();
+    fitRoute(
+      map,
+      routes[0].geometry,
+      routes.slice(1).map((r) => r.geometry),
+      openListPadding(
+        mapDiv.getBoundingClientRect(),
+        box("#header") ?? null,
+        box(".sheet") ?? null,
+      ),
+    );
+  }
+
+  async function chooseRoute(index: number): Promise<void> {
+    const res = routeOptions[index];
+    if (!res || res === routeLine) return;
     routeLine = res;
     // The last route's stations must not show on this one while its detours load.
     routeRows = [];
-    setEndpointMarkers(start, end);
+    dashedRows = [];
+    extraMapStationIds = new Set();
+    destStatus = "routing";
+    refreshMap();
+    render();
     await evaluateRouteStations(res);
     if (routeLine !== res) return;
     destStatus = "idle";
@@ -931,6 +1009,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       return;
     }
     const seq = ++routeEvalSeq;
+    // Dashed lines are redrawn below; until then the old picks would carry stale prices.
+    dashedRows = [];
     const nearby: NearbyStation[] = [];
     for (const s of includedStations()) {
       const price = data.prices?.prices[s.id]?.[settings.fuel]?.price;
@@ -950,9 +1030,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
         detours,
       );
       const fetched = await fetchDetours(
-        start,
-        end,
-        unchecked.map((c) => c.station),
+        unchecked.map((c) => {
+          const { leave, rejoin } = detourWindow(res.geometry, c.station);
+          return { leave, stop: c.station, rejoin };
+        }),
       );
       if (fetched) unchecked.forEach((c, i) => detours.set(c.station.id, fetched[i] ?? null));
       // A newer route, fuel or brand filter has taken over while the router answered.
@@ -967,6 +1048,77 @@ export async function startApp(root: HTMLElement): Promise<void> {
     await Promise.all(
       onWay.filter((row) => mapIds.has(row.station.id)).map((row) => attachViaRoute(row, res)),
     );
+    if (seq !== routeEvalSeq || routeLine !== res) return;
+    const dashed = await dashedLineRows();
+    if (seq !== routeEvalSeq || routeLine !== res) return;
+    dashedRows = dashed;
+  }
+
+  /**
+   * On each dashed via-route on the map, the one station worth marking (cheapestOnDashed): the
+   * cheapest few near each line get a road detour check against that line, so one across the
+   * road from it is left out.
+   */
+  async function dashedLineRows(): Promise<RouteStationRow[]> {
+    const onWayIds = new Set(routeRows.map((r) => r.station.id));
+    const ids = mapRouteStationIds(routeRows, extraMapStationIds);
+    const priced: Array<{ station: Station; price: number }> = [];
+    for (const s of includedStations()) {
+      const price = data.prices?.prices[s.id]?.[settings.fuel]?.price;
+      if (price != null && !onWayIds.has(s.id)) priced.push({ station: s, price });
+    }
+    const lines: Array<{ target: RouteStationRow; line: LngLat[]; candidates: DashedCandidate[] }> =
+      [];
+    for (const target of routeRows) {
+      const line = target.viaGeometry;
+      if (!ids.has(target.station.id) || !line || line.length < 2) continue;
+      const box = boundsAround(line, DASHED_ROUTE_KM);
+      const candidates = priced
+        .filter(({ station: s, price }) => price < target.price && box.contains(s))
+        .map(({ station, price }) => ({
+          station,
+          price,
+          dashedKm: distanceToPolylineKm(station, line),
+          detourKm: undefined as number | null | undefined,
+          detourMin: 0,
+        }))
+        .filter((c) => c.dashedKm <= DASHED_ROUTE_KM)
+        .sort(byPrice)
+        .slice(0, MAX_DASHED_CHECKS);
+      if (candidates.length) lines.push({ target, line, candidates });
+    }
+    const checks = lines.flatMap(({ line, candidates }) => candidates.map((c) => ({ line, c })));
+    const fetched = await fetchDetours(
+      checks.map(({ line, c }) => {
+        const { leave, rejoin } = detourWindow(line, c.station);
+        return { leave, stop: c.station, rejoin };
+      }),
+    );
+    if (fetched) {
+      checks.forEach(({ c }, i) => {
+        c.detourKm = fetched[i]?.extraKm ?? null;
+        c.detourMin = fetched[i]?.extraMin ?? 0;
+      });
+    }
+    const rows = new Map<string, RouteStationRow>();
+    for (const { target, line, candidates } of lines) {
+      const pick = cheapestOnDashed(target.price, candidates);
+      if (!pick || rows.has(pick.station.id)) continue;
+      const nearest = nearestPointOnPolyline(pick.station, line);
+      rows.set(pick.station.id, {
+        station: pick.station,
+        price: pick.price,
+        kind: "detour",
+        distFromStartKm: distanceAlongLineKm(line, nearest.index, nearest.point),
+        // Taking the dashed route, then stopping on it.
+        extraKm: (target.viaExtraKm ?? target.extraKm) + (pick.detourKm ?? 0),
+        extraMin: (target.viaExtraMin ?? target.extraMin) + pick.detourMin,
+        roadDetour: true,
+        benefit: priceBenefit(target.price, pick.price, settings.fuel),
+        viaGeometry: line,
+      });
+    }
+    return [...rows.values()];
   }
 
   function onTheWayRows(
@@ -978,18 +1130,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
     for (const { station: s, price, lineKm } of nearby) {
       const detour = detours.get(s.id);
       if (!isOnTheWay(lineKm, detour)) continue;
-      let distFromStartKm = detour?.toKm;
-      if (distFromStartKm == null) {
-        const nearest = nearestPointOnPolyline({ lat: s.lat, lon: s.lon }, res.geometry);
-        distFromStartKm = distanceAlongLineKm(res.geometry, nearest.index, nearest.point);
-      }
+      const nearest = nearestPointOnPolyline({ lat: s.lat, lon: s.lon }, res.geometry);
       onWay.push({
         station: s,
         price,
         kind: "on",
-        distFromStartKm,
+        distFromStartKm: distanceAlongLineKm(res.geometry, nearest.index, nearest.point),
         extraKm: detour?.extraKm ?? 0,
         extraMin: detour?.extraMin ?? 0,
+        roadDetour: detour != null,
         benefit: priceBenefit(price, price, settings.fuel),
       });
     }
@@ -1009,8 +1158,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const via = { lat: row.station.lat, lon: row.station.lon };
     const viaRoute = await fetchRoute(start, end, settings.routePreference, via);
     if (viaRoute) {
-      row.extraKm = Math.max(0, viaRoute.distanceKm - res.distanceKm);
-      row.extraMin = Math.max(0, viaRoute.durationMin - res.durationMin);
+      row.viaExtraKm = Math.max(0, viaRoute.distanceKm - res.distanceKm);
+      row.viaExtraMin = Math.max(0, viaRoute.durationMin - res.durationMin);
+      if (!row.roadDetour) {
+        row.extraKm = row.viaExtraKm;
+        row.extraMin = row.viaExtraMin;
+      }
       row.viaGeometry = viaRoute.geometry;
     } else {
       row.viaGeometry = [start, via, end];
@@ -1068,10 +1221,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
   async function revealStation(id: string): Promise<void> {
     const s = activeStations().find((x) => x.id === id);
     if (!s) return;
-    const routeRow = routeRows.find((r) => r.station.id === id);
-    if (routeLine && routeRow) {
+    const routeRow =
+      routeRows.find((r) => r.station.id === id) ?? dashedRows.find((r) => r.station.id === id);
+    if (routeLine && routeRow?.kind === "on") {
+      const res = routeLine;
       extraMapStationIds.add(id);
-      await attachViaRoute(routeRow, routeLine);
+      await attachViaRoute(routeRow, res);
+      const seq = routeEvalSeq;
+      const dashed = await dashedLineRows();
+      if (seq === routeEvalSeq && routeLine === res) dashedRows = dashed;
       refreshMap();
     }
     const origin = originForDistance();
@@ -1302,14 +1460,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
       listHtml = html;
       list.innerHTML = html;
     };
-    if (routeLine && routeRows.length) {
-      const { cheapestOn, cheapestOverall, ordered } = orderRouteRows(routeRows);
+    if (choosingRoute()) {
+      setList(routeChoiceHtml());
+      return;
+    }
+    const rows = [...routeRows, ...dashedRows];
+    if (routeLine && rows.length) {
+      const { cheapestOn, cheapestOverall, ordered } = orderRouteRows(rows);
       setList(
         listWrap(
           ordered.map((r, i) => {
             const isCheapestOn = cheapestOn?.station.id === r.station.id;
             const isCheapestOverall = cheapestOverall?.station.id === r.station.id;
-            const detourWorth = r.benefit.netBenefit > 0 ? t("route.worth") : t("route.notWorth");
             const badges = [
               isCheapestOn
                 ? `<span class="badge">${escapeHtml(t("route.cheapestBadge"))}</span>`
@@ -1320,19 +1482,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
               !isCheapestOn && r.kind === "on"
                 ? `<span class="badge muted">${escapeHtml(t("route.onTheWay"))}</span>`
                 : "",
-              !isCheapestOverall && r.kind === "detour"
-                ? `<span class="badge">${escapeHtml(detourWorth)}</span>`
+              r.kind === "detour"
+                ? `<span class="badge">${escapeHtml(t("route.cheapestDashed"))}</span>`
                 : "",
             ].join("");
-            const extra =
-              r.kind === "detour"
-                ? t("route.extra", {
-                    km: r.extraKm.toFixed(1),
-                    save: formatMoney(r.benefit.netBenefit),
-                  })
-                : r.extraKm >= 0.1
-                  ? t("route.detour", { km: formatKm(r.extraKm) })
-                  : "";
+            const extra = r.extraKm >= 0.1 ? t("route.detour", { km: formatKm(r.extraKm) }) : "";
             const pinned = isCheapestOn || isCheapestOverall;
             const rowClass = [
               pinned && i < 2 ? "is-pick" : "",
@@ -1342,12 +1496,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
               .join(" ");
             return stationRow(r.station, r.price, r.distFromStartKm, extra, rowClass, badges);
           }),
+          undefined,
+          routeSwitchHtml(),
         ),
       );
       return;
     }
-    if (routeLine && endHit && routeRows.length === 0 && destStatus !== "routing") {
-      setList(listWrap([], t(isEv() ? "route.noChargers" : "route.noStations")));
+    if (routeLine && endHit && rows.length === 0 && destStatus !== "routing") {
+      setList(listWrap([], t(isEv() ? "route.noChargers" : "route.noStations"), routeSwitchHtml()));
       return;
     }
     if (isEv() && !chargers) {
@@ -1396,15 +1552,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
     return `<p class="list-meta" title="${escapeHtml(text)}"><span class="list-updated">${escapeHtml(text)}</span></p>`;
   }
 
-  function listWrap(items: string[], empty?: string): string {
+  function listWrap(items: string[], empty?: string, lead = ""): string {
     const count = items.length;
     const ev = isEv();
     const base = t(ev ? "list.titleEv" : "list.title");
     const title = count ? `${base} · ${tPlural(ev ? "chargers" : "stations", count)}` : base;
-    const meta = updatedMetaHtml();
     const body = empty
       ? `<p class="empty">${escapeHtml(empty)}</p>`
       : `<ul class="station-list">${items.join("")}</ul>`;
+    return sheetHtml(title, updatedMetaHtml(), lead + body);
+  }
+
+  function sheetHtml(title: string, meta: string, body: string): string {
     return `<div class="sheet${listMinimized ? " is-min" : ""}">
       <button type="button" class="list-head" data-act="toggle-list" aria-expanded="${listMinimized ? "false" : "true"}" aria-label="${escapeHtml(listMinimized ? t("list.expand") : t("list.collapse"))}">
         <span class="list-handle" aria-hidden="true"></span>
@@ -1416,6 +1575,35 @@ export async function startApp(root: HTMLElement): Promise<void> {
       </button>
       <div class="list-body">${body}</div>
     </div>`;
+  }
+
+  /** The routes to pick from, best first, each in its color on the map. */
+  function routeChoiceHtml(): string {
+    const items = routeOptions.map((r, i) => {
+      const color = ROUTE_OPTION_COLORS[i % ROUTE_OPTION_COLORS.length];
+      const note = i === 0 && r.profile === "fastest" ? t("route.fastest") : "";
+      return `<li><button type="button" class="route-option" data-act="route" data-index="${i}">
+        <span class="route-swatch" style="background:${color}" aria-hidden="true"></span>
+        <span class="route-option-main">
+          <strong>${escapeHtml(t("route.option", { n: i + 1 }))}</strong>
+          ${note ? `<small>${escapeHtml(note)}</small>` : ""}
+        </span>
+        <span class="route-option-meta">${escapeHtml(formatKm(r.distanceKm))} · ${escapeHtml(formatDuration(r.durationMin))}</span>
+      </button></li>`;
+    });
+    const hint = `<p class="list-meta">${escapeHtml(t("route.chooseHint"))}</p>`;
+    return sheetHtml(t("route.choose"), hint, `<ul class="route-options">${items.join("")}</ul>`);
+  }
+
+  /** Once a route is picked, the others stay one tap away above its stations. */
+  function routeSwitchHtml(): string {
+    if (!routeLine || routeOptions.length < 2) return "";
+    const chosen = routeOptions.indexOf(routeLine);
+    const chips = routeOptions.map(
+      (r, i) =>
+        `<button type="button" class="route-chip${i === chosen ? " is-on" : ""}" data-act="route" data-index="${i}" aria-pressed="${i === chosen ? "true" : "false"}">${escapeHtml(t("route.option", { n: i + 1 }))} · ${escapeHtml(formatDuration(r.durationMin))}</button>`,
+    );
+    return `<div class="route-switch" role="group" aria-label="${escapeHtml(t("route.choose"))}">${chips.join("")}</div>`;
   }
 
   function stationRow(
