@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page } from "./fixtures.ts";
 import { REPORT_ENDPOINT } from "../src/report.ts";
 
 test("PWA can be installed as a standalone mobile app", async ({ page }) => {
