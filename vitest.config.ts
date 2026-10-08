@@ -11,5 +11,12 @@ export default defineConfig({
     // Dependency tests call outside services; they run with `npm run test:deps`.
     exclude: [...configDefaults.exclude, "tests/deps/**"],
     globals: true,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json-summary"],
+      reportsDirectory: "coverage/unit",
+      include: ["src/**/*.ts", "scripts/**/*.ts", "worker/src/**/*.ts"],
+      exclude: ["**/*.d.ts"],
+    },
   },
 });

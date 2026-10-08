@@ -23,13 +23,47 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run i18n:check
       - run: npm run lint
-      - run: npm test
+      - run: npm run test:coverage
+      # Pull requests do not publish: a branch must not replace the badge on main.
+      # A push to main, or a called run, does. Called runs include feature branches
+      # so the badge exists before merge; the next main push puts the unit badge back.
+      - name: Write unit coverage badge
+        if: github.event_name != 'pull_request'
+        run: ./node_modules/.bin/tsx scripts/publish-coverage-badge.ts unit
+      - name: Upload unit coverage badge
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-unit
+          path: coverage/unit.json
       - name: Dependency wiring (offline)
         run: npm run test:deps -- wiring
       - run: npm run typecheck
       - run: npm run build
         env:
           BASE_URL: /Degalai-web/
+
+  # contents: write lives on this job only, and only off pull requests, so a PR
+  # workflow cannot publish. Uploading a release asset does not create a commit.
+  publish-unit-coverage:
+    needs: check
+    if: github.event_name != 'pull_request' && needs.check.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage-unit
+          path: coverage
+      - name: Publish unit coverage badge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          badge="$(find . -name unit.json -print -quit)"
+          test -n "$badge"
+          bash scripts/publish-coverage-release.sh "$badge"
 
   e2e:
     # Only when called: these load the map tiles and drive a real browser.
@@ -45,3 +79,30 @@ jobs:
       # The Playwright the lockfile pins, not one npx would fetch.
       - run: ./node_modules/.bin/playwright install --with-deps chromium
       - run: npm run test:e2e
+      - name: Write e2e coverage badge
+        run: ./node_modules/.bin/tsx scripts/publish-coverage-badge.ts e2e
+      - name: Upload e2e coverage badge
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-e2e
+          path: coverage/e2e.json
+
+  publish-e2e-coverage:
+    needs: e2e
+    if: needs.e2e.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage-e2e
+          path: coverage
+      - name: Publish e2e coverage badge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          badge="$(find . -name e2e.json -print -quit)"
+          test -n "$badge"
+          bash scripts/publish-coverage-release.sh "$badge"
