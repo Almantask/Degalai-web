@@ -22,13 +22,14 @@ Changing files is not checking them: `npx prettier --write` before a commit is f
      `ref: "<branch>"`;
    - or `gh workflow run ci.yml --ref <branch>`.
 
-   A called run has two jobs: `check` (i18n keys, lint, unit tests, offline dependency wiring,
-   typecheck, build; the same job a pull request runs) and `e2e` (`npm run test:e2e` in a
-   Chromium that matches Playwright; only when called).
+   Every run — a pull request, a push to `main`, and a called run — has two jobs:
+   `check` (i18n keys, lint, unit tests with coverage, offline dependency wiring,
+   typecheck, build) and `e2e` (`npm run test:e2e` in a Chromium that matches
+   Playwright). Pull requests do not publish the coverage badges.
 
 3. Find the run: `actions_list` with `method: "list_workflow_runs"`, `resource_id: "ci.yml"` and
-   `workflow_runs_filter: { branch: "<branch>", event: "workflow_dispatch" }`. Take the newest
-   run whose `head_sha` is the commit you pushed.
+   `workflow_runs_filter: { branch: "<branch>" }`. Take the newest run whose `head_sha` is the
+   commit you pushed. A pull request run and a called run execute the same jobs.
 4. Wait for it: read it with `actions_get` (`method: "get_workflow_run"`) until `status` is
    `completed`, a minute or more apart. It takes a few minutes.
 5. Read the result. When `conclusion` is not `success`, get the failing output with
@@ -41,8 +42,9 @@ Changing files is not checking them: `npx prettier --write` before a commit is f
   link (`html_url`).
 - When it is red, say which job and test failed and why, with the log lines that show it.
 - Never report a local run as the check.
-- If CI cannot be called (no access, the dispatch is refused), say so and ask the user how to go
-  on. Do not fall back to a local run without telling them.
+- If CI cannot be called (no access, the dispatch is refused), a pull request's CI run is the
+  same check, browser tests included. Say so with that run's link. Do not fall back to a local
+  run.
 
 ## Outside services
 

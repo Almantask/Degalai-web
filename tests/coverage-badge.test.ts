@@ -70,12 +70,40 @@ describe("coverage publish", () => {
     const script = readFileSync("scripts/publish-coverage-release.sh", "utf8");
     expect(ci).toContain("publish-coverage-release.sh");
     expect(ci).not.toMatch(/^\s*(-\s*)?(run:\s*)?git (commit|push)/m);
+    const e2e = job(ci, "e2e");
+    expect(e2e, "browser tests run on pull requests and pushes, not only when called").not.toMatch(
+      /^\s+if:/m,
+    );
+    expect(e2e).toContain("npm run test:e2e");
+    const publish = job(ci, "publish-e2e-coverage");
+    expect(publish).toContain("github.event_name != 'pull_request'");
+    expect(publish).toContain("needs.e2e.result == 'success'");
     expect(script).toContain("coverage-badges");
     expect(script).toContain("gh release upload");
     expect(script).toContain("--clobber");
     expect(script).not.toMatch(/^\s*git (commit|push)/m);
   });
+
+  it("points the README badges at the worker, which Shields can fetch", () => {
+    const readme = readFileSync("README.md", "utf8");
+    expect(readme).not.toContain("endpoint?url=https%3A%2F%2Fgithub.com");
+    expect(readme).toContain(
+      "https%3A%2F%2Fkur-degalai-cron.almantusk.workers.dev%2Fcoverage%2Funit.json",
+    );
+    expect(readme).toContain(
+      "https%3A%2F%2Fkur-degalai-cron.almantusk.workers.dev%2Fcoverage%2Fe2e.json",
+    );
+  });
 });
+
+/** The YAML of one job, from its key through the line before the next job. */
+function job(yaml: string, name: string): string {
+  const start = yaml.indexOf(`\n  ${name}:\n`);
+  if (start < 0) throw new Error(`missing job ${name}`);
+  const rest = yaml.slice(start + 1);
+  const next = rest.slice(1).search(/\n {2}[a-z0-9-]+:\n/);
+  return next < 0 ? rest : rest.slice(0, next + 1);
+}
 
 /** Two statements on their own lines; `hits[i]` is how many times line i + 1 ran. */
 function fileCoverage(path: string, hits: number[]) {

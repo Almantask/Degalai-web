@@ -3,8 +3,8 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Almantask_Degalai-web&metric=alert_status)](https://sonarcloud.io/dashboard?id=Almantask_Degalai-web)
 [![CI](https://github.com/Almantask/Degalai-web/actions/workflows/ci.yml/badge.svg)](https://github.com/Almantask/Degalai-web/actions/workflows/ci.yml)
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=Almantask_Degalai-web&metric=ncloc)](https://sonarcloud.io/dashboard?id=Almantask_Degalai-web)
-[![Unit test coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fgithub.com%2FAlmantask%2FDegalai-web%2Freleases%2Fdownload%2Fcoverage-badges%2Funit.json)](https://github.com/Almantask/Degalai-web/actions/workflows/ci.yml)
-[![E2E coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fgithub.com%2FAlmantask%2FDegalai-web%2Freleases%2Fdownload%2Fcoverage-badges%2Fe2e.json)](https://github.com/Almantask/Degalai-web/actions/workflows/ci.yml)
+[![Unit test coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fkur-degalai-cron.almantusk.workers.dev%2Fcoverage%2Funit.json)](https://github.com/Almantask/Degalai-web/actions/workflows/ci.yml)
+[![E2E coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fkur-degalai-cron.almantusk.workers.dev%2Fcoverage%2Fe2e.json)](https://github.com/Almantask/Degalai-web/actions/workflows/ci.yml)
 
 Free, up-to-date fuel prices at every station in Lithuania. Open the map, pick
 diesel, petrol, LPG or EV, and see who is cheapest nearby or on the way.
@@ -312,16 +312,19 @@ npm run test:e2e          # also writes end-to-end line coverage of src
 npm run test:deps         # dependency tests (needs network)
 ```
 
-**CI** (`ci.yml`) runs `check` on every pull request and push to `main`. Run it on
-any branch from Actions → CI → Run workflow (`gh workflow run ci.yml --ref <branch>`);
-a run started that way also runs the Playwright tests. Claude Code sessions check
-changes this way rather than locally (`.claude/skills/ci-checks/SKILL.md`).
+**CI** (`ci.yml`) runs `check` and the Playwright tests on every pull request and
+push to `main`. The same jobs run on any branch from Actions → CI → Run workflow
+(`gh workflow run ci.yml --ref <branch>`). Claude Code sessions check changes this
+way rather than locally (`.claude/skills/ci-checks/SKILL.md`).
 
 **Coverage badges** show line coverage for the unit tests (`src`, `scripts`, `worker/src`)
-and then for the end-to-end tests (`src`, from the pages Playwright opens). A push to
-`main` refreshes the unit badge; a called run refreshes both. CI replaces the JSON files
-on the `coverage-badges` release. That is not a commit, so a coverage change does not
-add one. The `coverage/` directory stays gitignored.
+and then for the end-to-end tests (`src`, from the pages Playwright opens). A pull
+request runs both and does not publish. A push to `main`, or a called run, replaces
+the JSON files on the `coverage-badges` release. That is not a commit, so a coverage
+change does not add one. The `coverage/` directory stays gitignored. Shields.io will
+not fetch `github.com`, so the badges read those files through the cron worker
+(`/coverage/unit.json` and `/coverage/e2e.json` on
+`kur-degalai-cron.almantusk.workers.dev`).
 
 **Dependency tests** (`tests/deps/`) check that everything needed to call each
 outside service is there. `wiring` is offline and runs in CI: every `env` name the

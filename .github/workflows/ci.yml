@@ -4,8 +4,8 @@ on:
   pull_request:
   push:
     branches: [main]
-  # Called on a branch to check a change there, browser tests included
-  # (.claude/skills/ci-checks/SKILL.md).
+  # Called on a branch to check a change there (.claude/skills/ci-checks/SKILL.md).
+  # Browser tests run on every event, the same as a pull request.
   workflow_dispatch:
 
 permissions:
@@ -65,9 +65,8 @@ jobs:
           test -n "$badge"
           bash scripts/publish-coverage-release.sh "$badge"
 
+  # Map tiles and a real browser, on pull requests, pushes to main, and called runs.
   e2e:
-    # Only when called: these load the map tiles and drive a real browser.
-    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -87,9 +86,10 @@ jobs:
           name: coverage-e2e
           path: coverage/e2e.json
 
+  # Same rule as the unit badge: a pull request must not replace the badge on main.
   publish-e2e-coverage:
     needs: e2e
-    if: needs.e2e.result == 'success'
+    if: github.event_name != 'pull_request' && needs.e2e.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
