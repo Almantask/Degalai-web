@@ -1,5 +1,9 @@
 # Kur degalai
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Almantask_Degalai-web&metric=alert_status)](https://sonarcloud.io/dashboard?id=Almantask_Degalai-web)
+[![CI](https://github.com/Almantask/Degalai-web/actions/workflows/ci.yml/badge.svg)](https://github.com/Almantask/Degalai-web/actions/workflows/ci.yml)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=Almantask_Degalai-web&metric=ncloc)](https://sonarcloud.io/dashboard?id=Almantask_Degalai-web)
+
 Free, up-to-date fuel prices at every station in Lithuania. Open the map, pick
 diesel, petrol, LPG or EV, and see who is cheapest nearby or on the way.
 
