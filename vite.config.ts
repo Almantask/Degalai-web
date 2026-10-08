@@ -12,6 +12,7 @@ import { join, relative, resolve } from "node:path";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { includePublishedDataFile, slimPrices, slimStations } from "./scripts/publish-data.ts";
+import { injectWebAnalytics } from "./src/web-analytics.ts";
 import type { DailyPrices, Station } from "./src/types.ts";
 
 const base = process.env.BASE_URL ?? "/";
@@ -19,6 +20,15 @@ const base = process.env.BASE_URL ?? "/";
 export default defineConfig({
   base,
   plugins: [
+    {
+      name: "cf-web-analytics",
+      transformIndexHtml: {
+        order: "post",
+        handler(html) {
+          return injectWebAnalytics(html, process.env.VITE_CF_BEACON_TOKEN);
+        },
+      },
+    },
     {
       name: "data-files",
       configureServer(server) {

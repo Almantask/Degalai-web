@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi, type TestContext } from "vitest";
 import { fetchRoute } from "../../src/routing.ts";
+import { webAnalyticsTag } from "../../src/web-analytics.ts";
 import { dispatchWorkflow } from "../../worker/src/dispatch.ts";
 import { createIssue } from "../../worker/src/report.ts";
 import { ROOT, workerSecrets, workerVar, wrangler } from "./repo.ts";
@@ -91,5 +92,12 @@ describe("ORS_KEY (VITE_ORS_KEY, OpenRouteService)", () => {
     const kaunas = { lat: 54.8985, lon: 23.9036 };
     // OSRM, the fallback, would answer "fastest".
     expect((await fetchRoute(vilnius, kaunas, "shortest"))?.profile).toBe("shortest");
+  });
+});
+
+describe("CF_BEACON_TOKEN (VITE_CF_BEACON_TOKEN, Cloudflare Web Analytics)", () => {
+  it("is a site token the beacon tag can embed", (ctx) => {
+    const token = setting(ctx, "VITE_CF_BEACON_TOKEN", { optional: true });
+    expect(webAnalyticsTag(token)).toContain(token);
   });
 });

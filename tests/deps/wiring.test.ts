@@ -98,6 +98,12 @@ describe("site build", () => {
     ).toEqual([]);
   });
 
+  it("passes the Cloudflare Web Analytics token into the pages build", () => {
+    expect(workflow("daily.yml")).toMatch(
+      /^\s+VITE_CF_BEACON_TOKEN:\s+\$\{\{ secrets\.CF_BEACON_TOKEN \}\}$/m,
+    );
+  });
+
   it("links only to issue templates that exist", () => {
     const source = [...readAll("src", ".ts").values()].join("\n");
     for (const [, file] of source.matchAll(/issues\/new\?template=([\w.-]+)/g)) {

@@ -66,6 +66,9 @@ jobs:
           # OpenRouteService key (openrouteservice.org). It ends up in the public JS bundle.
           # Unset, routes come from the public OSRM server.
           VITE_ORS_KEY: ${{ secrets.ORS_KEY }}
+          # Cloudflare Web Analytics site token (dash → Web Analytics → the github.io hostname).
+          # Public in the page. Unset, the beacon is left out.
+          VITE_CF_BEACON_TOKEN: ${{ secrets.CF_BEACON_TOKEN }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
