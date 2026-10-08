@@ -3,7 +3,7 @@
   "name": "kur-degalai-cron",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-01",
-  // The cron, plus POST /report on workers.dev for the site's "Report a problem" form.
+  // The cron, plus POST /report and the coverage badges on workers.dev.
   "workers_dev": true,
   "preview_urls": false,
   "triggers": {
