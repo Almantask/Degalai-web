@@ -1,7 +1,11 @@
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { createCoverageMap, type CoverageMapData } from "istanbul-lib-coverage";
+import istanbulCoverage, { type CoverageMapData } from "istanbul-lib-coverage";
 import { isAppSource } from "./coverage-instrument.ts";
+
+// Named exports are invisible to Node's ESM loader: the package is CommonJS
+// and defines these as methods. Playwright loads this file that way; Vitest does not.
+const { createCoverageMap } = istanbulCoverage;
 
 export { isAppSource };
 
