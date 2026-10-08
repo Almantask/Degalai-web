@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { createFileCoverage } from "istanbul-lib-coverage";
 import { describe, expect, it } from "vitest";
 import { coverageBadge, linePercent } from "../scripts/coverage-badge.ts";
@@ -32,22 +33,23 @@ describe("coverage badge", () => {
 
 describe("e2e coverage", () => {
   it("instruments src TypeScript only", () => {
-    expect(instrumentPath("/workspace/src/app.ts")).toBe("/workspace/src/app.ts");
-    expect(instrumentPath("/workspace/src/app.ts?used")).toBe("/workspace/src/app.ts");
-    expect(instrumentPath("/workspace/src/vite-env.d.ts")).toBeUndefined();
-    expect(instrumentPath("/workspace/node_modules/pkg/src/x.ts")).toBeUndefined();
-    expect(instrumentPath("/workspace/scripts/pipeline.ts")).toBeUndefined();
+    const app = resolve("src/app.ts");
+    expect(instrumentPath(app)).toBe(app);
+    expect(instrumentPath(`${app}?used`)).toBe(app);
+    expect(instrumentPath(resolve("src/vite-env.d.ts"))).toBeUndefined();
+    expect(instrumentPath(resolve("node_modules/pkg/src/x.ts"))).toBeUndefined();
+    expect(instrumentPath(resolve("scripts/pipeline.ts"))).toBeUndefined();
   });
 
   it("counts a covered line in src and ignores the pipeline", () => {
-    const covered = fileCoverage("/workspace/src/a.ts", [1, 0]);
-    const pipeline = fileCoverage("/workspace/scripts/pipeline.ts", [1]);
+    const srcFile = resolve("src/a.ts");
+    const pipelineFile = resolve("scripts/pipeline.ts");
     const summary = summarizeCoverage({
-      "/workspace/src/a.ts": covered,
-      "/workspace/scripts/pipeline.ts": pipeline,
+      [srcFile]: fileCoverage(srcFile, [1, 0]),
+      [pipelineFile]: fileCoverage(pipelineFile, [1]),
     });
     expect(summary.total.lines).toMatchObject({ total: 2, covered: 1, pct: 50 });
-    expect(isAppSource("/workspace/worker/src/report.ts")).toBe(false);
+    expect(isAppSource(resolve("worker/src/report.ts"))).toBe(false);
   });
 
   it("records hits on globalThis", () => {

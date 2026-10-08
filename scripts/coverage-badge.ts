@@ -9,10 +9,12 @@ export interface CoverageBadge {
 
 /** Line percentage from an Istanbul / Vitest `coverage-summary.json`. */
 export function linePercent(summary: unknown): number {
-  if (!summary || typeof summary !== "object") throw new Error("coverage summary is not an object");
+  if (!summary || typeof summary !== "object") {
+    throw new TypeError("coverage summary is not an object");
+  }
   const pct = (summary as { total?: { lines?: { pct?: unknown } } }).total?.lines?.pct;
   if (typeof pct !== "number" || !Number.isFinite(pct)) {
-    throw new Error("coverage summary has no line percentage");
+    throw new TypeError("coverage summary has no line percentage");
   }
   return pct;
 }
