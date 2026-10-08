@@ -276,6 +276,20 @@ On each dashed via-route, the cheapest station within 200 m of it is marked too
 leads to and within your detour limit of that line by road (same check). Its
 detour is the dashed route's extra length plus that stop.
 
+## Visits
+
+Page views go to [Cloudflare Web Analytics](https://developers.cloudflare.com/web-analytics/).
+The hourly build writes the beacon into every page when the `CF_BEACON_TOKEN`
+repository secret is set (passed as `VITE_CF_BEACON_TOKEN`). Without that secret the
+beacon is left out and the site is unchanged.
+
+In the Cloudflare dashboard: **Analytics & logs → Web Analytics → Add a site**, hostname
+`almantask.github.io`, then copy the site token from **Manage site** into the secret.
+The token is public in the page, the same way the OpenRouteService key is. The beacon
+sets no cookie. It counts the map and history pages in both languages, including a
+change of page inside the app. It stores the path only, so `?fuel=` and `?kw=` are not
+separate pages.
+
 ## Develop
 
 ```bash
@@ -314,9 +328,11 @@ has the branch, enabled workflow and labels.
 `WORKFLOW_DISPATCH_TOKEN` with the worker's dispatch and issue calls (sent so
 GitHub refuses them after accepting the token: nothing starts, nothing is filed),
 `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` with wrangler (the KV namespaces
-and the deployed worker's secrets) and `ORS_KEY` with `fetchRoute`. The
+and the deployed worker's secrets), `ORS_KEY` with `fetchRoute`, and
+`CF_BEACON_TOKEN` as the site token embedded in the beacon. The
 **Dependencies** workflow runs everything daily and on pushes that change how a
-service is called; there an empty secret fails (`ORS_KEY` is optional). Locally a
+service is called; there an empty secret fails (`ORS_KEY` and `CF_BEACON_TOKEN`
+are optional). Locally a
 test skips when its value is not in the environment.
 
 To refresh the README shots (preview must be running on port 4173):

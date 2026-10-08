@@ -51,3 +51,5 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           # Optional: without it the site routes with OSRM and this test skips.
           VITE_ORS_KEY: ${{ secrets.ORS_KEY }}
+          # Optional: without it the deployed site omits the Web Analytics beacon and this test skips.
+          VITE_CF_BEACON_TOKEN: ${{ secrets.CF_BEACON_TOKEN }}
