@@ -289,12 +289,30 @@ The hourly build writes the beacon into every page when the `CF_BEACON_TOKEN`
 repository secret is set (passed as `VITE_CF_BEACON_TOKEN`). Without that secret the
 beacon is left out and the site is unchanged.
 
-In the Cloudflare dashboard: **Analytics & logs → Web Analytics → Add a site**, hostname
-`almantask.github.io`, then copy the site token from **Manage site** into the secret.
-The token is public in the page, the same way the OpenRouteService key is. The beacon
-sets no cookie. It counts the map and history pages in both languages, including a
-change of page inside the app. It stores the path only, so `?fuel=` and `?kw=` are not
-separate pages.
+One Web Analytics site covers every project on `almantask.github.io`, so this repository
+and donate-me use the same token, each from its own `CF_BEACON_TOKEN` secret.
+
+1. In the [Cloudflare dashboard](https://dash.cloudflare.com/), open **Analytics & logs →
+   Web Analytics**.
+2. If `almantask.github.io` is already listed, choose **Manage site** and go to step 4.
+   Don't add the host a second time.
+3. Otherwise choose **Add a site**, enter the hostname `almantask.github.io` and confirm.
+   Leave EU visitors in: the option that drops them would lose most Lithuanian visits.
+4. The JS snippet shown contains `data-cf-beacon='{"token": "…"}'`. Copy the value of
+   `token` (32 hex characters), without quotes.
+5. In this repository, open **Settings → Secrets and variables → Actions → Secrets → New
+   repository secret**. Name: `CF_BEACON_TOKEN`. Secret: the token. Use a secret, not a
+   variable.
+6. Wait for the next hourly build, or run **Actions → Hourly data + deploy → Run
+   workflow** on `main`. A malformed secret fails the build.
+7. Check: on https://almantask.github.io/Degalai-web/, the browser's network tab shows
+   `beacon.min.js` and a request to `cloudflareinsights.com/cdn-cgi/rum`. Visits show in
+   the dashboard within a few minutes.
+
+The token is public in the page, the same way the OpenRouteService key is. The secret
+keeps it out of the repository. The beacon sets no cookie. It counts the map and history
+pages in both languages, including a change of page inside the app. It stores the path
+only, so `?fuel=` and `?kw=` are not separate pages.
 
 ## Develop
 
