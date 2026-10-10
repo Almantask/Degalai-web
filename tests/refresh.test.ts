@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { DATA_CACHE_NAMES, refreshWebsite } from "../src/refresh.ts";
+import { browserRefreshDeps, DATA_CACHE_NAMES, refreshWebsite } from "../src/refresh.ts";
 
 describe("refreshWebsite", () => {
   it("clears price caches, updates the service worker, then reloads", async () => {
@@ -44,5 +44,61 @@ describe("refreshWebsite", () => {
     await done;
     expect(reload).toHaveBeenCalledOnce();
     vi.useRealTimers();
+  });
+});
+
+describe("browserRefreshDeps", () => {
+  it("deletes caches, updates workers when present, and reloads", async () => {
+    const reload = vi.fn();
+    const updated: string[] = [];
+    const deleted: string[] = [];
+    const withWorker = browserRefreshDeps({
+      caches: {
+        delete: async (name: string) => {
+          deleted.push(name);
+          return true;
+        },
+      },
+      navigator: {
+        serviceWorker: {
+          getRegistrations: async () => [
+            {
+              update: async () => {
+                updated.push("sw");
+              },
+            },
+          ],
+        },
+      },
+      location: { reload },
+    } as unknown as Window);
+    await withWorker.deleteCache!("kur-degalai-data");
+    await withWorker.updateWorkers!();
+    withWorker.reload();
+    expect(deleted).toEqual(["kur-degalai-data"]);
+    expect(updated).toEqual(["sw"]);
+    expect(reload).toHaveBeenCalledOnce();
+
+    const bareReload = vi.fn();
+    const bare = browserRefreshDeps({
+      navigator: {},
+      location: { reload: bareReload },
+    } as unknown as Window);
+    await bare.deleteCache!("kur-degalai-history");
+    await bare.updateWorkers!();
+    bare.reload();
+    expect(bareReload).toHaveBeenCalledOnce();
+
+    const defaultReload = vi.fn();
+    vi.stubGlobal("window", {
+      caches: { delete: async () => false },
+      navigator: {},
+      location: { reload: defaultReload },
+    });
+    const fromWindow = browserRefreshDeps();
+    await fromWindow.updateWorkers!();
+    fromWindow.reload();
+    expect(defaultReload).toHaveBeenCalledOnce();
+    vi.unstubAllGlobals();
   });
 });

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   CIRCLE_K_PRICES_URL,
   circleKFuel,
@@ -53,6 +53,28 @@ describe("circleKFuel", () => {
     expect(circleKFuel("/media-assets/card/2027-01/new.png", "95miles+")).toBeNull();
     expect(circleKFuel("/media-assets/card/2027-01/car-wash.png", "Plovykla")).toBeUndefined();
   });
+
+  it("keeps a file name that cannot be decoded", () => {
+    expect(circleKFuel("/media/%ZZ.png", "95miles")).toBe("95");
+  });
+
+  it("treats a missing file name as no image", () => {
+    const src = {
+      split(sep: string) {
+        return sep === "?" ? [{ split: () => ({ at: () => undefined }) }] : [""];
+      },
+    };
+    expect(circleKFuel(src as unknown as string, "95")).toBe("95");
+  });
+});
+
+describe("circleKSourceId", () => {
+  it("sorts place tokens and ignores a name with no words", () => {
+    expect(circleKSourceId("Vilnius\u00a0m.", "Gedimino pr. 1")).toBe(
+      "circle-k:1-gedimino-m-pr-vilnius",
+    );
+    expect(circleKSourceId("!!!", "@@@")).toBe("circle-k:");
+  });
 });
 
 describe("parseCircleKDate", () => {
@@ -67,6 +89,13 @@ describe("parseCircleKDate", () => {
 
   it("returns null when the sentence is missing", () => {
     expect(parseCircleKDate("<h1>Degalų kainos</h1>", now)).toBeNull();
+  });
+
+  it("reads an ISO date and rejects an unknown month or an impossible day", () => {
+    expect(parseCircleKDate("Kainos atnaujintos 2026-09-17.", now)).toBe("2026-09-17");
+    expect(parseCircleKDate("Kainos atnaujintos xyz 10-ą dieną.", now)).toBeNull();
+    expect(parseCircleKDate("Kainos atnaujintos rugsėjo 0-ą dieną.", now)).toBeNull();
+    expect(parseCircleKDate("Kainos atnaujintos rugsėjo 32-ą dieną.", now)).toBeNull();
   });
 });
 
@@ -97,6 +126,55 @@ describe("parseCircleKPage", () => {
     expect(() =>
       parseCircleKPage(`<div>Kainos atnaujintos rugsėjo 17-ą dieną.</div>`, now),
     ).toThrow(/0 prices/);
+  });
+
+  it("skips cards that are not a priced station and decodes the address", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const html = `
+        Kainos atnaujintos 2026-09-17
+        <div class="atom-card"><p>x</p></div>
+        <div class="atom-card"><img src="/media/car-wash.png" alt="Plovykla"></div>
+        <div class="atom-card"><img src="/media/Miles_95.png" alt="95"></div>
+        <div class="atom-card">
+          <img src="/media/Miles_D.png" alt="d">
+          <h2 class="uk-heading-large">nope</h2>
+          <p>A<br>B<br>C</p>
+        </div>
+        <div class="atom-card">
+          <img src="/media/Miles_95.png" alt="95">
+          <h2 class="uk-heading-large">1,919</h2>
+          <p>A<br>B</p>
+        </div>
+        <div class="atom-card">
+          <img src="/media/MilesPlus_95.png" alt="plus">
+          <h2 class="uk-heading-large">2,00</h2>
+          <p>A<br>B<br>C</p>
+        </div>
+        <div class="atom-card">
+          <img src="/media/MilesPlus_98.jpg" alt="98">
+          <h2 class="uk-heading-large">2,043</h2>
+          <p>Name&nbsp;&amp;&nbsp;Co<br>A &quot;B&quot; &#39;C<br>&#352;iauliai</p>
+        </div>
+      `;
+      const rows = parseCircleKPage(html, now);
+      expect(rows).toEqual([
+        {
+          sourceStationId: circleKSourceId("Šiauliai", `A "B" 'C`),
+          brand: "circle-k",
+          name: "Name & Co",
+          address: `A "B" 'C`,
+          city: "Šiauliai",
+          fuel: "98",
+          price: 2.043,
+          observedAt: "2026-09-17T00:00:00+03:00",
+          source: "circle-k",
+        },
+      ]);
+      expect(warn).toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
   });
 });
 

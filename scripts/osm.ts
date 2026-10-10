@@ -295,10 +295,10 @@ export function parseChargeTag(value: string | undefined): number | undefined {
   return undefined;
 }
 
-function brandName(brand: string, fallback: string): string {
+export function brandName(brand: string, fallback: string): string {
   return brand === "independent" ? fallback : displayBrandName(brand);
 }
 
-function displayFallback(brand: string): string {
+export function displayFallback(brand: string): string {
   return brand === "independent" ? "Degalinė" : brand;
 }

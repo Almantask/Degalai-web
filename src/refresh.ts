@@ -35,16 +35,11 @@ async function prepareRefresh(deps: RefreshWebsiteDeps): Promise<void> {
 function withTimeout(task: Promise<unknown>, ms: number): Promise<void> {
   return new Promise((resolve) => {
     const timer = setTimeout(resolve, ms);
-    task.then(
-      () => {
-        clearTimeout(timer);
-        resolve();
-      },
-      () => {
-        clearTimeout(timer);
-        resolve();
-      },
-    );
+    const done = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    task.then(done, done);
   });
 }
 

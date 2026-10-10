@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -119,6 +119,25 @@ describe("loadHealth / saveHealth", () => {
       const health = recordRuns(emptyHealth(), [{ name: "lea", ...run(0, true, 700) }], now);
       saveHealth(path, health);
       expect(loadHealth(path)).toEqual(health);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("returns empty health for invalid json or a file that is not a run log", () => {
+    const dir = mkdtempSync(join(tmpdir(), "source-health-bad-"));
+    try {
+      const path = join(dir, "health.json");
+      writeFileSync(path, "{");
+      expect(loadHealth(path)).toEqual(emptyHealth());
+      writeFileSync(path, "null");
+      expect(loadHealth(path)).toEqual(emptyHealth());
+      writeFileSync(path, JSON.stringify({ runs: null }));
+      expect(loadHealth(path)).toEqual(emptyHealth());
+      writeFileSync(path, JSON.stringify({ runs: 1 }));
+      expect(loadHealth(path)).toEqual(emptyHealth());
+      writeFileSync(path, JSON.stringify({ runs: {} }));
+      expect(loadHealth(path)).toEqual(emptyHealth());
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

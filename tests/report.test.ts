@@ -106,6 +106,16 @@ describe("sendReport", () => {
       reason: "failed",
     });
   });
+
+  it("calls a thrown request a failure when the abort signal is not aborted", async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new TypeError("Failed to fetch");
+    });
+    expect(await sendReport(ENDPOINT, bug, context, fetchImpl, 5_000)).toEqual({
+      ok: false,
+      reason: "failed",
+    });
+  });
 });
 
 describe("isEmail", () => {

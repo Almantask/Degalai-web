@@ -1,6 +1,14 @@
-import { describe, expect, it } from "vitest";
-import { lastUpdatedAt, pricesObservedAt, sourceLabels } from "../src/data.ts";
-import type { DailyPrices, DataMeta } from "../src/types.ts";
+import { describe, expect, it, vi } from "vitest";
+import {
+  dataUrl,
+  lastUpdatedAt,
+  loadAppData,
+  loadChargers,
+  loadHistory,
+  pricesObservedAt,
+  sourceLabels,
+} from "../src/data.ts";
+import type { DailyPrices, DataMeta, HistoryFile, Station } from "../src/types.ts";
 
 const prices: DailyPrices = {
   date: "2026-09-15",
@@ -63,6 +71,96 @@ describe("pricesObservedAt", () => {
         },
       }),
     ).toBeUndefined();
+  });
+});
+
+describe("dataUrl", () => {
+  it("joins a data file onto the base", () => {
+    expect(dataUrl("stations.json")).toBe("/data/stations.json");
+    expect(dataUrl("stations.json", "")).toBe("/data/stations.json");
+    expect(dataUrl("stations.json", "/")).toBe("/data/stations.json");
+    expect(dataUrl("stations.json", "/Degalai-web")).toBe("/Degalai-web/data/stations.json");
+    expect(dataUrl("meta.json", "/Degalai-web/")).toBe("/Degalai-web/data/meta.json");
+  });
+});
+
+function stubFetch(handler: (url: string) => { ok: boolean; body?: unknown } | "throw"): void {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) => {
+      const spec = handler(String(url));
+      if (spec === "throw") throw new Error("offline");
+      return { ok: spec.ok, json: async () => spec.body };
+    }),
+  );
+}
+
+describe("loadAppData", () => {
+  it("loads stations, meta and that day's prices, or the fallbacks", async () => {
+    const stations: Station[] = [
+      { id: "s1", name: "S", brand: "neste", lat: 1, lon: 2, fuels: ["D"], sourceIds: {} },
+    ];
+    const meta: DataMeta = {
+      date: "2026-09-15",
+      generatedAt: "t",
+      stationCount: 1,
+      pricedStationCount: 1,
+      sources: ["lea"],
+    };
+    const prices: DailyPrices = { date: "2026-09-15", generatedAt: "t", prices: {} };
+    stubFetch((url) => {
+      if (url.endsWith("stations.json")) return { ok: true, body: stations };
+      if (url.endsWith("meta.json")) return { ok: true, body: meta };
+      return { ok: true, body: prices };
+    });
+    await expect(loadAppData()).resolves.toEqual({ stations, prices, meta });
+
+    stubFetch((url) => {
+      if (url.endsWith("stations.json")) return { ok: true, body: [] };
+      return { ok: true, body: { ...meta, date: null } };
+    });
+    await expect(loadAppData()).resolves.toEqual({
+      stations: [],
+      prices: null,
+      meta: { ...meta, date: null },
+    });
+
+    stubFetch(() => ({ ok: false }));
+    await expect(loadAppData()).resolves.toEqual({ stations: [], prices: null, meta: null });
+
+    stubFetch(() => "throw");
+    await expect(loadAppData()).resolves.toEqual({ stations: [], prices: null, meta: null });
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("loadChargers", () => {
+  it("returns the list, or nothing when the file is not an array", async () => {
+    const chargers: Station[] = [
+      { id: "c", name: "C", brand: "independent", lat: 1, lon: 2, fuels: ["EV"], sourceIds: {} },
+    ];
+    stubFetch(() => ({ ok: true, body: chargers }));
+    await expect(loadChargers()).resolves.toEqual(chargers);
+    stubFetch(() => ({ ok: true, body: { nope: true } }));
+    await expect(loadChargers()).resolves.toEqual([]);
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("loadHistory", () => {
+  it("returns the file only when it is an object with byFuel", async () => {
+    const file: HistoryFile = { generatedAt: "t", keepDays: 7, byFuel: {} };
+    stubFetch(() => ({ ok: true, body: file }));
+    await expect(loadHistory()).resolves.toEqual(file);
+    stubFetch(() => ({ ok: true, body: null }));
+    await expect(loadHistory()).resolves.toBeNull();
+    stubFetch(() => ({ ok: true, body: "x" }));
+    await expect(loadHistory()).resolves.toBeNull();
+    stubFetch(() => ({ ok: true, body: [] }));
+    await expect(loadHistory()).resolves.toBeNull();
+    stubFetch(() => ({ ok: true, body: { generatedAt: "t" } }));
+    await expect(loadHistory()).resolves.toBeNull();
+    vi.unstubAllGlobals();
   });
 });
 

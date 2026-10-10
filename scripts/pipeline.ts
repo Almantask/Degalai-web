@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { isCliEntry, runCli } from "./cli.ts";
 import type { DailyPrices, DataMeta, Observation, Station } from "../src/types.ts";
 import { HISTORY_KEEP_DAYS } from "../src/types.ts";
 import { cheapestHoursByFuel } from "../src/cheap-hours.ts";
@@ -43,12 +44,19 @@ import {
   type SelectionPolicy,
 } from "./validate.ts";
 
-const ROOT = join(import.meta.dirname, "..");
-const DATA = join(ROOT, "data");
-const PRICES = join(DATA, "prices");
-const REPORTS = join(ROOT, "reports");
+const REPO = join(import.meta.dirname, "..");
 
-function todayVilnius(): string {
+/** Checkout root, or `PIPELINE_ROOT` when a test points the pipeline at a temp directory. */
+export function pipelineRoot(): string {
+  return process.env.PIPELINE_ROOT || REPO;
+}
+
+function locate(root: string): { data: string; prices: string; reports: string } {
+  const data = join(root, "data");
+  return { data, prices: join(data, "prices"), reports: join(root, "reports") };
+}
+
+export function todayVilnius(): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Europe/Vilnius",
     year: "numeric",
@@ -57,28 +65,32 @@ function todayVilnius(): string {
   }).format(new Date());
 }
 
-function readJson<T>(path: string, fallback: T): T {
+export function readJson<T>(path: string, fallback: T): T {
   if (!existsSync(path)) return fallback;
   return JSON.parse(readFileSync(path, "utf8")) as T;
 }
 
-function writeJson(path: string, value: unknown): void {
+export function writeJson(path: string, value: unknown): void {
   mkdirSync(join(path, ".."), { recursive: true });
   const space = /\/prices\/\d{4}-\d{2}-\d{2}\.json$/.test(path) ? 0 : 2;
   writeFileSync(path, `${JSON.stringify(value, null, space)}\n`);
 }
 
-function latestPriceDate(): string | null {
-  if (!existsSync(PRICES)) return null;
-  const dates = readdirSync(PRICES)
+export function latestPriceDate(root: string): string | null {
+  const { prices } = locate(root);
+  if (!existsSync(prices)) return null;
+  const dates = readdirSync(prices)
     .filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f))
     .map((f) => f.slice(0, 10))
     .sort();
   return dates.at(-1) ?? null;
 }
 
-async function enrichCoords(observations: Observation[]): Promise<Observation[]> {
-  const cachePath = join(DATA, "cache", "geocode.json");
+export async function enrichCoords(
+  observations: Observation[],
+  root: string,
+): Promise<Observation[]> {
+  const cachePath = join(locate(root).data, "cache", "geocode.json");
   const cache = await loadGeocodeCache(cachePath);
   const bySource = new Map<string, Observation[]>();
   for (const o of observations) {
@@ -125,8 +137,8 @@ async function enrichCoords(observations: Observation[]): Promise<Observation[]>
   return out;
 }
 
-async function loadOsm(force: boolean): Promise<Station[]> {
-  const path = join(DATA, "stations.json");
+export async function loadOsm(force: boolean, root: string): Promise<Station[]> {
+  const path = join(locate(root).data, "stations.json");
   const existing = readJson<Station[]>(path, []).filter((s) => s.id.startsWith("osm:"));
   const weekday = new Date().getUTCDay();
   const shouldRefresh = force || existing.length === 0 || weekday === 0;
@@ -147,12 +159,13 @@ async function loadOsm(force: boolean): Promise<Station[]> {
 }
 
 /** OSM EV chargers refresh on the same weekly cadence; a failed fetch never fails the build. */
-async function loadOsmChargers(force: boolean): Promise<Station[]> {
-  const path = join(DATA, "cache", "osm-chargers.json");
+export async function loadOsmChargers(force: boolean, root: string): Promise<Station[]> {
+  const { data } = locate(root);
+  const path = join(data, "cache", "osm-chargers.json");
   // Before this cache existed, the OSM chargers lived only in chargers.json (`ev:` ids).
   const existing = existsSync(path)
     ? readJson<Station[]>(path, [])
-    : readJson<Station[]>(join(DATA, "chargers.json"), []).filter((c) => c.id.startsWith("ev:"));
+    : readJson<Station[]>(join(data, "chargers.json"), []).filter((c) => c.id.startsWith("ev:"));
   const weekday = new Date().getUTCDay();
   if (!force && existing.length > 0 && weekday !== 0) {
     console.log(`Reusing ${existing.length} OSM chargers`);
@@ -179,8 +192,8 @@ async function loadOsmChargers(force: boolean): Promise<Station[]> {
 }
 
 /** Via Lietuva register chargers with prices; a failed download falls back to a recent cache. */
-async function loadRegister(now: Date): Promise<Station[]> {
-  const path = join(DATA, "cache", "via-lietuva.json");
+export async function loadRegister(now: Date, root: string): Promise<Station[]> {
+  const path = join(locate(root).data, "cache", "via-lietuva.json");
   try {
     const { reportUrl, chargers } = await fetchRegister();
     writeJson(path, { fetchedAt: now.toISOString(), reportUrl, chargers });
@@ -199,8 +212,11 @@ async function loadRegister(now: Date): Promise<Station[]> {
 }
 
 /** Nord Pool LT spot price, merged into a cache so one failed fetch keeps the chart. */
-async function loadSpot(now: Date): Promise<{ points: SpotPoint[]; fetchedAt?: string }> {
-  const path = join(DATA, "cache", "spot.json");
+export async function loadSpot(
+  now: Date,
+  root: string,
+): Promise<{ points: SpotPoint[]; fetchedAt?: string }> {
+  const path = join(locate(root).data, "cache", "spot.json");
   const cache = loadSpotCache(path);
   try {
     const fresh = await fetchSpot(now);
@@ -216,38 +232,39 @@ async function loadSpot(now: Date): Promise<{ points: SpotPoint[]; fetchedAt?: s
   }
 }
 
-async function main(): Promise<void> {
+export async function main(root: string): Promise<void> {
+  const { data, prices, reports: reportsDir } = locate(root);
   const args = new Set(process.argv.slice(2));
   const osmOnly = args.has("--osm-only");
   const dateArg = process.argv.find((_, i) => process.argv[i - 1] === "--date");
 
-  mkdirSync(PRICES, { recursive: true });
-  mkdirSync(join(DATA, "overrides"), { recursive: true });
-  mkdirSync(REPORTS, { recursive: true });
-  if (!existsSync(join(DATA, "overrides", "stations.json"))) {
-    writeJson(join(DATA, "overrides", "stations.json"), []);
+  mkdirSync(prices, { recursive: true });
+  mkdirSync(join(data, "overrides"), { recursive: true });
+  mkdirSync(reportsDir, { recursive: true });
+  if (!existsSync(join(data, "overrides", "stations.json"))) {
+    writeJson(join(data, "overrides", "stations.json"), []);
   }
-  if (!existsSync(join(DATA, "overrides", "prices.json"))) {
-    writeJson(join(DATA, "overrides", "prices.json"), []);
+  if (!existsSync(join(data, "overrides", "prices.json"))) {
+    writeJson(join(data, "overrides", "prices.json"), []);
   }
-  if (!existsSync(join(DATA, "overrides", "ev-tariffs.json"))) {
-    writeJson(join(DATA, "overrides", "ev-tariffs.json"), []);
+  if (!existsSync(join(data, "overrides", "ev-tariffs.json"))) {
+    writeJson(join(data, "overrides", "ev-tariffs.json"), []);
   }
 
-  let stations = await loadOsm(args.has("--osm"));
-  const osmChargers = await loadOsmChargers(args.has("--osm"));
+  let stations = await loadOsm(args.has("--osm"), root);
+  const osmChargers = await loadOsmChargers(args.has("--osm"), root);
   if (osmOnly) {
-    writeJson(join(DATA, "stations.json"), stations);
+    writeJson(join(data, "stations.json"), stations);
     return;
   }
   const runAt = new Date();
-  const register = await loadRegister(runAt);
+  const register = await loadRegister(runAt, root);
   const merged = mergeChargers(register, osmChargers);
   const osmOnlyChargers = merged.osmOnly;
   const { chargers, networks } = assignNetworkBrands(merged.chargers);
-  const spot = await loadSpot(runAt);
+  const spot = await loadSpot(runAt, root);
 
-  const overrides = loadOverrides(join(DATA, "overrides", "stations.json"));
+  const overrides = loadOverrides(join(data, "overrides", "stations.json"));
   const requested = dateArg ?? todayVilnius();
   const ctx: SourceContext = { requested, leaByDate: new Map(), leaDate: null };
   console.log(`Fetching sources: ${SOURCE_META.map((m) => m.name).join(", ")}…`);
@@ -255,7 +272,7 @@ async function main(): Promise<void> {
   for (const run of runs) logRun(run);
   if (ctx.leaByDate.size) console.log(`  ${ctx.leaByDate.size} days in LEA workbook`);
 
-  const healthPath = join(DATA, "cache", "source-health.json");
+  const healthPath = join(data, "cache", "source-health.json");
   const health = recordRuns(loadHealth(healthPath), runs);
   saveHealth(healthPath, health);
   const ranking = rankSources(health);
@@ -266,7 +283,7 @@ async function main(): Promise<void> {
   };
 
   const reports = reportsToObservations(
-    loadPriceReports(join(DATA, "overrides", "prices.json")),
+    loadPriceReports(join(data, "overrides", "prices.json")),
     stations,
   );
   const combined = combinePriceObservations({
@@ -302,20 +319,20 @@ async function main(): Promise<void> {
         for (const o of group) pre.push({ ...o, lat: hit.lat, lon: hit.lon });
       } else needGeo.push(...group);
     }
-    const geocoded = await enrichCoords(needGeo);
+    const geocoded = await enrichCoords(needGeo, root);
     observations = [...pre, ...geocoded];
   }
 
   const matched = matchObservations(stations, observations, overrides);
   stations = [...stations, ...matched.extraStations];
-  writeJson(join(REPORTS, "unmatched.json"), matched.unmatched);
+  writeJson(join(reportsDir, "unmatched.json"), matched.unmatched);
 
-  const prevDate = latestPriceDate();
+  const prevDate = latestPriceDate(root);
   const previous = prevDate
-    ? readJson<DailyPrices | null>(join(PRICES, `${prevDate}.json`), null)
+    ? readJson<DailyPrices | null>(join(prices, `${prevDate}.json`), null)
     : null;
   const { daily: fresh, log } = observationsToDaily(date, matched.observations, previous, policy);
-  const tariffs = loadEvTariffs(join(DATA, "overrides", "ev-tariffs.json"));
+  const tariffs = loadEvTariffs(join(data, "overrides", "ev-tariffs.json"));
   const evPrices = chargerPrices(chargers, tariffs, runAt, previous);
   mergeChargerPrices(fresh, evPrices);
   const bySource = countBySource(evPrices);
@@ -328,27 +345,27 @@ async function main(): Promise<void> {
   );
   applyStale(fresh, previous, prevDate);
   const daily = reuseGeneratedAtIfUnchanged(previous, fresh);
-  writeJson(join(PRICES, `${date}.json`), daily);
-  writeJson(join(REPORTS, "validation.json"), log);
+  writeJson(join(prices, `${date}.json`), daily);
+  writeJson(join(reportsDir, "validation.json"), log);
 
-  const removed = prunePriceFiles(PRICES, date);
+  const removed = prunePriceFiles(prices, date);
   if (removed.length)
     console.log(`Pruned ${removed.length} price files older than ${HISTORY_KEEP_DAYS} days`);
 
-  const storedHistory = readJson<unknown>(join(DATA, "history.json"), null);
+  const storedHistory = readJson<unknown>(join(data, "history.json"), null);
   const previousHistory = isHistoryFile(storedHistory) ? storedHistory : null;
   const spotChart = spotSeries(spot.points);
   // Chargers too: EV history is per charging network.
   let history = recomputeHistory(
-    PRICES,
+    prices,
     [...stations, ...chargers],
     previousHistory,
     runAt,
     spotChart,
   );
-  writeJson(join(DATA, "history.json"), history);
-  writeJson(join(DATA, "stations.json"), stations);
-  writeJson(join(DATA, "chargers.json"), chargers);
+  writeJson(join(data, "history.json"), history);
+  writeJson(join(data, "stations.json"), stations);
+  writeJson(join(data, "chargers.json"), chargers);
 
   const priced = Object.keys(daily.prices).length;
   const checkedAt = new Date().toISOString();
@@ -377,7 +394,7 @@ async function main(): Promise<void> {
     chargerCount: chargers.length,
     ...(spot.fetchedAt ? { spotUpdatedAt: spot.fetchedAt } : {}),
   };
-  writeJson(join(DATA, "meta.json"), meta);
+  writeJson(join(data, "meta.json"), meta);
   console.log(
     `Wrote ${stations.length} stations, ${priced} with prices for ${date}. Checked ${checkedAt}; prices generated ${daily.generatedAt}${meta.observedAt ? `; observed ${meta.observedAt}` : ""}. Unmatched groups: ${matched.unmatched.length}`,
   );
@@ -389,32 +406,33 @@ async function main(): Promise<void> {
     const recent = datesWithinDays(otherDates, date);
     let prev: DailyPrices | null = null;
     for (const d of recent) {
-      const rows = (byDate.get(d) ?? [])
+      const rows = byDate
+        .get(d)!
         .map((o) => {
           const sid = matched.sourceToStation[o.sourceStationId];
           return sid ? { ...o, sourceStationId: sid } : null;
         })
         .filter((o): o is Observation => o !== null);
       const snap = observationsToDaily(d, rows, prev);
-      writeJson(join(PRICES, `${d}.json`), snap.daily);
+      writeJson(join(prices, `${d}.json`), snap.daily);
       prev = snap.daily;
       console.log(`Backfilled ${d}: ${Object.keys(snap.daily.prices).length} stations`);
     }
-    prunePriceFiles(PRICES, date);
+    prunePriceFiles(prices, date);
     history = recomputeHistory(
-      PRICES,
+      prices,
       [...stations, ...chargers],
       previousHistory,
       runAt,
       spotChart,
     );
-    writeJson(join(DATA, "history.json"), history);
+    writeJson(join(data, "history.json"), history);
     meta.cheapestHours = cheapestHoursByFuel(history, [], checkedAt);
-    writeJson(join(DATA, "meta.json"), meta);
+    writeJson(join(data, "meta.json"), meta);
   }
 }
 
-function logRun(run: SourceRun & { name: string }): void {
+export function logRun(run: SourceRun & { name: string }): void {
   if (run.ok) {
     const newest = run.newestObservedAt ? `, newest ${run.newestObservedAt}` : "";
     console.log(`  ${run.name}: ${run.rows} rows in ${run.ms} ms${newest}`);
@@ -425,7 +443,7 @@ function logRun(run: SourceRun & { name: string }): void {
   if (process.env.GITHUB_ACTIONS) console.log(`::warning::Source ${run.name} failed: ${run.error}`);
 }
 
-function logRanking(
+export function logRanking(
   ranking: RankedSource[],
   summary: NonNullable<DataMeta["sourceRanking"]>,
   runs: Array<SourceRun & { name: string }>,
@@ -440,7 +458,8 @@ function logRanking(
   });
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+export function cliMain(): Promise<void> {
+  return main(pipelineRoot());
+}
+
+runCli(isCliEntry(import.meta.url, process.argv[1]), cliMain);

@@ -1,6 +1,10 @@
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   fetchSpot,
+  loadSpotCache,
   mergeSpot,
   parseEleringPrices,
   spotSeries,
@@ -33,12 +37,82 @@ describe("parseEleringPrices", () => {
   it("rejects a payload without the LT area", () => {
     expect(() => parseEleringPrices({ data: { ee: [] } })).toThrow(/no lt prices/);
   });
+
+  it("rejects a payload that is not an object", () => {
+    expect(() => parseEleringPrices(null)).toThrow(/Invalid Elering JSON/);
+    expect(() => parseEleringPrices("x")).toThrow(/Invalid Elering JSON/);
+    expect(() => parseEleringPrices(1)).toThrow(/Invalid Elering JSON/);
+  });
+
+  it("skips broken rows and prices outside the feed's range", () => {
+    const points = parseEleringPrices({
+      data: {
+        lt: [
+          null,
+          "nope",
+          { timestamp: "x", price: 10 },
+          { timestamp: t("2026-10-06T09:00:00Z"), price: "x" },
+          { timestamp: t("2026-10-06T10:00:00Z"), price: -2000 },
+          { timestamp: t("2026-10-06T11:00:00Z"), price: 6000 },
+          { timestamp: t("2026-10-06T12:00:00Z"), price: 50 },
+        ],
+      },
+    });
+    expect(points).toEqual([{ at: "2026-10-06T12:00:00.000Z", price: 0.05 }]);
+  });
+
+  it("rejects a feed whose prices are all unusable", () => {
+    expect(() =>
+      parseEleringPrices({
+        data: { lt: [{ timestamp: t("2026-10-06T10:00:00Z"), price: 9000 }] },
+      }),
+    ).toThrow(/no usable lt prices/);
+  });
 });
 
 describe("fetchSpot", () => {
   it("throws on HTTP errors so the pipeline keeps its cache", async () => {
     const fail = (async () => new Response("", { status: 503 })) as typeof fetch;
     await expect(fetchSpot(new Date("2026-10-06T12:00:00Z"), 7, fail)).rejects.toThrow(/503/);
+  });
+
+  it("returns the parsed LT prices", async () => {
+    const ok = (async () =>
+      new Response(
+        JSON.stringify({
+          data: { lt: [{ timestamp: t("2026-10-06T09:00:00Z"), price: 100 }] },
+        }),
+        { status: 200 },
+      )) as typeof fetch;
+    await expect(fetchSpot(new Date("2026-10-06T12:00:00Z"), 7, ok)).resolves.toEqual([
+      { at: "2026-10-06T09:00:00.000Z", price: 0.1 },
+    ]);
+  });
+});
+
+describe("loadSpotCache", () => {
+  it("loads a cache and ignores a missing, broken or shapeless file", () => {
+    const dir = mkdtempSync(join(tmpdir(), "spot-"));
+    try {
+      const path = join(dir, "spot.json");
+      expect(loadSpotCache(path)).toBeNull();
+      writeFileSync(path, "{");
+      expect(loadSpotCache(path)).toBeNull();
+      writeFileSync(path, "null");
+      expect(loadSpotCache(path)).toBeNull();
+      writeFileSync(path, JSON.stringify({ fetchedAt: 1, points: [] }));
+      expect(loadSpotCache(path)).toBeNull();
+      writeFileSync(path, JSON.stringify({ fetchedAt: "2026-10-06T00:00:00Z", points: "no" }));
+      expect(loadSpotCache(path)).toBeNull();
+      const cache = {
+        fetchedAt: "2026-10-06T00:00:00Z",
+        points: [{ at: "2026-10-06T09:00:00.000Z", price: 0.1 }],
+      };
+      writeFileSync(path, JSON.stringify(cache));
+      expect(loadSpotCache(path)).toEqual(cache);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 

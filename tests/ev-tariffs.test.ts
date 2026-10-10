@@ -1,9 +1,13 @@
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   chargerPrices,
   countBySource,
   EV_TARIFF_SOURCE,
   isDcCharger,
+  loadEvTariffs,
   mergeChargerPrices,
   OSM_CHARGE_SOURCE,
   type EvTariff,
@@ -29,6 +33,41 @@ function charger(id: string, brand: string, ev: Partial<NonNullable<Station["ev"
 const TARIFFS: EvTariff[] = [
   { network: "Ignitis ON", ac: 0.29, dc: 0.39, observedAt: "2026-10-01T00:00:00Z" },
 ];
+
+describe("loadEvTariffs", () => {
+  it("loads tariffs and drops entries that are not a price", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ev-tariffs-"));
+    try {
+      const path = join(dir, "tariffs.json");
+      expect(loadEvTariffs(join(dir, "missing.json"))).toEqual([]);
+      writeFileSync(path, "{}");
+      expect(loadEvTariffs(path)).toEqual([]);
+      const kept = [
+        { network: "Ignitis ON", ac: 0.29, observedAt: "2026-10-01T00:00:00Z" },
+        { network: "Eleport", dc: 0.41, observedAt: "2026-10-02T00:00:00Z" },
+        { network: "Enefit", ac: 0.2, dc: 0.4, observedAt: "2026-10-03T00:00:00Z" },
+      ];
+      writeFileSync(
+        path,
+        JSON.stringify([
+          null,
+          "x",
+          { network: "  ", ac: 0.3, observedAt: "2026-10-01T00:00:00Z" },
+          { network: 1, ac: 0.3, observedAt: "2026-10-01T00:00:00Z" },
+          { network: "Ignitis ON", ac: 0.3, observedAt: "nope" },
+          { network: "Ignitis ON", ac: 0.3, observedAt: 1 },
+          { network: "Ignitis ON", observedAt: "2026-10-01T00:00:00Z" },
+          { network: "Ignitis ON", ac: "0.3", observedAt: "2026-10-01T00:00:00Z" },
+          { network: "Ignitis ON", ac: Number.NaN, observedAt: "2026-10-01T00:00:00Z" },
+          ...kept,
+        ]),
+      );
+      expect(loadEvTariffs(path)).toEqual(kept);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
 
 describe("isDcCharger", () => {
   it("treats 50 kW+ or CCS / CHAdeMO sockets as DC", () => {
@@ -107,11 +146,29 @@ describe("chargerPrices", () => {
 
   it("falls back to the other tariff when only one is published", () => {
     const prices = chargerPrices(
-      [charger("dc", "enefit", { maxKw: 120 })],
-      [{ network: "Enefit Volt", ac: 0.3, observedAt: "2026-10-01T00:00:00Z" }],
+      [charger("dc", "enefit", { maxKw: 120 }), charger("ac", "eleport", { maxKw: 22 })],
+      [
+        { network: "Enefit Volt", ac: 0.3, observedAt: "2026-10-01T00:00:00Z" },
+        { network: "Eleport", dc: 0.35, observedAt: "2026-10-01T00:00:00Z" },
+      ],
       NOW,
     );
     expect(prices.dc?.EV?.price).toBe(0.3);
+    expect(prices.ac?.EV?.price).toBe(0.35);
+  });
+
+  it("keeps the newest tariff for a network and ignores an unknown network", () => {
+    const prices = chargerPrices(
+      [charger("a", "ignitis-on", { maxKw: 22 })],
+      [
+        { network: "Ignitis ON", ac: 0.29, observedAt: "2026-10-01T00:00:00Z" },
+        { network: "Ignitis", ac: 0.33, observedAt: "2026-10-06T00:00:00Z" },
+        { network: "Ignitis ON", ac: 0.2, observedAt: "2026-09-01T00:00:00Z" },
+        { network: "Local Farm", ac: 0.4, observedAt: "2026-10-01T00:00:00Z" },
+      ],
+      NOW,
+    );
+    expect(prices.a?.EV?.price).toBe(0.33);
   });
 });
 

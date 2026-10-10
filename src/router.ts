@@ -27,13 +27,12 @@ export function viewFromPath(pathname: string): { view: View; locale: Locale } {
   return { view, locale };
 }
 
-export function basePath(): string {
-  const b = import.meta.env.BASE_URL || "/";
+export function basePath(base: string = import.meta.env.BASE_URL): string {
+  const b = base || "/";
   return b.endsWith("/") ? b.slice(0, -1) : b;
 }
 
-export function stripBase(pathname: string): string {
-  const base = basePath();
+export function stripBase(pathname: string, base = basePath()): string {
   if (base && pathname.startsWith(base)) return pathname.slice(base.length) || "/";
   return pathname;
 }
@@ -66,12 +65,15 @@ function searchParams(fuel: FuelType | undefined, minKw: number): URLSearchParam
   return params;
 }
 
-export function hrefFor(view: View, locale: Locale, fuel?: FuelType, minKw = 0): string {
-  const path = pathFor(view, locale);
-  const q = searchParams(fuel, minKw).toString();
-  if (!q) return path;
+/** `path?query`, or `path&query` when the path already has a query. */
+export function appendQuery(path: string, query: string): string {
+  if (!query) return path;
   const sep = path.includes("?") ? "&" : "?";
-  return `${path}${sep}${q}`;
+  return `${path}${sep}${query}`;
+}
+
+export function hrefFor(view: View, locale: Locale, fuel?: FuelType, minKw = 0): string {
+  return appendQuery(pathFor(view, locale), searchParams(fuel, minKw).toString());
 }
 
 export function navigate(

@@ -1,23 +1,24 @@
 import { mkdirSync } from "node:fs";
 import { chromium, type Page } from "@playwright/test";
+import { isCliEntry, runCli } from "./cli.ts";
 
 const BASE = process.env.SCREENSHOT_BASE_URL ?? "http://127.0.0.1:4173";
 const OUT = "docs/screenshots";
 
 const VILNIUS = { latitude: 54.6872, longitude: 25.2797 };
 
-async function waitForStations(page: Page): Promise<void> {
+export async function waitForStations(page: Page): Promise<void> {
   await page.locator("#map .maplibregl-canvas").waitFor();
   await page.locator(".station-row").first().waitFor({ timeout: 20_000 });
   await page.waitForTimeout(2500);
 }
 
-async function locateInVilnius(page: Page): Promise<void> {
+export async function locateInVilnius(page: Page): Promise<void> {
   await page.locator(".maplibregl-ctrl-geolocate").click();
   await page.waitForTimeout(2500);
 }
 
-async function zoomBy(page: Page, selector: string, times: number): Promise<void> {
+export async function zoomBy(page: Page, selector: string, times: number): Promise<void> {
   const btn = page.locator(selector);
   for (let i = 0; i < times; i++) {
     await btn.click();
@@ -26,7 +27,7 @@ async function zoomBy(page: Page, selector: string, times: number): Promise<void
   await page.waitForTimeout(1800);
 }
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   mkdirSync(OUT, { recursive: true });
   const browser = await chromium.launch();
   const context = await browser.newContext({
@@ -89,7 +90,4 @@ async function main(): Promise<void> {
   console.log(`Wrote screenshots to ${OUT}/`);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+runCli(isCliEntry(import.meta.url, process.argv[1]), main);

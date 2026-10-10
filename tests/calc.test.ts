@@ -1,4 +1,4 @@
-import { extraMinutesFromKm, netBenefit } from "../src/calc.ts";
+import { extraMinutesFromKm, netBenefit, round2 } from "../src/calc.ts";
 import { formatDuration } from "../src/format.ts";
 import { haversineKm, inLithuania, roadDistanceKm } from "../src/geo.ts";
 import { pluralCategory, setLocale } from "../src/i18n/index.ts";
@@ -51,6 +51,21 @@ describe("netBenefit", () => {
     });
     expect(r.savings).toBeCloseTo(-4, 5);
     expect(r.netBenefit).toBeLessThan(0);
+  });
+});
+
+describe("extraMinutesFromKm", () => {
+  it("is zero when the speed is not positive", () => {
+    expect(extraMinutesFromKm(10, 0)).toBe(0);
+    expect(extraMinutesFromKm(10, -5)).toBe(0);
+    expect(extraMinutesFromKm(10, 60)).toBe(10);
+  });
+});
+
+describe("round2", () => {
+  it("rounds to two decimal places", () => {
+    expect(round2(1.235)).toBe(1.24);
+    expect(round2(1.2)).toBe(1.2);
   });
 });
 

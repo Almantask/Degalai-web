@@ -1,7 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { installOffer, isIosSafari, isStandalone } from "../src/pwa.ts";
+import {
+  installOffer,
+  isIosSafari,
+  isStandalone,
+  loadInstallDismissed,
+  persistInstallDismissed,
+} from "../src/pwa.ts";
 
 describe("isStandalone", () => {
   it("detects display-mode media queries and iOS navigator.standalone", () => {
@@ -33,6 +39,12 @@ describe("isIosSafari", () => {
         },
       ),
     ).toBe(true);
+    expect(
+      isIosSafari(
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/17.0 Safari/605.1.15",
+        { platform: "MacIntel" },
+      ),
+    ).toBe(false);
   });
 });
 
@@ -56,6 +68,47 @@ describe("installOffer", () => {
     expect(
       installOffer({ standalone: false, dismissed: false, canPrompt: false, iosSafari: false }),
     ).toBe("hidden");
+  });
+});
+
+describe("loadInstallDismissed", () => {
+  it("reads the hint and treats storage errors as not dismissed", () => {
+    const mem = new Map<string, string>();
+    let fail = false;
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => {
+        if (fail) throw new Error("blocked");
+        return mem.get(key) ?? null;
+      },
+      setItem: (key: string, value: string) => {
+        mem.set(key, value);
+      },
+    });
+    expect(loadInstallDismissed()).toBe(false);
+    mem.set("kur-degalai-install-hint", "1");
+    expect(loadInstallDismissed()).toBe(true);
+    fail = true;
+    expect(loadInstallDismissed()).toBe(false);
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("persistInstallDismissed", () => {
+  it("stores the hint and ignores storage errors", () => {
+    const mem = new Map<string, string>();
+    let fail = false;
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => mem.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        if (fail) throw new Error("blocked");
+        mem.set(key, value);
+      },
+    });
+    persistInstallDismissed();
+    expect(mem.get("kur-degalai-install-hint")).toBe("1");
+    fail = true;
+    expect(() => persistInstallDismissed()).not.toThrow();
+    vi.unstubAllGlobals();
   });
 });
 

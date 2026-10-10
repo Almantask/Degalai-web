@@ -3,6 +3,7 @@ import {
   CONTACT_TTL_SECONDS,
   codeBlock,
   handleReport,
+  isHoneypotFilled,
   issueFromReport,
   issueTitle,
   parseReport,
@@ -181,6 +182,17 @@ describe("storeContact", () => {
   });
 });
 
+describe("isHoneypotFilled", () => {
+  it("ignores a value that is not an object", () => {
+    expect(isHoneypotFilled(null)).toBe(false);
+    expect(isHoneypotFilled(undefined)).toBe(false);
+    expect(isHoneypotFilled(42)).toBe(false);
+    expect(isHoneypotFilled("https://spam.example")).toBe(false);
+    expect(isHoneypotFilled({ website: 42 })).toBe(false);
+    expect(isHoneypotFilled({ website: "  " })).toBe(false);
+  });
+});
+
 describe("handleReport", () => {
   it("files an issue and returns its number and link", async () => {
     const fetchImpl = github();
@@ -310,6 +322,61 @@ describe("handleReport", () => {
     );
     expect(res.status).toBe(201);
     expect(await res.json()).toEqual({ ok: true });
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("treats a missing Content-Length as zero", async () => {
+    const req = post(form);
+    expect(req.headers.get("Content-Length")).toBeNull();
+    const res = await handleReport(req, env(), github());
+    expect(res.status).toBe(201);
+  });
+
+  it("rejects a body that is bigger than its Content-Length claims", async () => {
+    const fetchImpl = github();
+    const claimed = new Request("https://w.dev/report", {
+      method: "POST",
+      headers: { Origin: ORIGIN, "Content-Type": "application/json", "Content-Length": "8" },
+      body: "x".repeat(2_100_001),
+    });
+    expect((await handleReport(claimed, env(), fetchImpl)).status).toBe(413);
+    const header = new Request("https://w.dev/report", {
+      method: "POST",
+      headers: {
+        Origin: ORIGIN,
+        "Content-Type": "application/json",
+        "Content-Length": String(2_100_001),
+      },
+      body: JSON.stringify(form),
+    });
+    expect((await handleReport(header, env(), fetchImpl)).status).toBe(413);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("treats a missing Origin header as not allowed", async () => {
+    const fetchImpl = github();
+    const res = await handleReport(
+      new Request("https://w.dev/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      }),
+      env(),
+      fetchImpl,
+    );
+    expect(res.status).toBe(403);
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("rejects every origin when the allow-list is unset", async () => {
+    const fetchImpl = github();
+    const res = await handleReport(
+      post(form),
+      { ...env(), REPORT_ORIGINS: undefined as unknown as string },
+      fetchImpl,
+    );
+    expect(res.status).toBe(403);
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
