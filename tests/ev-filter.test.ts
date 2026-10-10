@@ -4,6 +4,7 @@ import {
   chargerFits,
   evPricesFor,
   fittingPrice,
+  fittingSockets,
   isDcSocket,
   plugGroup,
   socketKw,
@@ -90,6 +91,12 @@ describe("socketKw", () => {
   });
 });
 
+describe("fittingSockets", () => {
+  it("is empty when the charger is missing", () => {
+    expect(fittingSockets(undefined, fast)).toEqual([]);
+  });
+});
+
 describe("chargerFits", () => {
   it("keeps every charger with no filter on, even one with no data", () => {
     expect(chargerFits(charger("ev:node:1", { sockets: [] }), any)).toBe(true);
@@ -139,6 +146,16 @@ describe("fittingPrice", () => {
     expect(fittingPrice(dcOnlyPriced, entry(mixed), type2Only)).toBeUndefined();
   });
 
+  it("prices both currents when no socket fits a plug filter below 50 kW", () => {
+    const bare = charger("vl:bare", {
+      sockets: [],
+      maxKw: 22,
+      registerPrice: 0.33,
+      prices: { ac: 0.21, dc: 0.44 },
+    });
+    expect(fittingPrice(bare, entry(bare), { excludedPlugs: ["ccs"], minKw: 0 })).toBe(0.21);
+  });
+
   it("keeps a single-price source as it is", () => {
     expect(fittingPrice(mixed, entry(mixed, "osm-charge"), fast)).toBe(0.29);
   });
@@ -168,6 +185,13 @@ describe("evPricesFor", () => {
     expect(fastOut.prices[mixed.id]?.EV).toMatchObject({ price: 0.37, source: "via-lietuva" });
     expect(fastOut.prices["osm:node:9"]).toBe(prices.prices["osm:node:9"]);
     expect(prices.prices[mixed.id]?.EV?.price).toBe(0.29);
+  });
+
+  it("leaves a charger with no EV price unchanged", () => {
+    const stranger = charger("vl:none", { sockets: ["type2"], maxKw: 22 });
+    const out = evPricesFor(prices, [stranger], fast);
+    expect(out.prices[stranger.id]).toBeUndefined();
+    expect(out.prices[mixed.id]).toBe(prices.prices[mixed.id]);
   });
 });
 

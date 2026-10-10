@@ -206,14 +206,18 @@ export async function fetchLeaRange(
   return out;
 }
 
+/** Rows for `date`, or the latest workbook day, or none when the workbook is empty. */
+export function leaRowsForDate(all: Map<string, Observation[]>, date: string): Observation[] {
+  const dates = [...all.keys()].sort();
+  return all.get(date) ?? all.get(dates.at(-1) ?? "") ?? [];
+}
+
 export function leaAdapter(date: string): PriceSource {
   return {
     name: "lea",
     enabled: true,
     async fetch() {
-      const all = await fetchLeaWorkbook();
-      const dates = [...all.keys()].sort();
-      return all.get(date) ?? all.get(dates.at(-1) ?? "") ?? [];
+      return leaRowsForDate(await fetchLeaWorkbook(), date);
     },
   };
 }

@@ -56,6 +56,10 @@ describe("parseImage", () => {
     expect(parseImage(dataUrl("image/webp", WEBP))?.bytes).toEqual(WEBP);
   });
 
+  it("refuses a data url whose base64 atob cannot decode", () => {
+    expect(parseImage("data:image/png;base64,A")).toBeNull();
+  });
+
   it("refuses SVG, mislabelled bytes, junk and oversized pictures", () => {
     expect(parseImage(dataUrl("image/svg+xml", SVG))).toBeNull();
     expect(parseImage(dataUrl("image/png", SVG))).toBeNull();
@@ -101,6 +105,46 @@ describe("storeImage and serveImage", () => {
     expect((await serveImage(new Request(unknown), store))!.status).toBe(404);
     expect(await serveImage(new Request(`${WORKER}/report/image/../secret`), store)).toBeNull();
     expect(await serveImage(new Request(`${WORKER}/`), store)).toBeNull();
+  });
+
+  it("answers HEAD with headers and an empty body", async () => {
+    const { store } = memoryStore();
+    const url = (await storeImage(store, { bytes: JPEG, type: "image/jpeg" }, WORKER))!;
+    const res = (await serveImage(new Request(url, { method: "HEAD" }), store))!;
+    expect(res.status).toBe(200);
+    expect(res.body).toBeNull();
+    expect(res.headers.get("Content-Type")).toBe("image/jpeg");
+  });
+
+  it("refuses methods other than GET and HEAD", async () => {
+    const { store } = memoryStore();
+    const url = (await storeImage(store, { bytes: PNG, type: "image/png" }, WORKER))!;
+    const res = (await serveImage(new Request(url, { method: "POST" }), store))!;
+    expect(res.status).toBe(405);
+    expect(res.headers.get("Allow")).toBe("GET, HEAD");
+  });
+
+  it("returns 404 when the store is missing or the metadata does not match", async () => {
+    const id = "00000000-0000-4000-8000-000000000000";
+    const url = `${WORKER}/report/image/${id}.png`;
+    expect((await serveImage(new Request(url), undefined))!.status).toBe(404);
+    const wrongType: ImageStore = {
+      async put() {},
+      async getWithMetadata() {
+        return {
+          value: PNG.buffer.slice(PNG.byteOffset, PNG.byteOffset + PNG.byteLength),
+          metadata: { type: "image/jpeg" },
+        };
+      },
+    };
+    expect((await serveImage(new Request(url), wrongType))!.status).toBe(404);
+    const noType: ImageStore = {
+      async put() {},
+      async getWithMetadata() {
+        return { value: new ArrayBuffer(8), metadata: null };
+      },
+    };
+    expect((await serveImage(new Request(url), noType))!.status).toBe(404);
   });
 
   it("gives no URL when KV fails or is not bound", async () => {

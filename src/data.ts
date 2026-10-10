@@ -1,10 +1,11 @@
 import type { DailyPrices, DataMeta, HistoryFile, Station } from "./types.ts";
 
-const dataUrl = (file: string): string => {
-  const base = import.meta.env.BASE_URL || "/";
-  const prefix = base.endsWith("/") ? base : `${base}/`;
+/** `data/<file>` on a Vite base, with a single slash before `data`. */
+export function dataUrl(file: string, base: string = import.meta.env.BASE_URL): string {
+  const root = base || "/";
+  const prefix = root.endsWith("/") ? root : `${root}/`;
   return `${prefix}data/${file}`;
-};
+}
 
 export interface AppData {
   stations: Station[];

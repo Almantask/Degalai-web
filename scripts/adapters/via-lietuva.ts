@@ -82,7 +82,7 @@ export function socketKey(label: string): string {
   return s.replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || "other";
 }
 
-function cellText(value: unknown): string {
+export function cellText(value: unknown): string {
   if (value == null) return "";
   if (typeof value === "object" && "text" in (value as object)) {
     return String((value as { text: unknown }).text ?? "");

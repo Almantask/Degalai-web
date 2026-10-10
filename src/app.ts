@@ -186,6 +186,23 @@ const REFRESH_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height=
   <path d="M21 3v6h-6"/>
 </svg>`;
 
+/** Public URL prefix for built assets. An empty Vite base is the site root. */
+export function assetBase(base: string): string {
+  return base || "/";
+}
+
+/** Independent stations stay last; the other names follow the active language. */
+export function compareBrandNames(
+  a: string,
+  b: string,
+  name: (brand: string) => string,
+  locale: Locale,
+): number {
+  if (a === "independent") return 1;
+  if (b === "independent") return -1;
+  return name(a).localeCompare(name(b), locale === "lt" ? "lt" : "en");
+}
+
 /** Price-delta savings only — user consumption and time value stay out of ranking. */
 function priceBenefit(
   baselinePrice: number,
@@ -276,6 +293,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let historyMinimized = false;
   let historyFile: HistoryFile | null = null;
   let historyLoading = false;
+  /** A failed load stays failed; rendering must not ask for the file again. */
+  let historySettled = false;
   let historyPlot: {
     destroy: () => void;
     setHidden: (hidden: ReadonlySet<string>) => void;
@@ -823,8 +842,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     endIsHere = next.endIsHere;
     destQuery = next.end?.label ?? "";
     pickMode = null;
-    if (endHit) void runRoute();
-    else clearDestination();
+    // A swap that returns always has a destination.
+    void runRoute();
   }
 
   async function fillGpsStartLabel(ll: LngLat): Promise<void> {
@@ -1052,9 +1071,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function focusRoute(): void {
-    if (!routeLine) return;
     collapseForMapFocus();
-    fitRoute(map, routeLine.geometry, viaGeometries(), chromePadding());
+    fitRoute(map, routeLine!.geometry, viaGeometries(), chromePadding());
   }
 
   function focusStationOnMap(s: Station, row: RouteStationRow | undefined): void {
@@ -1335,10 +1353,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
         benefit: priceBenefit(price, price, settings.fuel),
       });
     }
-    const baselinePrice = onWay.length ? Math.min(...onWay.map((r) => r.price)) : undefined;
-    for (const row of onWay) {
-      if (baselinePrice == null) continue;
-      row.benefit = priceBenefit(baselinePrice, row.price, settings.fuel);
+    if (onWay.length) {
+      const baselinePrice = Math.min(...onWay.map((r) => r.price));
+      for (const row of onWay) row.benefit = priceBenefit(baselinePrice, row.price, settings.fuel);
     }
     return onWay;
   }
@@ -1386,8 +1403,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       startQuery = t("route.myLocation");
       startIsGps = false;
       void fillMapStartLabel(ll);
-      if (endHit) void runRoute();
-      else render();
+      // The tap only runs while a destination is waiting.
+      void runRoute();
     }
   }
 
@@ -1546,13 +1563,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   async function ensureHistory(): Promise<void> {
-    if (historyFile || historyLoading) {
-      if (historyFile && view === "history") void paintHistoryChart();
-      return;
-    }
+    if (historyFile || historyLoading || historySettled) return;
     historyLoading = true;
     historyFile = await loadHistory();
     historyLoading = false;
+    historySettled = true;
     if (view === "history") render();
   }
 
@@ -1591,7 +1606,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
     const caption = hasPoints
       ? isSpotView()
-        ? spotCaptionHtml(filtered)
+        ? spotCaptionHtml(filtered!)
         : isEv()
           ? `<p class="history-caption">${escapeHtml(t("history.evCaption"))}</p>`
           : ""
@@ -1610,10 +1625,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   /** What the spot price includes, and its cheapest hours from now on. */
-  function spotCaptionHtml(series: HistoryHourSeries | undefined): string {
-    const ranges = series
-      ? cheapestHourRanges(series, undefined, new Date().toISOString(), { ahead: true })
-      : [];
+  function spotCaptionHtml(series: HistoryHourSeries): string {
+    const ranges = cheapestHourRanges(series, undefined, new Date().toISOString(), { ahead: true });
     const cheap = ranges.length
       ? `<p class="history-caption history-cheap">${escapeHtml(t("history.cheapAhead", { ranges: formatCheapRanges(ranges) }))}</p>`
       : "";
@@ -2032,11 +2045,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const evLabels = ev ? networkLabels(activeStations()) : new Map<string, string>();
     const label = (brand: string) => evLabels.get(brand) ?? brandLabel(brand);
     const excluded = excludedFor(settings);
-    const brands = uniqueBrands(activeStations()).sort((a, b) => {
-      if (a === "independent") return 1;
-      if (b === "independent") return -1;
-      return label(a).localeCompare(label(b), locale === "lt" ? "lt" : "en");
-    });
+    const brands = uniqueBrands(activeStations()).sort((a, b) =>
+      compareBrandNames(a, b, label, locale),
+    );
     const checks = brands.length
       ? brands
           .map((brand) => {
@@ -2410,7 +2421,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (appleTitle) appleTitle.setAttribute("content", t("app.name"));
     const manifest = document.querySelector<HTMLLinkElement>("link[rel='manifest']");
     if (manifest) {
-      const base = import.meta.env.BASE_URL || "/";
+      const base = assetBase(import.meta.env.BASE_URL);
       manifest.href = `${base}manifest-${locale}.webmanifest`;
     }
   }

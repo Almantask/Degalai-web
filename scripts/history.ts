@@ -270,7 +270,7 @@ export function rollupHourAverages(
     out[fuel] = {
       dates: points.map((p) => p.date),
       hours: points.map((p) => p.hour),
-      brands: stats.avg ?? {},
+      brands: stats.avg!,
       stats,
     };
   }

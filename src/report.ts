@@ -58,6 +58,7 @@ export async function sendReport(
 ): Promise<ReportResult> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let result: ReportResult = { ok: false, reason: "failed" };
   try {
     const res = await fetchImpl(endpoint, {
       method: "POST",
@@ -65,20 +66,23 @@ export async function sendReport(
       body: JSON.stringify({ ...form, ...context }),
       signal: controller.signal,
     });
-    if (res.status === 429) return { ok: false, reason: "rate" };
-    if (!res.ok) return { ok: false, reason: "failed" };
-    const body = (await res.json()) as { number?: unknown; url?: unknown; imageSaved?: unknown };
-    return {
-      ok: true,
-      number: typeof body.number === "number" ? body.number : undefined,
-      url: typeof body.url === "string" && body.url.startsWith("https://") ? body.url : undefined,
-      imageSaved: typeof body.imageSaved === "boolean" ? body.imageSaved : undefined,
-    };
+    if (res.status === 429) result = { ok: false, reason: "rate" };
+    else if (!res.ok) result = { ok: false, reason: "failed" };
+    else {
+      const body = (await res.json()) as { number?: unknown; url?: unknown; imageSaved?: unknown };
+      result = {
+        ok: true,
+        number: typeof body.number === "number" ? body.number : undefined,
+        url: typeof body.url === "string" && body.url.startsWith("https://") ? body.url : undefined,
+        imageSaved: typeof body.imageSaved === "boolean" ? body.imageSaved : undefined,
+      };
+    }
   } catch {
-    return { ok: false, reason: controller.signal.aborted ? "timeout" : "failed" };
+    result = { ok: false, reason: controller.signal.aborted ? "timeout" : "failed" };
   } finally {
     clearTimeout(timer);
   }
+  return result;
 }
 
 export function isEmail(value: string): boolean {

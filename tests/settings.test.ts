@@ -1,13 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { DEFAULT_SETTINGS } from "../src/types.ts";
 import {
   excludedFor,
   fuelFromUrl,
   fuelToUrl,
   isBrandIncluded,
+  loadSettings,
   locationPositionOptions,
   minKwFromUrl,
+  persistLocale,
   sanitizeSettings,
+  saveSettings,
   uniqueBrands,
 } from "../src/settings.ts";
 
@@ -131,6 +134,12 @@ describe("sanitizeSettings", () => {
     ).toEqual(["neste"]);
   });
 
+  it("keeps at most 40 brand ids", () => {
+    const ids = Array.from({ length: 45 }, (_, i) => `b${i}`);
+    expect(sanitizeSettings({ excludedBrands: ids }).excludedBrands).toHaveLength(40);
+    expect(sanitizeSettings({ excludedBrands: "viada" }).excludedBrands).toEqual([]);
+  });
+
   it("keeps a valid history statistic and defaults the rest", () => {
     expect(sanitizeSettings({}).historyStat).toBe("avg");
     expect(sanitizeSettings({ historyStat: "median" }).historyStat).toBe("median");
@@ -141,6 +150,63 @@ describe("sanitizeSettings", () => {
     expect(sanitizeSettings({ consumption: 100, litres: 1, timeValue: -4 }).consumption).toBe(20);
     expect(sanitizeSettings({ litres: 1 }).litres).toBe(5);
     expect(sanitizeSettings({ timeValue: -4 }).timeValue).toBe(0);
+  });
+});
+
+describe("loadSettings", () => {
+  it("reads stored JSON and falls back when it is missing or broken", () => {
+    const mem = new Map<string, string>();
+    let fail = false;
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => {
+        if (fail) throw new Error("blocked");
+        return mem.get(key) ?? null;
+      },
+      setItem: (key: string, value: string) => {
+        mem.set(key, value);
+      },
+    });
+    expect(loadSettings()).toEqual(DEFAULT_SETTINGS);
+    mem.set("kur-degalai-settings", JSON.stringify({ fuel: "LPG", litres: 20 }));
+    expect(loadSettings()).toMatchObject({ fuel: "LPG", litres: 20 });
+    mem.set("kur-degalai-settings", "{");
+    expect(loadSettings()).toEqual(DEFAULT_SETTINGS);
+    fail = true;
+    expect(loadSettings()).toEqual(DEFAULT_SETTINGS);
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("saveSettings", () => {
+  it("stores the sanitized settings", () => {
+    const mem = new Map<string, string>();
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => mem.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        mem.set(key, value);
+      },
+    });
+    saveSettings({ ...DEFAULT_SETTINGS, fuel: "98", litres: 999 });
+    expect(JSON.parse(mem.get("kur-degalai-settings") ?? "{}")).toMatchObject({
+      fuel: "98",
+      litres: 80,
+    });
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("persistLocale", () => {
+  it("writes the locale into the saved settings", () => {
+    const mem = new Map<string, string>();
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => mem.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        mem.set(key, value);
+      },
+    });
+    persistLocale("en");
+    expect(loadSettings().locale).toBe("en");
+    vi.unstubAllGlobals();
   });
 });
 
@@ -157,6 +223,14 @@ describe("isBrandIncluded", () => {
 });
 
 describe("uniqueBrands", () => {
+  it("treats a blank brand as independent", () => {
+    expect(
+      uniqueBrands([
+        { id: "a", name: "A", brand: "", lat: 1, lon: 1, fuels: ["D"], sourceIds: {} },
+      ]),
+    ).toEqual(["independent"]);
+  });
+
   it("lists each provider once", () => {
     expect(
       uniqueBrands([
@@ -180,10 +254,25 @@ describe("locationPositionOptions", () => {
 describe("fuelFromUrl", () => {
   it("maps known aliases and rejects other query values", () => {
     expect(fuelFromUrl("?fuel=diesel")).toBe("D");
+    expect(fuelFromUrl("?fuel=D")).toBe("D");
+    expect(fuelFromUrl("?fuel=petrol")).toBe("95");
+    expect(fuelFromUrl("?fuel=95")).toBe("95");
+    expect(fuelFromUrl("?fuel=98")).toBe("98");
     expect(fuelFromUrl("?fuel=gas")).toBe("LPG");
+    expect(fuelFromUrl("?fuel=lpg")).toBe("LPG");
+    expect(fuelFromUrl("?fuel=LPG")).toBe("LPG");
     expect(fuelFromUrl("?fuel=ev")).toBe("EV");
-    expect(fuelToUrl("EV")).toBe("ev");
+    expect(fuelFromUrl("?fuel=EV")).toBe("EV");
     expect(fuelFromUrl(`?fuel=" onclick="alert(1)`)).toBeNull();
+  });
+});
+
+describe("fuelToUrl", () => {
+  it("maps diesel, gas, EV and leaves petrol grades as they are", () => {
+    expect(fuelToUrl("D")).toBe("diesel");
+    expect(fuelToUrl("LPG")).toBe("gas");
+    expect(fuelToUrl("EV")).toBe("ev");
+    expect(fuelToUrl("95")).toBe("95");
   });
 });
 

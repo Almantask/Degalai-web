@@ -613,7 +613,7 @@ export function stationPopupHtml(
     ${addr === s.name ? "" : `<p class="popup-addr">${escapeHtml(addr)}</p>`}
     ${dist}
     ${fuels}
-    ${s.ev ? chargerDetailsHtml(s, prices) : ""}
+    ${chargerDetailsHtml(s, prices)}
   </div>`;
 }
 

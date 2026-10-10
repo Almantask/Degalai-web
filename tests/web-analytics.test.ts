@@ -35,6 +35,14 @@ describe("injectWebAnalytics", () => {
     expect(injectWebAnalytics(PAGE, undefined)).toBe(PAGE);
   });
 
+  it("appends the beacon when the page has no closing body tag", () => {
+    const html = `<div id="app"></div>`;
+    const out = injectWebAnalytics(html, TOKEN);
+    expect(out.startsWith(html)).toBe(true);
+    expect(out).toContain(`data-cf-beacon='{"token":"${TOKEN}"}'`);
+    expect(out).not.toContain("</body>");
+  });
+
   it("places the beacon before the closing body tag", () => {
     const out = injectWebAnalytics(PAGE, TOKEN);
     expect(out).toContain(`data-cf-beacon='{"token":"${TOKEN}"}'`);

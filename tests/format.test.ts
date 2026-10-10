@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   escapeHtml,
   formatChartDate,
+  formatDate,
   formatDateTime,
+  formatKm,
+  formatMoney,
   formatPrice,
   formatPriceNumber,
   shortAddress,
@@ -43,6 +46,33 @@ describe("formatChartDate", () => {
     expect(formatChartDate("2026-09-15")).toMatch(/15/);
     setLocale("lt");
     expect(formatChartDate("2026-09-15")).toMatch(/15/);
+  });
+});
+
+describe("formatMoney", () => {
+  it("puts the euro sign by locale and marks a negative amount", () => {
+    setLocale("lt");
+    expect(formatMoney(1.5)).toBe("1,50 €");
+    expect(formatMoney(-1.5)).toBe("−1,50 €");
+    setLocale("en");
+    expect(formatMoney(1.5)).toBe("€1.50");
+    expect(formatMoney(-1.5)).toBe("−€1.50");
+  });
+});
+
+describe("formatKm", () => {
+  it("keeps one decimal under 10 km and none from there up", () => {
+    setLocale("en");
+    expect(formatKm(1.24)).toBe("1.2 km");
+    expect(formatKm(12.6)).toBe("13 km");
+  });
+});
+
+describe("formatDate", () => {
+  it("formats a calendar day and a full timestamp", () => {
+    setLocale("en");
+    expect(formatDate("2026-09-15")).toMatch(/15/);
+    expect(formatDate("2026-09-15T12:00:00Z")).toMatch(/15/);
   });
 });
 

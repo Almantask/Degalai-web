@@ -84,6 +84,17 @@ describe("combinePriceObservations", () => {
     expect(combined).toMatchObject({ date: "2026-09-17", sources: ["report"] });
     expect(combined.observations).toEqual([report]);
   });
+
+  it("uses the requested day when Excel did not load", () => {
+    expect(
+      combinePriceObservations({
+        byProvider: {},
+        reports: [],
+        requested: "2026-09-17",
+        excelDate: null,
+      }),
+    ).toEqual({ date: "2026-09-17", observations: [], sources: [] });
+  });
 });
 
 describe("summarizeSources", () => {
@@ -109,6 +120,26 @@ describe("summarizeSources", () => {
       { name: "lea-live", chosen: 1, stale: 0 },
       { name: "circle-k", chosen: 1, stale: 0 },
       { name: "report", chosen: 1, stale: 0 },
+    ]);
+  });
+
+  it("skips an empty price slot and sorts unknown sources after reports", () => {
+    const extra: DailyPrices = {
+      date: "2026-09-17",
+      generatedAt: "2026-09-17T12:00:00.000Z",
+      prices: {
+        a: {
+          "95": undefined,
+          D: { price: 1.1, source: "zeta", observedAt: "2026-09-17T00:00:00Z" },
+          "98": { price: 1.2, source: "alpha", observedAt: "2026-09-17T00:00:00Z" },
+          LPG: { price: 0.7, source: "report", observedAt: "2026-09-17T00:00:00Z" },
+        },
+      },
+    };
+    expect(summarizeSources(extra, ["lea"])).toEqual([
+      { name: "report", chosen: 1, stale: 0 },
+      { name: "alpha", chosen: 1, stale: 0 },
+      { name: "zeta", chosen: 1, stale: 0 },
     ]);
   });
 });

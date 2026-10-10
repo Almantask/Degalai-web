@@ -1,14 +1,29 @@
-import { describe, expect, it } from "vitest";
+import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { describe, expect, it, vi } from "vitest";
 import {
   brandAverages,
+  brandStatEqual,
+  brandStats,
   buildHistoryFile,
   compactHistoryForClient,
   datesWithinDays,
+  fuelPricesEqual,
+  hourInVilnius,
+  isHistoryFile,
+  listPriceDates,
+  median,
   mergeSamples,
+  prunePriceFiles,
+  recomputeHistory,
   rollupHourAverages,
   sampleFromDaily,
+  sampleHour,
   sampleKey,
+  toBrandStat,
 } from "../scripts/history.ts";
+import { HISTORY_KEEP_DAYS } from "../src/types.ts";
 import type { BrandStat, DailyPrices, HistorySample, Station } from "../src/types.ts";
 
 const stations = new Map<string, Station>([
@@ -275,5 +290,242 @@ describe("buildHistoryFile", () => {
     expect(file.byFuel.D?.brands.neste).toEqual([1.6]);
     expect(buildHistoryFile([sample], "2026-09-14T12:00:00Z").spot).toBeUndefined();
     expect(compactHistoryForClient(file).spot).toEqual(spot);
+  });
+});
+
+describe("median", () => {
+  it("is zero for an empty list", () => {
+    expect(median([])).toBe(0);
+  });
+});
+
+describe("hourInVilnius", () => {
+  it("uses 0 when the formatted time has no hour", () => {
+    const Original = Intl.DateTimeFormat;
+    vi.spyOn(Intl, "DateTimeFormat").mockImplementation(
+      (locales?: Intl.LocalesArgument, options?: Intl.DateTimeFormatOptions) => {
+        const real = new Original(locales, options);
+        real.formatToParts = () => [{ type: "literal", value: "x" }];
+        return real;
+      },
+    );
+    expect(hourInVilnius("2026-09-14T05:00:00.000Z")).toBe(0);
+    vi.restoreAllMocks();
+  });
+});
+
+describe("sampleHour", () => {
+  it("uses the generated hour when that day has no observation", () => {
+    expect(
+      sampleHour({
+        date: "2026-09-14",
+        generatedAt: "2026-09-01T05:00:00.000Z",
+        prices: { a: { D: { price: 1.2, source: "lea", observedAt: "" } } },
+      }),
+    ).toBe(8);
+  });
+
+  it("uses noon when a snapshot has no clock", () => {
+    expect(sampleHour({ date: "2026-09-14", generatedAt: "", prices: {} })).toBe(12);
+  });
+});
+
+describe("brandStats", () => {
+  it("counts an unknown station as independent", () => {
+    expect(brandStats(daily, new Map()).D?.independent).toEqual({
+      min: 1.4,
+      max: 1.6,
+      avg: 1.5,
+      median: 1.5,
+    });
+  });
+});
+
+describe("toBrandStat", () => {
+  it("copies a single number into every stat", () => {
+    expect(toBrandStat(1.5)).toEqual({ min: 1.5, max: 1.5, avg: 1.5, median: 1.5 });
+  });
+
+  it("rejects a non-finite number", () => {
+    expect(toBrandStat(Number.NaN)).toBeUndefined();
+  });
+
+  it("rejects a missing value", () => {
+    expect(toBrandStat(null)).toBeUndefined();
+  });
+
+  it("rejects a stat that is not all numbers", () => {
+    expect(toBrandStat({ min: 1, max: 1, avg: 1, median: "x" })).toBeUndefined();
+  });
+});
+
+describe("sampleFromDaily clock", () => {
+  it("uses the clock it was given", () => {
+    const sample = sampleFromDaily(daily, stations, new Date("2026-09-14T12:00:00Z"));
+    expect(sample.hour).toBe(15);
+    expect(sample.at).toBe("2026-09-14T15:00:00.000Z");
+  });
+});
+
+describe("brandStatEqual", () => {
+  it("treats the same stat as equal", () => {
+    const stat = p(1);
+    expect(brandStatEqual(stat, stat)).toBe(true);
+  });
+
+  it("treats a missing stat as different", () => {
+    expect(brandStatEqual(p(1), undefined)).toBe(false);
+  });
+});
+
+describe("fuelPricesEqual", () => {
+  it("treats the same price map as equal", () => {
+    const row = { neste: p(1) };
+    expect(fuelPricesEqual(row, row)).toBe(true);
+  });
+
+  it("treats a missing fuel row as different", () => {
+    expect(fuelPricesEqual({ neste: p(1) }, undefined)).toBe(false);
+  });
+
+  it("treats a different set of brands as different", () => {
+    expect(fuelPricesEqual({ neste: p(1) }, { neste: p(1), viada: p(1) })).toBe(false);
+  });
+});
+
+describe("mergeSamples order", () => {
+  it("orders two samples that share a timestamp by hour", () => {
+    const later = {
+      at: "2026-09-14T08:00:00.000Z",
+      hour: 10,
+      byFuel: { D: { neste: p(1) } },
+    };
+    const earlier = {
+      at: "2026-09-14T08:00:00.000Z",
+      hour: 8,
+      byFuel: { D: { neste: p(2) } },
+    };
+    const merged = mergeSamples([later], [earlier], new Date("2026-09-14T12:00:00Z"), 7);
+    expect(merged.map((s) => s.hour)).toEqual([8, 10]);
+  });
+});
+
+describe("rollupHourAverages blanks", () => {
+  it("leaves a blank where a brand has no price on a point", () => {
+    const samples: HistorySample[] = [
+      {
+        at: "2026-09-14T08:00:00.000Z",
+        hour: 8,
+        byFuel: { D: { neste: p(1.5), viada: p(1.4) } },
+      },
+      { at: "2026-09-15T08:00:00.000Z", hour: 8, byFuel: { D: { neste: p(1.6) } } },
+    ];
+    expect(rollupHourAverages(samples).D?.brands.viada).toEqual([1.4, null]);
+  });
+});
+
+describe("isHistoryFile", () => {
+  const file = { generatedAt: "t", keepDays: 7, samples: [], byFuel: {} };
+
+  it("accepts a history file", () => {
+    expect(isHistoryFile(file)).toBe(true);
+  });
+
+  it("rejects a missing value", () => {
+    expect(isHistoryFile(null)).toBe(false);
+  });
+
+  it("rejects a string", () => {
+    expect(isHistoryFile("file")).toBe(false);
+  });
+
+  it("rejects an array", () => {
+    expect(isHistoryFile([])).toBe(false);
+  });
+
+  it("rejects an object without byFuel", () => {
+    expect(isHistoryFile({ samples: [] })).toBe(false);
+  });
+
+  it("rejects an object whose samples are not a list", () => {
+    expect(isHistoryFile({ byFuel: {}, samples: "no" })).toBe(false);
+  });
+});
+
+describe("listPriceDates", () => {
+  it("is empty when the directory is missing", () => {
+    expect(listPriceDates(join(tmpdir(), "missing-prices-dir"))).toEqual([]);
+  });
+
+  it("lists price files and ignores other names", () => {
+    const dir = mkdtempSync(join(tmpdir(), "prices-"));
+    writeFileSync(join(dir, "2026-09-14.json"), "{}");
+    writeFileSync(join(dir, "notes.txt"), "");
+    writeFileSync(join(dir, "2026-09-01.json"), "{}");
+    expect(listPriceDates(dir)).toEqual(["2026-09-01", "2026-09-14"]);
+  });
+});
+
+describe("prunePriceFiles", () => {
+  it("deletes files older than the keep window and leaves the rest", () => {
+    const dir = mkdtempSync(join(tmpdir(), "prune-"));
+    writeFileSync(join(dir, "2026-09-01.json"), "{}");
+    writeFileSync(join(dir, "2026-09-14.json"), "{}");
+    writeFileSync(join(dir, "readme.txt"), "");
+    expect(prunePriceFiles(dir, "2026-09-14", 7)).toEqual(["2026-09-01"]);
+    expect(existsSync(join(dir, "2026-09-01.json"))).toBe(false);
+    expect(existsSync(join(dir, "2026-09-14.json"))).toBe(true);
+  });
+});
+
+describe("recomputeHistory", () => {
+  const now = new Date("2026-09-14T12:00:00.000Z");
+
+  it("builds samples from price files when there is no previous chart", () => {
+    const dir = mkdtempSync(join(tmpdir(), "history-"));
+    writeFileSync(
+      join(dir, "2026-09-14.json"),
+      JSON.stringify({
+        date: "2026-09-14",
+        generatedAt: "2026-09-14T05:00:00.000Z",
+        prices: {
+          a: { D: { price: 1.6, source: "lea", observedAt: "2026-09-14T07:00:00+03:00" } },
+        },
+      }),
+    );
+    const next = recomputeHistory(dir, [...stations.values()], null, now);
+    expect(next.samples).toHaveLength(1);
+    expect(next.generatedAt).toBe(now.toISOString());
+  });
+
+  it("keeps the previous timestamp when the chart did not change", () => {
+    const dir = mkdtempSync(join(tmpdir(), "history-same-"));
+    const previous = {
+      generatedAt: "2020-01-01T00:00:00.000Z",
+      keepDays: HISTORY_KEEP_DAYS,
+      samples: [],
+      byFuel: {},
+    };
+    const next = recomputeHistory(dir, [], previous, now);
+    expect(next.generatedAt).toBe(previous.generatedAt);
+  });
+
+  it("stamps a new time when history changed", () => {
+    const dir = mkdtempSync(join(tmpdir(), "history-new-"));
+    const previous = {
+      generatedAt: "2020-01-01T00:00:00.000Z",
+      keepDays: HISTORY_KEEP_DAYS,
+      samples: [{ at: "2020-01-01T08:00:00.000Z", hour: 8, byFuel: {} }],
+      byFuel: {},
+    };
+    const next = recomputeHistory(dir, [], previous, now);
+    expect(next.generatedAt).toBe(now.toISOString());
+  });
+
+  it("keeps a spot series on the recomputed file", () => {
+    const dir = mkdtempSync(join(tmpdir(), "history-spot-"));
+    const spot = { dates: ["2026-09-14"], hours: [9], brands: { spot: [0.1] } };
+    const next = recomputeHistory(dir, [], null, now, spot);
+    expect(next.spot).toEqual(spot);
   });
 });

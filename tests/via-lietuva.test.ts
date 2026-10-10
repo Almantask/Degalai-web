@@ -1,8 +1,15 @@
+import { randomBytes } from "node:crypto";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import ExcelJS from "exceljs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   companyName,
+  cellText,
+  fetchRegister,
   freeReason,
+  loadRegisterCache,
   parseRegisterPrice,
   parseRegisterRows,
   parseRegisterXlsx,
@@ -72,6 +79,16 @@ function row(
   return r;
 }
 
+describe("cellText", () => {
+  it("stringifies empty, linked and formula cells", () => {
+    expect(cellText(null)).toBe("");
+    expect(cellText({ text: null })).toBe("");
+    expect(cellText({ result: undefined })).toBe("");
+    expect(cellText({ text: "A" })).toBe("A");
+    expect(cellText({ result: 2 })).toBe("2");
+  });
+});
+
 describe("parseRegisterPrice", () => {
   it("reads €/kWh, free chargers and session fees", () => {
     expect(parseRegisterPrice("0.28 €/kWh")).toEqual({ kwh: 0.28 });
@@ -80,6 +97,7 @@ describe("parseRegisterPrice", () => {
     expect(parseRegisterPrice("0.48 €/kWh ir 0.3 €")).toEqual({ kwh: 0.48, sessionFee: 0.3 });
     expect(parseRegisterPrice("0.85510416666667 €/kWh")).toEqual({ kwh: 0.855 });
     expect(parseRegisterPrice("")).toEqual({});
+    expect(parseRegisterPrice("nėra")).toEqual({});
   });
 });
 
@@ -97,6 +115,17 @@ describe("socketKey", () => {
     expect(socketKey("Type 2")).toBe("type2");
     expect(socketKey("CCS2")).toBe("type2_combo");
     expect(socketKey("CHAdeMO")).toBe("chademo");
+  });
+
+  it("maps the other connector names and unknown plugs", () => {
+    expect(socketKey("tipas 2")).toBe("type2");
+    expect(socketKey("Mennekes")).toBe("type2");
+    expect(socketKey("Combo")).toBe("type2_combo");
+    expect(socketKey("Type 1")).toBe("type1");
+    expect(socketKey("Schuko")).toBe("schuko");
+    expect(socketKey("Tesla")).toBe("tesla");
+    expect(socketKey("a b")).toBe("a_b");
+    expect(socketKey("!!!")).toBe("other");
   });
 });
 
@@ -222,6 +251,165 @@ describe("parseRegisterRows", () => {
 
   it("fails loudly when a needed column disappears", () => {
     expect(() => parseRegisterRows([HEADER.slice(0, 15), row("A")])).toThrow(/column/);
+    expect(() => parseRegisterRows([])).toThrow(/empty/);
+  });
+
+  it("reads odd rows: swapped coordinates, missing cells and nameless sites", () => {
+    const place = (i: number) => ({
+      lat: (54.5 + i * 0.01).toFixed(5),
+      lon: (23.5 + i * 0.01).toFixed(5),
+    });
+    const short = row("SHORT", { ...place(12), type: "Type 2" }).slice(0, 15);
+    const sites = parseRegisterRows([
+      HEADER,
+      row("SW", {
+        lat: "25.20",
+        lon: "54.90",
+        operator: "Swap Op",
+        location: "Swap place",
+      }),
+      row("BADX", { lat: "nope", lon: "24.00" }),
+      row("BADY", { ...place(2), lon: "nope" }),
+      row("OWN", {
+        ...place(3),
+        operator: "",
+        owner: "Stuart Energy",
+        location: "Stuart | Street 9",
+      }),
+      row("BLANK", { ...place(4), location: "", town: "", operator: "Lidl" }),
+      row("PLAIN", { ...place(5), location: "Parduotuve" }),
+      row("PREFIX", {
+        ...place(6),
+        operator: "Inbalance grid",
+        location: "Shop | Inbalance grid, Gatve 1",
+      }),
+      row("OTHER", {
+        ...place(7),
+        operator: "Inbalance grid",
+        location: "Shop | Other, Gatve 3",
+      }),
+      row("HEAD", { ...place(8), operator: "Ignitis", location: "| Gatve 2" }),
+      row("NAME", { ...place(9), operator: "Viada", location: "Only name |" }),
+      row("DC", {
+        ...place(10),
+        type: "CCS2",
+        current: "Nuolatinė",
+        kw: "150",
+        price: "0.39 €/kWh",
+      }),
+      row("", {
+        lat: "55.10000",
+        lon: "24.10000",
+        operator: "No Id Op",
+        location: "No id place",
+      }),
+      row("NONAME", { ...place(11), operator: "", owner: "", location: "", town: "" }),
+      row("FREE", {
+        ...place(13),
+        price: "Nemokama",
+        operator: "",
+        owner: "",
+        location: "Parkas",
+      }),
+      short,
+    ]);
+    const byId = new Map(sites.map((s) => [s.id, s]));
+    expect(byId.get("vl:SW")).toMatchObject({ lat: 54.9, lon: 25.2 });
+    expect(byId.get("vl:OWN")).toMatchObject({
+      name: "Stuart",
+      address: "Street 9",
+      ev: { network: "Stuart Energy" },
+    });
+    expect(byId.get("vl:BLANK")).toMatchObject({ name: "Lidl" });
+    expect(byId.get("vl:BLANK")!.address).toBeUndefined();
+    expect(byId.get("vl:PLAIN")).toMatchObject({ name: "Parduotuve", address: "Parduotuve" });
+    expect(byId.get("vl:PREFIX")).toMatchObject({ name: "Shop", address: "Gatve 1" });
+    expect(byId.get("vl:OTHER")).toMatchObject({ name: "Shop", address: "Other, Gatve 3" });
+    expect(byId.get("vl:HEAD")).toMatchObject({ name: "Ignitis", address: "Gatve 2" });
+    expect(byId.get("vl:NAME")).toMatchObject({ name: "Only name" });
+    expect(byId.get("vl:NAME")!.address).toBeUndefined();
+    expect(byId.get("vl:DC")!.ev).toMatchObject({
+      sockets: ["type2_combo"],
+      registerPrice: 0.39,
+      prices: { dc: 0.39 },
+    });
+    expect(byId.get("vl:DC")!.ev!.prices!.ac).toBeUndefined();
+    expect(byId.get("vl:55.10000,24.10000")).toBeDefined();
+    expect(byId.get("vl:NONAME")).toMatchObject({ name: "Įkrovimo stotelė" });
+    expect(byId.get("vl:NONAME")!.ev!.network).toBeUndefined();
+    expect(byId.get("vl:FREE")!.ev).toMatchObject({
+      registerPrice: 0,
+      free: { reason: "unknown" },
+    });
+    expect(byId.get("vl:SHORT")).toBeDefined();
+    expect(byId.has("vl:BADX")).toBe(false);
+    expect(byId.has("vl:BADY")).toBe(false);
+  });
+
+  it("leaves the town blank when the features column is absent or has no town", () => {
+    const header = [...HEADER];
+    header[10] = "Kita";
+    const [noCol] = parseRegisterRows([header, row("A", { lat: "54.80", lon: "24.70" })]);
+    const unmarked = row("B", { lat: "54.81", lon: "24.71" });
+    unmarked[10] = "Šalia TEN-T kelio - Ne";
+    const [noTown] = parseRegisterRows([HEADER, unmarked]);
+    expect(noCol.id).toBe("vl:A");
+    expect(noTown.id).toBe("vl:B");
+  });
+
+  it("folds a far site's extra socket and higher power into the town site", () => {
+    const plant = "Elektrinės g. 21, Elektrėnai, Elektrinės g. 21, Elektrėnai";
+    const sites = parseRegisterRows([
+      HEADER,
+      row("L-1", { lat: "54.7894", lon: "24.6751", town: "Elektrėnai", operator: "Lidl" }),
+      row("E-1", { lat: "54.7879", lon: "24.6812", town: "Elektrėnai", operator: "Enefit" }),
+      row("I-1", { lat: "54.7891", lon: "24.6770", town: "Elektrėnai", operator: "Ignitis" }),
+      row("V-1", { lat: "54.7885", lon: "24.6790", town: "Elektrėnai", operator: "Viada" }),
+      row("H", {
+        lat: "54.7860",
+        lon: "24.6700",
+        town: "Elektrėnai",
+        operator: "Stuart",
+        location: plant,
+        type: "Type 2",
+        kw: "22",
+      }),
+      row("H2", {
+        lat: "54.8000",
+        lon: "24.8000",
+        town: "Elektrėnai",
+        operator: "Stuart",
+        location: plant,
+        type: "Type 2",
+        kw: "11",
+      }),
+      row("F1", {
+        lat: "54.6832",
+        lon: "25.2932",
+        town: "Elektrėnai",
+        operator: "Stuart",
+        location: plant,
+        type: "CCS2",
+        kw: "150",
+        current: "Nuolatinė",
+      }),
+      row("F2", {
+        lat: "54.6900",
+        lon: "25.2800",
+        town: "Elektrėnai",
+        operator: "Stuart",
+        location: plant,
+        type: "",
+        kw: "",
+      }),
+      row("SOLO", { lat: "55.0000", lon: "23.5000", location: "", town: "", operator: "Solo" }),
+    ]);
+    const home = sites.find((s) => s.sourceIds["via-lietuva"]?.includes("H"))!;
+    expect(home.ev).toMatchObject({ maxKw: 150, sockets: ["type2", "type2_combo"] });
+    expect(home.id).toBe("vl:F1");
+    expect(home.sourceIds["via-lietuva"]).toBe("F1,F2,H");
+    expect(sites.find((s) => s.id === "vl:SOLO")).toMatchObject({ name: "Solo" });
+    expect(sites.filter((s) => s.lon > 25)).toEqual([]);
   });
 });
 
@@ -234,6 +422,29 @@ describe("parseRegisterXlsx", () => {
     const buf = Buffer.from(await wb.xlsx.writeBuffer());
     const sites = await parseRegisterXlsx(buf);
     expect(sites.map((s) => [s.id, s.ev?.registerPrice])).toEqual([["vl:IBG-P-G7H7", 0.28]]);
+  });
+
+  it("reads formula, link and empty cells", async () => {
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("Worksheet");
+    ws.addRow(HEADER);
+    const values = row("S1");
+    values.push(null as unknown as string);
+    ws.addRow(values);
+    const data = ws.getRow(2);
+    data.getCell(24).value = new Date("2026-09-16T00:00:00Z");
+    data.getCell(25).value = { text: "link", hyperlink: "https://example.com" };
+    data.getCell(26).value = { formula: "1+1", result: 2 };
+    data.getCell(27).value = { richText: [{ text: "rich" }] };
+    const buf = Buffer.from(await wb.xlsx.writeBuffer());
+    const sites = await parseRegisterXlsx(buf);
+    expect(sites.map((s) => s.id)).toEqual(["vl:S1"]);
+  });
+
+  it("fails when the workbook has no sheet", async () => {
+    const wb = new ExcelJS.Workbook();
+    const buf = Buffer.from(await wb.xlsx.writeBuffer());
+    await expect(parseRegisterXlsx(buf)).rejects.toThrow(/no sheet/);
   });
 });
 
@@ -368,6 +579,19 @@ describe("mergeChargers", () => {
     expect(chargers[0].sourceIds).toEqual({ "via-lietuva": "A", osm: "node/1" });
     expect(site.ev?.chargeTag).toBeUndefined();
   });
+
+  it("copies sockets, power and city onto a register site that has none", () => {
+    const bare: Station = { ...site, ev: { sockets: [] } };
+    const osm: Station = {
+      ...near,
+      city: "Vilnius",
+      ev: { sockets: ["type2"], maxKw: 22, chargeTag: 0.4 },
+    };
+    const [merged] = mergeChargers([bare], [osm]).chargers;
+    expect(merged!.ev).toMatchObject({ sockets: ["type2"], maxKw: 22, chargeTag: 0.4 });
+    expect(merged!.city).toBe("Vilnius");
+    expect(merged!.address).toBe("Mindaugo g. 25, Vilnius");
+  });
 });
 
 describe("networkSlug", () => {
@@ -413,5 +637,159 @@ describe("assignNetworkBrands", () => {
     expect(chargerBrandLabel(chargers[0])).toBe("Inbalance grid");
     expect(chargerBrandLabel(chargers[4])).toBe("Tesla");
     expect(chargerBrandLabel(chargers[3])).toBe("Hotel Charger");
+  });
+
+  it("keeps a known network below the minimum and leaves a charger with no network independent", () => {
+    const bare: Station = {
+      id: "c",
+      name: "c",
+      brand: "independent",
+      lat: 54.7,
+      lon: 25.3,
+      fuels: ["EV"],
+      sourceIds: {},
+    };
+    const { chargers } = assignNetworkBrands([at("a", "Ignitis ON"), at("b", ""), bare]);
+    expect(chargers.map((c) => c.brand)).toEqual(["ignitis-on", "independent", "independent"]);
+  });
+
+  it("treats a missing site count as below the minimum", () => {
+    const real = Map.prototype.get;
+    let calls = 0;
+    const spy = vi.spyOn(Map.prototype, "get").mockImplementation(function (
+      this: Map<string, number>,
+      key: string,
+    ) {
+      calls += 1;
+      if (calls === 1) return real.call(this, key);
+      return undefined;
+    });
+    try {
+      const { chargers } = assignNetworkBrands([at("a", "Hotel Charger")]);
+      expect(chargers[0]!.brand).toBe("independent");
+    } finally {
+      spy.mockRestore();
+    }
+  });
+});
+
+async function registerWorkbook(count: number, pad: boolean): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("Worksheet");
+  ws.addRow(HEADER);
+  for (let i = 0; i < count; i++) {
+    const lat = (54.1 + (i % 20) * 0.05).toFixed(5);
+    const lon = (21.2 + Math.floor(i / 20) * 0.4).toFixed(5);
+    ws.addRow(
+      row(`S${i}`, {
+        lat,
+        lon,
+        operator: `Operator ${i}`,
+        owner: `Owner ${i}`,
+        location: `Place ${i} | Street ${i}`,
+        town: `Town ${i}`,
+      }),
+    );
+  }
+  if (pad) ws.getCell(1, 30).value = randomBytes(20_000).toString("base64");
+  return Buffer.from(await wb.xlsx.writeBuffer());
+}
+
+describe("fetchRegister", () => {
+  it("downloads the newest report", async () => {
+    const buf = await registerWorkbook(200, false);
+    const fetchImpl: typeof fetch = async (input) =>
+      String(input).endsWith("/")
+        ? new Response(`<a href="/report/1"></a><a href="/report/9"></a>`)
+        : new Response(new Uint8Array(buf));
+    const result = await fetchRegister(fetchImpl);
+    expect(result.reportUrl).toBe("https://ev.vialietuva.lt/report/9");
+    expect(result.chargers).toHaveLength(200);
+  });
+
+  it("uses global fetch when no implementation is passed", async () => {
+    const buf = await registerWorkbook(200, false);
+    vi.stubGlobal("fetch", async (input: RequestInfo) =>
+      String(input).endsWith("/")
+        ? new Response(`<a href="/report/4"></a>`)
+        : new Response(new Uint8Array(buf)),
+    );
+    try {
+      await expect(fetchRegister()).resolves.toMatchObject({
+        reportUrl: "https://ev.vialietuva.lt/report/4",
+      });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("fails when the home page does not answer", async () => {
+    const fetchImpl: typeof fetch = async () => new Response("", { status: 503 });
+    await expect(fetchRegister(fetchImpl)).rejects.toThrow(/home HTTP 503/);
+  });
+
+  it("fails when the home page links no report", async () => {
+    const fetchImpl: typeof fetch = async () => new Response("<p>none</p>");
+    await expect(fetchRegister(fetchImpl)).rejects.toThrow(/links no report/);
+  });
+
+  it("fails when the report does not answer", async () => {
+    const fetchImpl: typeof fetch = async (input) =>
+      String(input).endsWith("/")
+        ? new Response(`<a href="/report/9"></a>`)
+        : new Response("", { status: 404 });
+    await expect(fetchRegister(fetchImpl)).rejects.toThrow(/report HTTP 404/);
+  });
+
+  it("fails when the report is too small to be a workbook", async () => {
+    const fetchImpl: typeof fetch = async (input) =>
+      String(input).endsWith("/")
+        ? new Response(`<a href="/report/9"></a>`)
+        : new Response(Buffer.from("hi"));
+    await expect(fetchRegister(fetchImpl)).rejects.toThrow(/not an XLSX/);
+  });
+
+  it("fails when a long download is not a workbook", async () => {
+    const fetchImpl: typeof fetch = async (input) =>
+      String(input).endsWith("/")
+        ? new Response(`<a href="/report/9"></a>`)
+        : new Response(new Uint8Array(Buffer.alloc(10_000, 1)));
+    await expect(fetchRegister(fetchImpl)).rejects.toThrow(/not an XLSX/);
+  });
+
+  it("fails when a real workbook lists too few sites", async () => {
+    const buf = await registerWorkbook(1, true);
+    const fetchImpl: typeof fetch = async (input) =>
+      String(input).endsWith("/")
+        ? new Response(`<a href="/report/9"></a>`)
+        : new Response(new Uint8Array(buf));
+    await expect(fetchRegister(fetchImpl)).rejects.toThrow(/too few sites \(1\)/);
+  });
+});
+
+describe("loadRegisterCache", () => {
+  it("loads a cache and ignores a missing, broken or shapeless file", () => {
+    const dir = mkdtempSync(join(tmpdir(), "via-register-"));
+    try {
+      const path = join(dir, "cache.json");
+      expect(loadRegisterCache(path)).toBeNull();
+      writeFileSync(path, "{");
+      expect(loadRegisterCache(path)).toBeNull();
+      writeFileSync(path, "null");
+      expect(loadRegisterCache(path)).toBeNull();
+      writeFileSync(path, JSON.stringify({ fetchedAt: 1, chargers: [] }));
+      expect(loadRegisterCache(path)).toBeNull();
+      writeFileSync(path, JSON.stringify({ fetchedAt: "2026-10-01T00:00:00Z", chargers: "no" }));
+      expect(loadRegisterCache(path)).toBeNull();
+      const cache = {
+        fetchedAt: "2026-10-01T00:00:00Z",
+        reportUrl: "https://ev.vialietuva.lt/report/1",
+        chargers: [],
+      };
+      writeFileSync(path, JSON.stringify(cache));
+      expect(loadRegisterCache(path)).toEqual(cache);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

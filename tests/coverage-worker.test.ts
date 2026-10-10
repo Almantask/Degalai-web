@@ -98,6 +98,22 @@ describe("coverage badge proxy", () => {
     }
   });
 
+  it("returns an unknown badge when the asset is not an object", async () => {
+    for (const body of ["null", "1", "false"]) {
+      const res = await serveCoverageBadge(
+        new Request(`${WORKER}/coverage/unit.json`),
+        vi.fn(async () => new Response(body, { status: 200 })),
+      );
+      expect(await res?.json()).toEqual({
+        schemaVersion: 1,
+        label: "unit coverage",
+        message: "unknown",
+        color: "lightgrey",
+        cacheSeconds: 300,
+      });
+    }
+  });
+
   it("keeps a short cache hint and refuses other methods and paths", async () => {
     const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
       expect(String(input)).toBe(`${RELEASE}/e2e.json`);

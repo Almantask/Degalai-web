@@ -10,6 +10,12 @@ describe("includePublishedDataFile", () => {
     expect(includePublishedDataFile("prices/.gitkeep", "2026-09-14")).toBe(false);
   });
 
+  it("keeps only the prices directory when the latest snapshot is unknown", () => {
+    expect(includePublishedDataFile("prices", "")).toBe(true);
+    expect(includePublishedDataFile("prices/2026-09-14.json", "")).toBe(false);
+    expect(includePublishedDataFile("stations.json", "")).toBe(true);
+  });
+
   it("keeps compact history and stations, skips caches", () => {
     expect(includePublishedDataFile("history.json", "2026-09-14")).toBe(true);
     expect(includePublishedDataFile("stations.json", "2026-09-14")).toBe(true);
@@ -69,6 +75,23 @@ describe("slimPrices", () => {
         b: { LPG: { price: 0.899 } },
       },
     });
+  });
+});
+
+describe("slimPrices missing entries", () => {
+  it("skips a fuel that has no price entry", () => {
+    expect(
+      slimPrices({
+        date: "2026-09-15",
+        generatedAt: "2026-09-15T00:00:00.000Z",
+        prices: {
+          a: {
+            "95": undefined,
+            D: { price: 1.2, source: "lea", observedAt: "2026-09-15T00:00:00Z" },
+          },
+        },
+      }).prices,
+    ).toEqual({ a: { D: { price: 1.2 } } });
   });
 });
 
